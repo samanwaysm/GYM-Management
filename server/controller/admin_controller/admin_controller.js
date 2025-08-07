@@ -1,0 +1,513 @@
+const bcrypt = require("bcrypt");
+const mongoose = require("mongoose");
+const nodemailer = require('nodemailer');
+const Mailgen = require('mailgen');
+
+const Admin = require("../../../model/admin/admin_schema");
+const OtpDb = require("../../../model/admin/otp_schema")
+const Branch = require("../../../model/admin/branch_schema");
+
+const Trainer = require("../../../model/trainers/trainers_schema");
+const Client = require("../../../model/clients/clients_schema")
+
+exports.adminLogin = async (req, res) => {
+  const superAdmin = {
+    email: process.env.ADMIN_EMAIL,
+    password: process.env.ADMIN_PASS,
+  };
+
+  const { email, password } = req.body;
+  const errors = {};
+
+  // Required fields
+  if (!email) errors.email = "Email is required.";
+  if (!password) errors.password = "Password is required.";
+
+  if (Object.keys(errors).length > 0) {
+    req.session.errors = errors;
+    return res.redirect("/admin-login");
+  }
+
+  // Email format validation
+  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailPattern.test(email)) {
+    req.session.errors = { email: "Invalid email format." };
+    return res.redirect("/admin-login");
+  }
+
+  try {
+    // Check for SuperAdmin login
+    if (email === superAdmin.email) {
+      if (password === superAdmin.password) {
+        req.session.isSuperAdminAuthenticated = true;
+        return res.redirect("/admin-dashboard"); // Or "/superadmin-dashboard"
+      } else {
+        req.session.errors = { password: "Incorrect SuperAdmin password." };
+        return res.redirect("/admin-login");
+      }
+    }
+
+    // Check for normal Admin in DB
+    const admin = await Admin.findOne({ email });
+    if (!admin) {
+      req.session.errors = { email: "Admin not found." };
+      return res.redirect("/admin-login");
+    }
+
+    // Compare password (if hashed)
+    const isMatch = await bcrypt.compare(password, admin.password);
+    if (!isMatch) {
+      req.session.errors = { password: "Incorrect password." };
+      return res.redirect("/admin-login");
+    }
+
+    // Authenticated as Admin
+    req.session.isAdminAuthenticated = true;
+    req.session.adminId = admin._id;
+    req.session.adminName = admin.username;
+    return res.redirect("/admin-dashboard");
+  } catch (err) {
+    console.error(err);
+    req.session.errors = { loginError: "Something went wrong during login." };
+    return res.redirect("/admin-login");
+  }
+};
+
+exports.adminlogout = (req, res) => {
+  // Clear session variables
+  req.session.isAdminAuthenticated = false;
+  req.session.isSuperAdminAuthenticated = false;
+  req.session.adminId = null;
+  req.session.adminName = null;
+
+  // Optionally destroy the entire session
+  req.session.destroy((err) => {
+    if (err) {
+      console.error("Logout error:", err);
+      return res.redirect("/admin-dashboard"); // fallback
+    }
+
+    // Redirect to login page after logout
+    res.redirect("/admin-login");
+  });
+};
+
+
+exports.addAdmin = async (req, res) => {
+  const { username, email, phone, password } = req.body;
+  const errors = {};
+
+  // Validation
+  if (!username || username.trim().length < 3) {
+    errors.usernameError = "Username must be at least 3 characters.";
+  }
+
+  if (!email) {
+    errors.emailError = "Email is required.";
+  } else {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      errors.emailError = "Invalid email format.";
+    }
+  }
+
+  if (!phone) {
+    errors.phoneError = "Phone number is required.";
+  }
+
+  if (!password) {
+    errors.passwordError = "Password is required.";
+  } else if (password.length < 8) {
+    errors.passwordError = "Password must be at least 8 characters long.";
+  } else {
+    const passwordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
+    if (!passwordPattern.test(password)) {
+      errors.passwordError = "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character.";
+    }
+  }
+
+  try {
+    const existingUser = await Admin.findOne({ email });
+    if (existingUser) {
+      errors.emailError = "User already exists with this email.";
+    }
+
+    if (Object.keys(errors).length > 0) {
+      req.session.errors = errors;
+      return res.redirect('/superadmin-add-admin');
+    }
+
+    // Hash the password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Save admin data
+    const newAdmin = new Admin({
+      username,
+      email,
+      phone,
+      password: hashedPassword
+    });
+
+    await newAdmin.save(); // Save to the database
+
+    req.session.success = "Admin added successfully.";
+    console.log(req.session.success);
+
+    res.redirect('/superadmin-admin-list');
+  } catch (err) {
+    console.error(err);
+    req.session.errors = { signUpError: "An error occurred during signup." };
+    res.redirect('/superadmin-add-admin');
+  }
+};
+
+exports.adminList = async (req, res) => {
+  try {
+    const admins = await Admin.find();
+    console.log(admins);
+
+    res.status(200).json(admins);
+  } catch (error) {
+    console.error("Error fetching users: ", error);
+    res.status(500).json({ message: "Server Error" });
+  }
+};
+
+exports.getAdminProfile = async (req, res) => {
+  try {
+    const adminId = req.query.adminId;
+    if (!adminId) {
+      return res.status(401).json({ error: "Not authorized. Please log in." });
+    }
+
+    const admin = await Admin.findById(adminId).select('-password'); // exclude password
+
+    if (!admin) {
+      return res.status(404).json({ error: "Admin not found." });
+    }
+
+    res.status(200).json(admin);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error while fetching profile data." });
+  }
+}
+
+exports.sendAdminOTP = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ success: false, message: 'Email is required' });
+    }
+
+    // Generate 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000);
+
+    // Save email in session (optional)
+    req.session.email = email;
+
+    // Delete any existing OTPs for this email
+    await OtpDb.deleteMany({ email });
+
+    // Save new OTP to DB with 60s expiry
+    const newOtp = new OtpDb({
+      email: email,
+      otp: otp,
+      createdAt: Date.now(),
+      expiresAt: Date.now() + 60 * 1000 // 60 seconds
+    });
+
+    await newOtp.save();
+
+    // Create Nodemailer transporter
+    const transporter = nodemailer.createTransport({
+      service: 'Gmail',
+      auth: {
+        user: process.env.AUTH_EMAIL,
+        pass: process.env.AUTH_PASS,
+      },
+    });
+
+    // Mailgen config
+    const mailGenerator = new Mailgen({
+      theme: 'default',
+      product: {
+        name: 'Gym Management App',
+        link: 'https://yourdomain.com/',
+      },
+    });
+
+    // Mail content
+    const emailTemplate = {
+      body: {
+        name: 'User',
+        intro: `Your OTP code is: **${otp}**`,
+        outro: 'This OTP is valid for 60 seconds. If you didn’t request this, ignore the email.',
+      },
+    };
+
+    const mailBody = mailGenerator.generate(emailTemplate);
+
+    const message = {
+      from: process.env.AUTH_EMAIL,
+      to: email,
+      subject: 'OTP Verification Code',
+      html: mailBody,
+    };
+
+    await transporter.sendMail(message);
+
+    return res.status(200).json({ success: true, message: 'OTP sent successfully' });
+
+  } catch (error) {
+    console.error('OTP send error:', error);
+    return res.status(500).json({ success: false, message: 'Failed to send OTP' });
+  }
+};
+
+exports.verifyAdminOTP = async (req, res) => {
+  const { email, otp, name, phone, password, newPassword, confirmPassword } = req.body;
+  try {
+    const otpRecord = await OtpDb.findOne({ email }).sort({ createdAt: -1 });
+
+    if (!otpRecord) {
+      return res.json({ success: false, message: 'OTP not found.' });
+    }
+
+    if (Date.now() > otpRecord.expiresAt) {
+      await OtpDb.deleteOne({ _id: otpRecord._id });
+      return res.json({ success: false, message: 'OTP expired.' });
+    }
+
+    if (otpRecord.otp !== otp) {
+      return res.json({ success: false, message: 'Invalid OTP.' });
+    }
+
+    if (newPassword !== confirmPassword) {
+      return res.json({ success: false, message: 'Passwords do not match.' });
+    }
+
+    const admin = await Admin.findOne({ email });
+    if (!admin) {
+      return res.json({ success: false, message: 'User not found.' });
+    }
+
+    const isMatch = await bcrypt.compare(password, admin.password);
+    if (!isMatch) {
+      return res.json({ success: false, message: 'Current password is incorrect.' });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    // ✅ Update existing admin document
+    admin.password = hashedPassword;
+    admin.name = name;
+    admin.phone = phone;
+
+    await admin.save(); // ✅ correct call here
+    await OtpDb.deleteOne({ _id: otpRecord._id });
+
+    return res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.json({ success: false, message: 'Server error.' });
+  }
+};
+
+exports.addBranch = async (req, res) => {
+  try {
+    const {
+      name, // branch name
+      phone,
+      address,
+      city,
+      state,
+      pincode,
+      lat,
+      lng
+    } = req.body;
+
+    // Validation (basic)
+    // if (!username || !phone || !address || !city || !state || !pincode) {
+    //   return res.status(400).send('All required fields must be filled.');
+    // }
+
+    // Create branch object
+    const newBranch = new Branch({
+      name: name,
+      contact: {
+        phone
+      },
+      location: {
+        address,
+        city,
+        state,
+        pincode,
+        geo: {
+          lat: lat || null,
+          lng: lng || null
+        }
+      }
+    });
+
+    await newBranch.save();
+
+    return res.redirect('/admin-branches-list'); // adjust this redirect path as needed
+  } catch (error) {
+    console.error('Error creating branch:', error);
+    res.status(500).send('Server error while adding branch.');
+  }
+};
+
+exports.branchList = async (req, res) => {
+  try {
+    const branches = await Branch.find();
+    console.log(branches);
+
+    res.status(200).json(branches);
+  } catch (error) {
+    console.error("Error fetching users: ", error);
+    res.status(500).json({ message: "Server Error" });
+  }
+}
+
+exports.getBranchNames = async (req, res) => {
+  try {
+    const branches = await Branch.find({}, { name: 1, _id: 1 });
+
+    res.status(200).json(branches);
+  } catch (error) {
+    console.error("Error fetching branch names: ", error);
+    res.status(500).json({ message: "Server Error" });
+  }
+}
+
+exports.addTrainers = async (req, res) => {
+  try {
+    const { name, email, phone, branch, password } = req.body;
+
+    // Check if email already exists
+    const existingTrainer = await Trainer.findOne({ email });
+    if (existingTrainer) {
+      req.session.errors = ['Trainer with this email already exists'];
+      return res.redirect('/admin-add-trainer');
+    }
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Create trainer object
+    const newTrainer = new Trainer({
+      name,
+      email,
+      phone,
+      branch,
+      password: hashedPassword
+    });
+
+    await newTrainer.save();
+
+    req.session.success = 'Trainer added successfully!';
+    return res.redirect('/admin-trainers-list'); // change route if needed
+  } catch (error) {
+    console.error('Error creating trainer:', error);
+    res.status(500).send('Server error while adding trainer.');
+  }
+}
+
+exports.trainersList = async (req, res) => {
+  try {
+    const trainers = await Trainer.aggregate([
+      {
+        $lookup: {
+          from: "branches",             // collection name in DB
+          localField: "branch",         // field in Trainer schema
+          foreignField: "_id",          // matching _id in branch collection
+          as: "branchInfo"
+        }
+      },
+      {
+        $unwind: "$branchInfo" // convert array to single object
+      },
+      {
+        $project: {
+          name: 1,
+          email: 1,
+          phone: 1,
+          password: 1,
+          branchName: "$branchInfo.name" // extract only branch name
+        }
+      }
+    ]);
+    console.log(trainers);
+
+    res.status(200).json(trainers);
+  } catch (error) {
+    console.error("Error fetching users: ", error);
+    res.status(500).json({ message: "Server Error" });
+  }
+}
+
+exports.addClients = async (req, res) => {
+  try {
+    const {
+      name,
+      email,
+      phone,
+      gender,
+      age,
+      branch,
+      membershipType
+    } = req.body;
+
+    const newClient = new Client({
+      name,
+      email,
+      phone,
+      gender,
+      age,
+      branch,
+      membershipType
+    });
+
+    await newClient.save();
+    req.session.success = 'Clients added successfully!';
+    return res.redirect('/admin-clients-list');
+    // res.status(201).json({ message: "Client registered successfully", client: newClient });
+  } catch (error) {
+    console.error("Error saving client:", error);
+    res.status(500).json({ message: "Server Error" });
+  }
+};
+
+exports.clientsList = async (req, res) => {
+  const trainers = ['a']
+  res.status(200).json(trainers);
+}
+
+exports.getTrainersByBranch = async (req, res) => {
+  // try {
+  //   const trainers = await Trainer.find({}, { name: 1, _id: 1 }); // Fetch only name and _id
+  //   res.json(trainers);
+  // } catch (error) {
+  //   console.error('Error fetching trainer names:', error);
+  //   res.status(500).json({ error: 'Failed to fetch trainer names' });
+  // }
+
+  try {
+    const { branchId } = req.params;
+
+    if (!branchId) {
+      return res.status(400).json({ message: 'Branch ID is required' });
+    }
+
+    const trainers = await Trainer.find({ branch: branchId }).select('name _id');
+    console.log(trainers);
+    
+    res.status(200).json({ trainers });
+  } catch (error) {
+    console.error('Error fetching trainers:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+}
