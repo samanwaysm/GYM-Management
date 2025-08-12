@@ -1,49 +1,66 @@
+
 const mongoose = require('mongoose');
 
 const schema = new mongoose.Schema({
   name: {
     type: String,
     required: true,
-    trim: true
-  },
-  email: {
-    type: String,
-    required: true,
-    lowercase: true,
-    unique: true
-  },
-  phone: {
-    type: String,
-    required: true
   },
   gender: {
     type: String,
     enum: ['Male', 'Female', 'Other'],
-    required: true
+    required: true,
   },
   age: {
     type: Number,
-    required: true
+    required: true,
   },
-  branch: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'branch',
+  phone: {
+    type: String,
+    required: true,
+    unique: true,
+  },
+  email: {
+    type: String,
+    required: true,
+    unique: true,
+  },
+  altphone: {
+    type: String,
+  },
+  height: {
+    type: Number,
+  },
+  weight: {
+    type: Number,
+  },
+  password: {
+    type: String,
     required: true
   },
   joinedDate: {
     type: Date,
-    default: Date.now
+    default: Date.now,
   },
-  membershipType: {
+  trainerId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Trainer',
+  },
+  branchId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Branch',
+  },
+  membershipId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Membership',
+  },
+  status: {
     type: String,
-    enum: ['Monthly', 'Quarterly', 'Yearly'],
-    required: true
+    enum: ['Active', 'Inactive', 'Cancelled'],
+    default: 'Active',
   },
-  isActive: {
-    type: Boolean,
-    default: true
-  }
 });
 
-const client_schema = mongoose.model('client', schema);
-module.exports = client_schema;
+const clients_schema = mongoose.model('client', schema);
+
+module.exports = clients_schema

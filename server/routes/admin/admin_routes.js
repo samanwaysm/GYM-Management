@@ -12,9 +12,11 @@ const {isSuperAdminAuthenticated,
     isAnyAdminAuthenticated,
     isAnyAdminNotAuthenticated } = require('../../middleware/admin/auth');
 
+const gateCheck = require('../../middleware/admin/gateCheck')
+
 route.get("/admin-login",isAnyAdminNotAuthenticated,services.adminLogin);
-route.get("/admin-dashboard",isAnyAdminAuthenticated,services.dashboard);
-route.get("/superadmin-add-admin",isSuperAdminAuthenticated,services.add_admin);
+route.get("/admin-dashboard",isAnyAdminAuthenticated,gateCheck(['superadmin','admin']),services.dashboard);
+route.get("/superadmin-add-admin",isSuperAdminAuthenticated,gateCheck(['superadmin']),services.add_admin);
 route.get("/superadmin-admin-list",isSuperAdminAuthenticated,services.admin_list);
 route.get("/admin-profile",isAdminAuthenticated,services.admin_profile);
 route.get("/admin-branches-list",isAnyAdminAuthenticated,services.branches_list);
@@ -23,9 +25,13 @@ route.get("/admin-add-trainers",isAnyAdminAuthenticated,services.add_trainers);
 route.get("/admin-trainers-list",isAnyAdminAuthenticated,services.trainers_list);
 route.get("/admin-clients-list",isAnyAdminAuthenticated,services.clients_list);
 route.get("/admin-add-clients",services.add_clients);
-
+route.get("/admin-forgot-password",services.forgot_password)
+route.get("/admin-change-password",services.change_password)
 
 route.post("/admin/adminlogin",controller.adminLogin);
+route.post("/admin/forgot-send-otp",controller.send_otp);
+route.post("/admin/forgot-verify-otp/:email",controller.verify_OTP);
+route.post("/admin/forgot-change-password",controller.change_password);
 route.post("/superadmin/add-admin",controller.addAdmin);
 route.post("/admin/send-otp",controller.sendAdminOTP);
 route.post("/admin/verify-otp",controller.verifyAdminOTP);

@@ -42,7 +42,7 @@
                             </div>
                             <div class="profile-name">
                                 <h5 class="mb-0 font-weight-normal">
-                                    <%= adminName || 'Admin' %>
+                                    <%= user || 'Admin' %>
                                 </h5>
                                 <span>Gold Member</span>
                             </div>
@@ -97,64 +97,64 @@
                         <span class="menu-title">Dashboard</span>
                     </a>
                 </li>
-                          <% if (isSuperAdminAuthenticated) { %>
-                <li class="nav-item menu-items">
-                    <a class="nav-link" href="/superadmin-admin-list">
-                        <span class="menu-icon">
-                            <i class="mdi mdi-account-key"></i>
-                        </span>
-                        <span class="menu-title">Admins</span>
-                    </a>
-                </li>
-            <% } %>
-            <li class="nav-item menu-items">
-                <a class="nav-link" href="/admin-branches-list">
-                <span class="menu-icon">
-                    <i class="mdi mdi-domain"></i>
-                </span>
-                <span class="menu-title">Branches</span>
-                </a> 
-            </li>
-            <li class="nav-item menu-items">
-                <a class="nav-link" href="/admin-trainers-list">
-                <span class="menu-icon">
-                    <i class="mdi mdi-run-fast"></i>
-                </span>
-                <span class="menu-title">Trainers</span>
-                </a>
-            </li>
-            <li class="nav-item menu-items">
-                <a class="nav-link" href="/admin-clients-list">
-                <span class="menu-icon">
-                    <i class="mdi mdi-account-group"></i>
-                </span>
-                <span class="menu-title">Clients</span>
-                </a>
-            </li>
-            <li class="nav-item menu-items">
-                <a class="nav-link" href="#">
-                <span class="menu-icon">
-                    <i class="mdi mdi-credit-card"></i>
-                </span>
-                <span class="menu-title">Payments</span>
-                </a>
-            </li>
-            <li class="nav-item menu-items">
-                <a class="nav-link" href="#">
-                <span class="menu-icon">
-                    <i class="mdi mdi-cash-multiple"></i>
-                </span>
-                <span class="menu-title">Salary</span>
-                </a>
-            </li>
-            <li class="nav-item menu-items">
-                <a class="nav-link" href="#">
-                <span class="menu-icon">
-                    <i class="mdi mdi-calendar-check"></i>
-                </span>
-                <span class="menu-title">Attendance</span>
-                </a>
-            </li>
+                <% if (isSuperAdminAuthenticated) { %>
+                    <li class="nav-item menu-items">
+                        <a class="nav-link" href="/superadmin-admin-list">
+                            <span class="menu-icon">
+                                <i class="mdi mdi-account-key"></i>
+                            </span>
+                            <span class="menu-title">Admins</span>
+                        </a>
+                    </li>
+                    <% } %>
+                        <li class="nav-item menu-items">
+                            <a class="nav-link" href="/admin-branches-list">
+                                <span class="menu-icon">
+                                    <i class="mdi mdi-domain"></i>
+                                </span>
+                                <span class="menu-title">Branches</span>
+                            </a>
+                        </li>
+                        <li class="nav-item menu-items">
+                            <a class="nav-link" href="/admin-trainers-list">
+                                <span class="menu-icon">
+                                    <i class="mdi mdi-run-fast"></i>
+                                </span>
+                                <span class="menu-title">Trainers</span>
+                            </a>
+                        </li>
+                        <li class="nav-item menu-items">
+                            <a class="nav-link" href="/admin-clients-list">
+                                <span class="menu-icon">
+                                    <i class="mdi mdi-account-group"></i>
+                                </span>
+                                <span class="menu-title">Clients</span>
+                            </a>
+                        </li>
+                        <li class="nav-item menu-items">
+                            <a class="nav-link" href="#">
+                                <span class="menu-icon">
+                                    <i class="mdi mdi-credit-card"></i>
+                                </span>
+                                <span class="menu-title">Payments</span>
+                            </a>
+                        </li>
+                        <li class="nav-item menu-items">
+                            <a class="nav-link" href="#">
+                                <span class="menu-icon">
+                                    <i class="mdi mdi-cash-multiple"></i>
+                                </span>
+                                <span class="menu-title">Salary</span>
+                            </a>
+                        </li>
+                        <li class="nav-item menu-items">
+                            <a class="nav-link" href="#">
+                                <span class="menu-icon">
+                                    <i class="mdi mdi-calendar-check"></i>
+                                </span>
+                                <span class="menu-title">Attendance</span>
+                            </a>
+                        </li>
             </ul>
         </nav>
         <!-- partial -->
@@ -327,7 +327,7 @@
                                 <div class="navbar-profile">
                                     <img class="img-xs rounded-circle" src="/images/faces/face15.jpg" alt="">
                                     <p class="mb-0 d-none d-sm-block navbar-profile-name">
-                                        <%= adminName || 'Admin' %>
+                                        <%= user || 'Admin' %>
                                     </p>
                                     <i class="mdi mdi-menu-down d-none d-sm-block"></i>
                                 </div>
@@ -380,28 +380,38 @@
                             </ol>
                         </nav>
                     </div>
-                    <div class="mt-3 mb-3">
-                        <a href="/superadmin-add-admin"><button type="button" class="btn btn-primary btn-md">
-                                <i class="mdi mdi-account"></i> Add Admin </button></a>
+                    <div class="mt-3 mb-3 d-flex justify-content-between">
+                        <a href="/superadmin-add-admin">
+                            <button type="button" class="btn btn-primary btn-md">
+                                <i class="mdi mdi-account"></i> Add Admin
+                            </button>
+                        </a>
+                        <a href="/superadmin-unlisted-admin">
+                            <button type="button" class="btn btn-primary btn-md">
+                                <i class="mdi mdi-account"></i> Unlisted Admin
+                            </button>
+                        </a>
                     </div>
                     <div class="card">
                         <div class="card-body">
                             <!-- <h4 class="card-title">Hoverable Table</h4>
                             <p class="card-description"> Add class <code>.table-hover</code>
                             </p> -->
+                            <% if (admins.length===0) { %>
+                                <p>No admins found.</p>
+                            <% } else { %>
                             <div class="table-responsive">
                                 <table class="table table-hover">
                                     <thead>
                                         <tr>
                                             <th>User</th>
                                             <th>Email</th>
+                                            <th>Phone</th>
                                             <th>Edit</th>
                                             <th>Delete</th>
                                         </tr>
                                     </thead>
-                                    <% if (admins.length===0) { %>
-                                        <p>No admins found.</p>
-                                        <% } else { %>
+                                    
                                             <tbody>
                                                 <% admins.forEach(admin=> { %>
                                                     <tr>
@@ -411,13 +421,16 @@
                                                         <td>
                                                             <%= admin.email %>
                                                         </td>
+                                                        <td>
+                                                            <%= admin.phone %>
+                                                        </td>
                                                         <td><button type="button"
                                                                 class="btn btn-outline-secondary btn-icon-text"> Edit <i
                                                                     class="mdi mdi-file-check btn-icon-append"></i></button>
                                                         </td>
                                                         <td><button type="button"
                                                                 class="btn btn-outline-danger btn-icon-text"><i
-                                                                    class="mdi mdi-bucket btn-icon-prepend"></i> Delete
+                                                                    class="mdi mdi-bucket btn-icon-prepend"></i> Unlist
                                                             </button></td>
                                                     </tr>
                                                     <% }) %>

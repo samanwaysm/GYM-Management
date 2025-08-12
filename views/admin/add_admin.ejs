@@ -37,7 +37,7 @@
                   <span class="count bg-success"></span>
                 </div>
                 <div class="profile-name">
-                  <h5 class="mb-0 font-weight-normal"><%= adminName || 'Admin'%></h5>
+                  <h5 class="mb-0 font-weight-normal"><%= user || 'Admin'%></h5>
                   <span>Gold Member</span>
                 </div>
               </div>
@@ -306,7 +306,7 @@
                 <a class="nav-link" id="profileDropdown" href="#" data-toggle="dropdown">
                   <div class="navbar-profile">
                     <img class="img-xs rounded-circle" src="/images/faces/face15.jpg" alt="">
-                    <p class="mb-0 d-none d-sm-block navbar-profile-name"><%= adminName || 'Admin'%></p>
+                    <p class="mb-0 d-none d-sm-block navbar-profile-name"><%= user || 'Admin'%></p>
                     <i class="mdi mdi-menu-down d-none d-sm-block"></i>
                   </div>
                 </a>
@@ -369,6 +369,11 @@
                             <label class="col-sm-3 col-form-label">Name : </label>
                             <div class="col-sm-9">
                               <input type="text" id="username" name="username" class="form-control" />
+                              <% if (errors && errors.usernameError) { %>
+                                <div class="text-danger small">
+                              <%= errors.usernameError %>
+                                </div>
+                              <% } %>
                             </div>
                           </div>
                         </div>
@@ -377,6 +382,11 @@
                             <label class="col-sm-3 col-form-label">Email : </label>
                             <div class="col-sm-9">
                               <input type="email" id="email" name="email" class="form-control" />
+                              <% if (errors && errors.emailError) { %>
+                                <div class="text-danger small">
+                              <%= errors.emailError %>
+                                </div>
+                              <% } %>
                             </div>
                           </div>
                         </div>
@@ -387,6 +397,11 @@
                             <label class="col-sm-3 col-form-label">Phone Number : </label>
                             <div class="col-sm-9">
                               <input type="tel" id="phone" name="phone" class="form-control" />
+                              <% if (errors && errors.phoneError) { %>
+                                <div class="text-danger small">
+                              <%= errors.phoneError %>
+                                </div>
+                              <% } %>
                             </div>
                           </div>
                         </div>
@@ -395,6 +410,11 @@
                             <label class="col-sm-3 col-form-label">Password : </label>
                             <div class="col-sm-9">
                               <input type="password" id="password" name="password" class="form-control" />
+                              <% if (errors && errors.passwordError) { %>
+                                <div class="text-danger small">
+                              <%= errors.passwordError %>
+                                </div>
+                              <% } %>
                             </div>
                           </div>
                         </div>

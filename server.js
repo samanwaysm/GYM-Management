@@ -49,7 +49,7 @@ app.use(session({
 }));
 
 app.use('/',admin_router );
-
+app.use('/',trainers_router);
 
 app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
