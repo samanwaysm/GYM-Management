@@ -372,7 +372,7 @@
             <div class="main-panel">
                 <div class="content-wrapper">
                     <div class="page-header">
-                        <h3 class="page-title"> Admin List </h3>
+                        <h3 class="page-title"> Trainers List </h3>
                         <nav aria-label="breadcrumb">
                             <ol class="breadcrumb">
                                 <li class="breadcrumb-item"><a href="#"> Admin</a></li>
@@ -422,7 +422,9 @@
                                                         <td>
                                                             <%= trainer.phone %>
                                                         </td>
-                                                        <td></td>
+                                                        <td>
+                                                            <%= trainer.clientsCount %>
+                                                        </td>
                                                         <td>
                                                             <%= trainer.branchName %>
                                                         </td>
@@ -441,7 +443,18 @@
                                 </table>
                             </div>
                         </div>
+                        
+
                     </div>
+                    <nav class="d-flex justify-content-center mt-3">
+                            <ul class="pagination">
+                                <% for(let i = 1; i <= totalPages; i++) { %>
+                                <li class="page-item <%= i === currentPage ? 'active' : '' %>">
+                                    <a class="page-link" href="?page=<%= i %>"><%= i %></a>
+                                </li>
+                                <% } %>
+                            </ul>
+                        </nav>
                 </div>
                 <!-- content-wrapper ends -->
                 <!-- partial:../../partials/_footer.html -->

@@ -372,10 +372,10 @@
             <div class="main-panel">
                 <div class="content-wrapper">
                     <div class="page-header">
-                        <h3 class="page-title"> Admin List </h3>
+                        <h3 class="page-title"> Branches List </h3>
                         <nav aria-label="breadcrumb">
                             <ol class="breadcrumb">
-                                <li class="breadcrumb-item"><a href="#">Super Admin</a></li>
+                                <li class="breadcrumb-item"><a href="#"> Admin </a></li>
                                 <li class="breadcrumb-item active" aria-current="page">Admin List</li>
                             </ol>
                         </nav>
@@ -399,8 +399,8 @@
                                     <thead>
                                         <tr>
                                             <th>Branch</th>
-                                            <th>Clients</th>
-                                            <th>Trainers</th>
+                                            <th>Trainers Count</th>
+                                            <th>Clients Count</th>
                                             <th>Edit</th>
                                             <th>ShutDown</th>
                                         </tr>
@@ -412,8 +412,12 @@
                                                         <td>
                                                             <%= branch.name %>
                                                         </td>
-                                                        <td></td>
-                                                        <td></td>
+                                                        <td>
+                                                            <%= branch.trainersCount %>
+                                                        </td>
+                                                        <td>
+                                                            <%= branch.clientsCount %>
+                                                        </td>
                                                         <td><button type="button"
                                                                 class="btn btn-outline-secondary btn-icon-text"> Edit <i
                                                                     class="mdi mdi-file-check btn-icon-append"></i></button>
@@ -430,6 +434,15 @@
                             </div>
                         </div>
                     </div>
+                    <nav class="d-flex justify-content-center mt-3">
+                            <ul class="pagination">
+                                <% for(let i = 1; i <= totalPages; i++) { %>
+                                <li class="page-item <%= i === currentPage ? 'active' : '' %>">
+                                    <a class="page-link" href="?page=<%= i %>"><%= i %></a>
+                                </li>
+                                <% } %>
+                            </ul>
+                    </nav>
                 </div>
                 <!-- content-wrapper ends -->
                 <!-- partial:../../partials/_footer.html -->

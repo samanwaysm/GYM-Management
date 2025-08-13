@@ -612,17 +612,67 @@ exports.addBranch = async (req, res) => {
   }
 };
 
+// exports.branchList = async (req, res) => {
+//   try {
+//     const branches = await Branch.find();
+//     console.log(branches);
+
+//     res.status(200).json(branches);
+//   } catch (error) {
+//     console.error("Error fetching users: ", error);
+//     res.status(500).json({ message: "Server Error" });
+//   }
+// }
+
 exports.branchList = async (req, res) => {
   try {
-    const branches = await Branch.find();
-    console.log(branches);
+    let page = parseInt(req.query.page) || 1;
+    let limit = 1;
+    let skip = (page - 1) * limit;
 
-    res.status(200).json(branches);
+    // Count total branches for pagination
+    const totalBranches = await Branch.countDocuments();
+
+    const branches = await Branch.aggregate([
+      {
+        $lookup: {
+          from: "trainers",            // collection name
+          localField: "_id",
+          foreignField: "branch",      // trainer schema field
+          as: "trainersList"
+        }
+      },
+      {
+        $lookup: {
+          from: "clients",
+          localField: "_id",
+          foreignField: "branchId",    // client schema field
+          as: "clientsList"
+        }
+      },
+      {
+        $project: {
+          _id: 0,                      // hide _id
+          name: 1,
+          trainersCount: { $size: "$trainersList" },
+          clientsCount: { $size: "$clientsList" }
+        }
+      },
+      { $skip: skip },
+      { $limit: limit }
+    ]);
+
+    res.status(200).json({
+      branches,
+      totalPages: Math.ceil(totalBranches / limit),
+      currentPage: page
+    });
   } catch (error) {
-    console.error("Error fetching users: ", error);
+    console.error("Error fetching branches: ", error);
     res.status(500).json({ message: "Server Error" });
   }
-}
+};
+
 
 exports.getBranchNames = async (req, res) => {
   try {
@@ -668,19 +718,185 @@ exports.addTrainers = async (req, res) => {
   }
 }
 
+// exports.trainersList = async (req, res) => {
+//   try {
+//     const trainers = await Trainer.aggregate([
+//       {
+//         $lookup: {
+//           from: "branches",             // collection name in DB
+//           localField: "branch",         // field in Trainer schema
+//           foreignField: "_id",          // matching _id in branch collection
+//           as: "branchInfo"
+//         }
+//       },
+//       {
+//         $unwind: "$branchInfo" // convert array to single object
+//       },
+//       {
+//         $project: {
+//           name: 1,
+//           email: 1,
+//           phone: 1,
+//           password: 1,
+//           branchName: "$branchInfo.name" // extract only branch name
+//         }
+//       }
+//     ]);
+//     console.log(trainers);
+
+//     res.status(200).json(trainers);
+//   } catch (error) {
+//     console.error("Error fetching users: ", error);
+//     res.status(500).json({ message: "Server Error" });
+//   }
+// }
+
+// exports.trainersList = async (req, res) => {
+//   try {
+//     const trainers = await Trainer.aggregate([
+//       {
+//         $lookup: {
+//           from: "branches",               // Branch collection name
+//           localField: "branch",           // field in Trainer schema
+//           foreignField: "_id",
+//           as: "branchInfo"
+//         }
+//       },
+//       {
+//         $unwind: {
+//           path: "$branchInfo",
+//           preserveNullAndEmptyArrays: true
+//         }
+//       },
+//       {
+//         $lookup: {
+//           from: "clients",
+//           let: { trainerId: "$_id" },
+//           pipeline: [
+//             {
+//               $match: {
+//                 $expr: { $eq: ["$trainerId", "$$trainerId"] },
+//                 status: "Active"
+//               }
+//             }
+//           ],
+//           as: "clientsHandled"
+//         }
+//       },
+//       {
+//         $addFields: {
+//           clientsCount: { $size: "$clientsHandled" }
+//         }
+//       },
+//       {
+//         $project: {
+//           name: 1,
+//           email: 1,
+//           phone: 1,
+//           password: 1,
+//           branchName: "$branchInfo.name",
+//           clientsCount: 1
+//         }
+//       }
+//     ]);
+//     console.log(trainers);
+//     res.status(200).json(trainers);
+//   } catch (error) {
+//     console.error("Error fetching trainers: ", error);
+//     res.status(500).json({ message: "Server Error" });
+//   }
+// };
+
+
+// exports.clientsList = async (req, res) => {
+//   try {
+//     const clients = await Client.aggregate([
+//       // Join with Branch collection
+//       {
+//         $lookup: {
+//           from: "branches",            // Branch collection name
+//           localField: "branchId",      // field in client schema
+//           foreignField: "_id",         // match _id in branch collection
+//           as: "branchInfo"
+//         }
+//       },
+//       { $unwind: { path: "$branchInfo", preserveNullAndEmptyArrays: true } },
+
+//       // Join with Trainer collection
+//       {
+//         $lookup: {
+//           from: "trainers",            // Trainer collection name
+//           localField: "trainerId",     // field in client schema
+//           foreignField: "_id",         // match _id in trainer collection
+//           as: "trainerInfo"
+//         }
+//       },
+//       { $unwind: { path: "$trainerInfo", preserveNullAndEmptyArrays: true } },
+
+//       // Select only needed fields
+//       {
+//         $project: {
+//           _id: 0,
+//           name: 1,
+//           email: 1,
+//           phone: 1,
+//           branch: "$branchInfo.name",   // branch name
+//           trainer: "$trainerInfo.name"  // trainer name
+//         }
+//       }
+//     ]);
+//     console.log(clients);
+    
+//     res.status(200).json(clients);
+//   } catch (error) {
+//     console.error("Error fetching clients list: ", error);
+//     res.status(500).json({ message: "Server Error" });
+//   }
+// }
+
 exports.trainersList = async (req, res) => {
   try {
+    let page = parseInt(req.query.page) || 1;
+    let limit = 1;
+    let skip = (page - 1) * limit;
+
+    // Get total trainers count
+    const totalTrainers = await Trainer.countDocuments();
+
     const trainers = await Trainer.aggregate([
       {
         $lookup: {
-          from: "branches",             // collection name in DB
-          localField: "branch",         // field in Trainer schema
-          foreignField: "_id",          // matching _id in branch collection
+          from: "branches",
+          localField: "branch",
+          foreignField: "_id",
           as: "branchInfo"
         }
       },
       {
-        $unwind: "$branchInfo" // convert array to single object
+        $unwind: {
+          path: "$branchInfo",
+          preserveNullAndEmptyArrays: true
+        }
+      },
+      {
+        $lookup: {
+          from: "clients",
+          let: { trainerId: "$_id" },
+          pipeline: [
+            {
+              $match: {
+                $expr: { $eq: ["$trainerId", "$$trainerId"] },
+                status: "Active"
+              }
+            }
+          ],
+          as: "clientsHandled"
+        }
+      },
+      {
+        $addFields: {
+          clientsCount: { $size: "$clientsHandled" }
+        }
       },
       {
         $project: {
@@ -688,65 +904,27 @@ exports.trainersList = async (req, res) => {
           email: 1,
           phone: 1,
           password: 1,
-          branchName: "$branchInfo.name" // extract only branch name
+          branchName: "$branchInfo.name",
+          clientsCount: 1
         }
-      }
+      },
+      { $skip: skip },
+      { $limit: limit }
     ]);
-    console.log(trainers);
 
-    res.status(200).json(trainers);
-  } catch (error) {
-    console.error("Error fetching users: ", error);
-    res.status(500).json({ message: "Server Error" });
-  }
-}
-
-exports.addClients = async (req, res) => {
-  try {
-    const {
-      name,
-      email,
-      phone,
-      gender,
-      age,
-      branch,
-      membershipType
-    } = req.body;
-
-    const newClient = new Client({
-      name,
-      email,
-      phone,
-      gender,
-      age,
-      branch,
-      membershipType
+    res.status(200).json({
+      trainers,
+      totalPages: Math.ceil(totalTrainers / limit),
+      currentPage: page
     });
-
-    await newClient.save();
-    req.session.success = 'Clients added successfully!';
-    return res.redirect('/admin-clients-list');
-    // res.status(201).json({ message: "Client registered successfully", client: newClient });
   } catch (error) {
-    console.error("Error saving client:", error);
+    console.error("Error fetching trainers: ", error);
     res.status(500).json({ message: "Server Error" });
   }
 };
 
-exports.clientsList = async (req, res) => {
-  const trainers = ['a']
-  res.status(200).json(trainers);
-}
 
 exports.getTrainersByBranch = async (req, res) => {
-  // try {
-  //   const trainers = await Trainer.find({}, { name: 1, _id: 1 }); // Fetch only name and _id
-  //   res.json(trainers);
-  // } catch (error) {
-  //   console.error('Error fetching trainer names:', error);
-  //   res.status(500).json({ error: 'Failed to fetch trainer names' });
-  // }
-
   try {
     const { branchId } = req.params;
 
@@ -821,8 +999,8 @@ exports.addClients = async (req, res) => {
       altphone: altphone || null, // optional
       gender,
       age,
-      branch: branchExists._id,
-      trainer: trainerExists._id,
+      branchId: branchExists._id,
+      trainerId: trainerExists._id,
       height: height || null,
       weight: weight || null,
       password: hashedPassword
@@ -838,5 +1016,55 @@ exports.addClients = async (req, res) => {
     console.error("Error adding client:", err);
     req.session.errors = { server: "Something went wrong while adding the client." };
     return res.redirect("/admin-add-clients");
+  }
+};
+
+exports.clientsList = async (req, res) => {
+  try {
+    let page = parseInt(req.query.page) || 1;
+    let limit = 1;
+    let skip = (page - 1) * limit;
+
+    const totalClients = await Client.countDocuments();
+
+    const clients = await Client.aggregate([
+      {
+        $lookup: {
+          from: "branches",
+          localField: "branchId",
+          foreignField: "_id",
+          as: "branchInfo"
+        }
+      },
+      { $unwind: { path: "$branchInfo", preserveNullAndEmptyArrays: true } },
+      {
+        $lookup: {
+          from: "trainers",
+          localField: "trainerId",
+          foreignField: "_id",
+          as: "trainerInfo"
+        }
+      },
+      { $unwind: { path: "$trainerInfo", preserveNullAndEmptyArrays: true } },
+      {
+        $project: {
+          name: 1,
+          email: 1,
+          phone: 1,
+          branch: "$branchInfo.name",
+          trainer: "$trainerInfo.name"
+        }
+      },
+      { $skip: skip },
+      { $limit: limit }
+    ]);
+
+    res.status(200).json({
+      clients,
+      totalPages: Math.ceil(totalClients / limit),
+      currentPage: page
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Server Error" });
   }
 };

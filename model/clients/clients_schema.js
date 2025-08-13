@@ -44,15 +44,11 @@ const schema = new mongoose.Schema({
   },
   trainerId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Trainer',
+    ref: 'trainer',
   },
   branchId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Branch',
-  },
-  membershipId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Membership',
+    ref: 'branch',
   },
   status: {
     type: String,

@@ -97,64 +97,64 @@
                         <span class="menu-title">Dashboard</span>
                     </a>
                 </li>
-                          <% if (isSuperAdminAuthenticated) { %>
-                <li class="nav-item menu-items">
-                    <a class="nav-link" href="/superadmin-admin-list">
-                        <span class="menu-icon">
-                            <i class="mdi mdi-account-key"></i>
-                        </span>
-                        <span class="menu-title">Admins</span>
-                    </a>
-                </li>
-            <% } %>
-            <li class="nav-item menu-items">
-                <a class="nav-link" href="/admin-branches-list">
-                <span class="menu-icon">
-                    <i class="mdi mdi-domain"></i>
-                </span>
-                <span class="menu-title">Branches</span>
-                </a> 
-            </li>
-            <li class="nav-item menu-items">
-                <a class="nav-link" href="/admin-trainers-list">
-                <span class="menu-icon">
-                    <i class="mdi mdi-run-fast"></i>
-                </span>
-                <span class="menu-title">Trainers</span>
-                </a>
-            </li>
-            <li class="nav-item menu-items">
-                <a class="nav-link" href="/admin-clients-list">
-                <span class="menu-icon">
-                    <i class="mdi mdi-account-group"></i>
-                </span>
-                <span class="menu-title">Clients</span>
-                </a>
-            </li>
-            <li class="nav-item menu-items">
-                <a class="nav-link" href="#">
-                <span class="menu-icon">
-                    <i class="mdi mdi-credit-card"></i>
-                </span>
-                <span class="menu-title">Payments</span>
-                </a>
-            </li>
-            <li class="nav-item menu-items">
-                <a class="nav-link" href="#">
-                <span class="menu-icon">
-                    <i class="mdi mdi-cash-multiple"></i>
-                </span>
-                <span class="menu-title">Salary</span>
-                </a>
-            </li>
-            <li class="nav-item menu-items">
-                <a class="nav-link" href="#">
-                <span class="menu-icon">
-                    <i class="mdi mdi-calendar-check"></i>
-                </span>
-                <span class="menu-title">Attendance</span>
-                </a>
-            </li>
+                <% if (isSuperAdminAuthenticated) { %>
+                    <li class="nav-item menu-items">
+                        <a class="nav-link" href="/superadmin-admin-list">
+                            <span class="menu-icon">
+                                <i class="mdi mdi-account-key"></i>
+                            </span>
+                            <span class="menu-title">Admins</span>
+                        </a>
+                    </li>
+                    <% } %>
+                        <li class="nav-item menu-items">
+                            <a class="nav-link" href="/admin-branches-list">
+                                <span class="menu-icon">
+                                    <i class="mdi mdi-domain"></i>
+                                </span>
+                                <span class="menu-title">Branches</span>
+                            </a>
+                        </li>
+                        <li class="nav-item menu-items">
+                            <a class="nav-link" href="/admin-trainers-list">
+                                <span class="menu-icon">
+                                    <i class="mdi mdi-run-fast"></i>
+                                </span>
+                                <span class="menu-title">Trainers</span>
+                            </a>
+                        </li>
+                        <li class="nav-item menu-items">
+                            <a class="nav-link" href="/admin-clients-list">
+                                <span class="menu-icon">
+                                    <i class="mdi mdi-account-group"></i>
+                                </span>
+                                <span class="menu-title">Clients</span>
+                            </a>
+                        </li>
+                        <li class="nav-item menu-items">
+                            <a class="nav-link" href="#">
+                                <span class="menu-icon">
+                                    <i class="mdi mdi-credit-card"></i>
+                                </span>
+                                <span class="menu-title">Payments</span>
+                            </a>
+                        </li>
+                        <li class="nav-item menu-items">
+                            <a class="nav-link" href="#">
+                                <span class="menu-icon">
+                                    <i class="mdi mdi-cash-multiple"></i>
+                                </span>
+                                <span class="menu-title">Salary</span>
+                            </a>
+                        </li>
+                        <li class="nav-item menu-items">
+                            <a class="nav-link" href="#">
+                                <span class="menu-icon">
+                                    <i class="mdi mdi-calendar-check"></i>
+                                </span>
+                                <span class="menu-title">Attendance</span>
+                            </a>
+                        </li>
             </ul>
         </nav>
         <!-- partial -->
@@ -375,7 +375,7 @@
                         <h3 class="page-title"> Clients List </h3>
                         <nav aria-label="breadcrumb">
                             <ol class="breadcrumb">
-                                <li class="breadcrumb-item"><a href="#"> Admin</a></li>
+                                <li class="breadcrumb-item"><a href="#"> GYM </a></li>
                                 <li class="breadcrumb-item active" aria-current="page">Clients List</li>
                             </ol>
                         </nav>
@@ -391,29 +391,41 @@
                             <!-- <h4 class="card-title">Hoverable Table</h4>
                             <p class="card-description"> Add class <code>.table-hover</code>
                             </p> -->
-
-                            <div class="table-responsive">
-                                <table class="table table-hover">
-                                    <thead>
-                                        <tr>
-                                            <th>User</th>
-                                            <th>Email</th>
-                                            <th>Branch</th>
-                                            <th>Edit</th>
-                                            <th>Delete</th>
-                                        </tr>
-                                    </thead>
+                            <% if (clients.length===0) { %>
+                                <tbody>
+                                    <p>No Clients found.</p>
+                                </tbody>
+                                <% } else { %>
+                                    <div class="table-responsive">
+                                        <table class="table table-hover">
+                                            <thead>
+                                                <tr>
+                                                    <th>User</th>
+                                                    <th>Email</th>
+                                                    <th>Phone</th>
+                                                    <th>Branch</th>
+                                                    <th>Trainer</th>
+                                                    <th>Edit</th>
+                                                    <th>Delete</th>
+                                                </tr>
+                                            </thead>
                                             <tbody>
-                                                <%# trainers.forEach(trainer=> { %>
+                                                <% clients.forEach(client=> { %>
                                                     <tr>
                                                         <td>
-                                                            <%#= trainer.name %>
+                                                            <%= client.name %>
                                                         </td>
                                                         <td>
-                                                            <%#= trainer.email %>
+                                                            <%= client.email %>
                                                         </td>
                                                         <td>
-                                                            <%#= trainer.branchName %>
+                                                            <%= client.phone %>
+                                                        </td>
+                                                        <td>
+                                                            <%= client.trainer %>
+                                                        </td>
+                                                        <td>
+                                                            <%= client.branch %>
                                                         </td>
                                                         <td><button type="button"
                                                                 class="btn btn-outline-secondary btn-icon-text"> Edit <i
@@ -424,13 +436,27 @@
                                                                     class="mdi mdi-bucket btn-icon-prepend"></i> Delete
                                                             </button></td>
                                                     </tr>
-                                                    <%# }) %>
+                                                    <% }) %>
                                             </tbody>
-                                            <%# } %>
-                                </table>
-                            </div>
+                                            <% } %>
+                                        </table>
+
+
+                                    </div>
                         </div>
+                        
                     </div>
+                    <nav class="d-flex justify-content-center mt-3">
+                                            <ul class="pagination">
+                                                <% for(let i=1; i <=totalPages; i++) { %>
+                                                    <li class="page-item <%= i === currentPage ? 'active' : '' %>">
+                                                        <a class="page-link" href="?page=<%= i %>">
+                                                            <%= i %>
+                                                        </a>
+                                                    </li>
+                                                    <% } %>
+                                            </ul>
+                                        </nav>
                 </div>
                 <!-- content-wrapper ends -->
                 <!-- partial:../../partials/_footer.html -->

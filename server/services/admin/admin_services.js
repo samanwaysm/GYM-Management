@@ -94,18 +94,45 @@ exports.admin_profile=(req,res)=>{
     });
 }
 
-exports.branches_list=(req,res)=>{
-    const { errors, isSuperAdminAuthenticated, user,userId } = req.session
-    delete req.session.errors
-    axios.get(`http://localhost:${process.env.PORT}/admin/branch-list`,{params: { userId }})
-    .then(function (response){
-        console.log(response.data);
-        res.render("admin/branches_list",{branches: response.data,errors, isSuperAdminAuthenticated,user,userId});
+// exports.branches_list=(req,res)=>{
+//     const { errors, isSuperAdminAuthenticated, user,userId } = req.session
+//     delete req.session.errors
+//     axios.get(`http://localhost:${process.env.PORT}/admin/branch-list`,{params: { userId }})
+//     .then(function (response){
+//         console.log(response.data);
+//         res.render("admin/branches_list",{branches: response.data,errors, isSuperAdminAuthenticated,user,userId});
+//     })
+//     .catch(err => {
+//         res.send(err);
+//     });
+// }
+
+exports.branches_list = (req, res) => {
+    const { errors, isSuperAdminAuthenticated, user, userId } = req.session;
+    delete req.session.errors;
+
+    const page = req.query.page || 1; // get page from query params
+
+    axios.get(`http://localhost:${process.env.PORT}/admin/branch-list?page=${page}`, {
+        params: { userId }
+    })
+    .then(function (response) {
+        const { branches, totalPages, currentPage } = response.data;
+        res.render("admin/branches_list", {
+            branches,
+            totalPages,
+            currentPage,
+            errors,
+            isSuperAdminAuthenticated,
+            user,
+            userId
+        });
     })
     .catch(err => {
         res.send(err);
     });
-}
+};
+
 
 exports.add_branch = (req, res) => {
     const { errors, isSuperAdminAuthenticated, user, userId } = req.session
@@ -118,18 +145,43 @@ exports.add_branch = (req, res) => {
     })
 }
 
-exports.trainers_list=(req,res)=>{
-    const { errors, isSuperAdminAuthenticated, user,userId } = req.session
-    delete req.session.errors
-    axios.get(`http://localhost:${process.env.PORT}/admin/trainers-list`)
-    .then(function (response){
-        console.log(response.data);
-        res.render("admin/trainers_list",{trainers: response.data,errors, isSuperAdminAuthenticated,user,userId});
-    })
-    .catch(err => {
-        res.send(err);
-    });
-}
+// exports.trainers_list=(req,res)=>{
+//     const { errors, isSuperAdminAuthenticated, user,userId } = req.session
+//     delete req.session.errors
+//     axios.get(`http://localhost:${process.env.PORT}/admin/trainers-list`)
+//     .then(function (response){
+//         console.log(response.data);
+//         res.render("admin/trainers_list",{trainers: response.data,errors, isSuperAdminAuthenticated,user,userId});
+//     })
+//     .catch(err => {
+//         res.send(err);
+//     });
+// }
+
+exports.trainers_list = (req, res) => {
+    const { errors, isSuperAdminAuthenticated, user, userId } = req.session;
+    delete req.session.errors;
+
+    const page = req.query.page || 1;
+
+    axios.get(`http://localhost:${process.env.PORT}/admin/trainers-list?page=${page}`)
+        .then(function (response) {
+            const { trainers, totalPages, currentPage } = response.data;
+            res.render("admin/trainers_list", {
+                trainers,
+                totalPages,
+                currentPage,
+                errors,
+                isSuperAdminAuthenticated,
+                user,
+                userId
+            });
+        })
+        .catch(err => {
+            res.send(err);
+        });
+};
+
 
 exports.add_trainers=(req,res)=>{
     const { errors, isSuperAdminAuthenticated, user,userId } = req.session
@@ -144,18 +196,44 @@ exports.add_trainers=(req,res)=>{
     });
 }
 
-exports.clients_list=(req,res)=>{
-    const { errors, isSuperAdminAuthenticated, user,userId } = req.session
-    delete req.session.errors
-    axios.get(`http://localhost:${process.env.PORT}/admin/clients-list`)
-    .then(function (response){
-        console.log(response.data);
-        res.render("admin/clients_list",{admin: response.data,errors, isSuperAdminAuthenticated,user,userId});
-    })
-    .catch(err => {
-        res.send(err);
-    });
-}
+exports.clients_list = (req, res) => {
+    const { errors, isSuperAdminAuthenticated, user, userId } = req.session;
+    delete req.session.errors;
+
+    const page = req.query.page || 1; // get page from URL query
+
+    axios.get(`http://localhost:${process.env.PORT}/admin/clients-list?page=${page}`)
+        .then(function (response) {
+            const { clients, totalPages, currentPage } = response.data;
+            res.render("admin/clients_list", {
+                clients,
+                totalPages,
+                currentPage,
+                errors,
+                isSuperAdminAuthenticated,
+                user,
+                userId
+            });
+        })
+        .catch(err => {
+            res.send(err);
+        });
+};
+
+
+// exports.clients_list=(req,res)=>{
+//     const { errors, isSuperAdminAuthenticated, user,userId } = req.session
+//     delete req.session.errors
+//     axios.get(`http://localhost:${process.env.PORT}/admin/clients-list`)
+//     .then(function (response){
+//         console.log(response.data);
+//         res.render("admin/clients_list",{clients: response.data,errors, isSuperAdminAuthenticated,user,userId});
+//     })
+//     .catch(err => {
+//         res.send(err);
+//     });
+// }
+
 
 // exports.add_clients=(req,res)=>{
 //     const { errors, isSuperAdminAuthenticated, user, userId } = req.session;
