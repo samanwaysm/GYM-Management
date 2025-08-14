@@ -271,3 +271,28 @@ exports.add_clients=(req,res)=>{
         res.send(err);
     });
 }
+
+exports.package_list = (req, res) => {
+    const { errors, isSuperAdminAuthenticated, isAnyAdminAuthenticated, user, userId } = req.session
+    delete req.session.errors
+    res.render("admin/package_list",{errors, isSuperAdminAuthenticated, isAnyAdminAuthenticated, user, userId},(err, html) => {
+        if (err) {
+            console.log(err);
+        }
+        res.send(html)
+    })
+}
+
+// exports.package_list=(req,res)=>{
+//     const { errors, isSuperAdminAuthenticated, user, userId } = req.session
+//     delete req.session.errors
+//     axios.get(`http://localhost:${process.env.PORT}/admin/package-list`)
+//     .then(function (response){
+//         res.render("admin/package_list",{packages: response.data.data, errors, isSuperAdminAuthenticated, user, userId});
+//         console.log(response.data.data);
+        
+//     })
+//     .catch(err => {
+//         res.send(err);
+//     });
+// }

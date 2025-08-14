@@ -6,6 +6,7 @@ const Mailgen = require('mailgen');
 const Admin = require("../../../model/admin/admin_schema");
 const OtpDb = require("../../../model/admin/otp_schema")
 const Branch = require("../../../model/admin/branch_schema");
+const Package = require("../../../model/admin/package_schema")
 
 const Trainer = require("../../../model/trainers/trainers_schema");
 const Client = require("../../../model/clients/clients_schema")
@@ -1066,5 +1067,50 @@ exports.clientsList = async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ message: "Server Error" });
+  }
+};
+
+exports.getPackageList = async (req, res) => {
+    try {
+        const packages = await Package.find().sort({ createdAt: -1 }); // Latest first
+        console.log(packages);
+        res.status(200).json({
+            success: true,
+            count: packages.length,
+            data: packages
+        });
+        
+    } catch (error) {
+        console.error("Error fetching package list:", error);
+        res.status(500).json({
+            success: false,
+            message: "Server error while fetching package list"
+        });
+    }
+};
+
+
+exports.addPackages = async (req, res) => {
+  try {
+    const { packageType, price } = req.body;
+    console.log(req.body);
+    
+    // Validate required fields
+    if (!packageType || !price) {
+      return res.status(400).json({ success: false, message: "Duration and price are required." });
+    }
+
+    // Create and save new package
+    const newPackage = new Package({ packageType, price });
+    await newPackage.save();
+
+    res.status(201).json({
+      success: true,
+      message: "Package added successfully.",
+      package: newPackage
+    });
+  } catch (error) {
+    console.error("Error adding package:", error);
+    res.status(500).json({ success: false, message: "Server error." });
   }
 };

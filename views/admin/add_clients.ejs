@@ -386,9 +386,9 @@
                           <div class="col-sm-9">
                             <input type="text" id="name" name="name" class="form-control" />
                             <% if (errors && errors.name) { %>
-                                <div class="text-danger small">
-                              <%= errors.name %>
-                                </div>
+                              <div class="text-danger small">
+                                <%= errors.name %>
+                              </div>
                               <% } %>
                           </div>
                         </div>
@@ -399,9 +399,9 @@
                           <div class="col-sm-9">
                             <input type="email" id="email" name="email" class="form-control" />
                             <% if (errors && errors.email) { %>
-                                <div class="text-danger small">
-                              <%= errors.email %>
-                                </div>
+                              <div class="text-danger small">
+                                <%= errors.email %>
+                              </div>
                               <% } %>
                           </div>
                         </div>
@@ -414,9 +414,9 @@
                           <div class="col-sm-9">
                             <input type="tel" id="phone" name="phone" class="form-control" />
                             <% if (errors && errors.phone) { %>
-                                <div class="text-danger small">
-                              <%= errors.phone %>
-                                </div>
+                              <div class="text-danger small">
+                                <%= errors.phone %>
+                              </div>
                               <% } %>
                           </div>
                         </div>
@@ -425,7 +425,8 @@
                         <div class="form-group row">
                           <label class="col-sm-3 col-form-label">Alt.Phone : </label>
                           <div class="col-sm-9">
-                            <input type="tel" id="altphone" name="altphone" class="form-control" placeholder="(optional)"/>
+                            <input type="tel" id="altphone" name="altphone" class="form-control"
+                              placeholder="(optional)" />
                           </div>
                         </div>
                       </div>
@@ -442,9 +443,9 @@
                               <option class="form-control" value="Other">Other</option>
                             </select>
                             <% if (errors && errors.gender) { %>
-                                <div class="text-danger small">
-                              <%= errors.gender %>
-                                </div>
+                              <div class="text-danger small">
+                                <%= errors.gender %>
+                              </div>
                               <% } %>
                           </div>
                         </div>
@@ -455,9 +456,9 @@
                           <div class="col-sm-9">
                             <input type="number" id="age" name="age" class="form-control" />
                             <% if (errors && errors.age) { %>
-                                <div class="text-danger small">
-                              <%= errors.age %>
-                                </div>
+                              <div class="text-danger small">
+                                <%= errors.age %>
+                              </div>
                               <% } %>
                           </div>
                         </div>
@@ -516,9 +517,9 @@
                           <div class="col-sm-9">
                             <input type="password" id="password" name="password" class="form-control" />
                             <% if (errors && errors.password) { %>
-                                <div class="text-danger small">
-                              <%= errors.password %>
-                                </div>
+                              <div class="text-danger small">
+                                <%= errors.password %>
+                              </div>
                               <% } %>
                           </div>
                         </div>
@@ -531,6 +532,46 @@
                   </form>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal fade" id="membershipModal" tabindex="-1" aria-labelledby="membershipModalLabel"
+          aria-hidden="true">
+          <div class="modal-dialog">
+            <div class="modal-content">
+
+              <div class="modal-header">
+                <h5 class="modal-title" id="membershipModalLabel">Membership & Payment Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+              </div>
+
+              <div class="modal-body">
+                <div class="mb-3">
+                  <label for="membership" class="form-label">Membership Plan</label>
+                  <select class="form-control" id="membership" name="membership" required>
+                    <option value="">-- Select Membership --</option>
+                    <option value="Monthly">Monthly</option>
+                    <option value="Quarterly">Quarterly</option>
+                    <option value="Yearly">Yearly</option>
+                  </select>
+                </div>
+
+                <div class="mb-3">
+                  <label for="paymentMethod" class="form-label">Payment Method</label>
+                  <select class="form-control" id="paymentMethod" name="paymentMethod" required>
+                    <option value="">-- Select Payment Method --</option>
+                    <option value="Cash">Cash</option>
+                    <option value="Card">Card</option>
+                    <option value="UPI">UPI</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="modal-footer">
+                <button type="button" id="confirmSave" class="btn btn-success">Save & Submit</button>
+              </div>
+
             </div>
           </div>
         </div>
@@ -548,6 +589,35 @@
     </div>
     <!-- page-body-wrapper ends -->
   </div>
+  <script>
+document.addEventListener("DOMContentLoaded", () => {
+  const form = document.getElementById("admin_register");
+  const membershipModal = new bootstrap.Modal(document.getElementById("membershipModal"));
+  const confirmSave = document.getElementById("confirmSave");
+
+  // When clicking Submit → show modal instead
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    membershipModal.show();
+  });
+
+  // When clicking Save & Submit in modal → actually submit
+  confirmSave.addEventListener("click", function () {
+    // Validate modal fields
+    const membership = document.getElementById("membership").value;
+    const paymentMethod = document.getElementById("paymentMethod").value;
+
+    if (!membership || !paymentMethod) {
+      alert("Please select both membership and payment method.");
+      return;
+    }
+
+    membershipModal.hide();
+    form.submit();
+  });
+});
+</script>
+
   <!-- container-scroller -->
   <!-- plugins:js -->
   <script src="/vendors/js/vendor.bundle.base.js"></script>
