@@ -116,6 +116,14 @@
                             </a>
                         </li>
                         <li class="nav-item menu-items">
+                            <a class="nav-link" href="/admin-package-list">
+                                <span class="menu-icon">
+                                    <i class="mdi mdi-run-fast"></i>
+                                </span>
+                                <span class="menu-title">Package</span>
+                            </a>
+                        </li>
+                        <li class="nav-item menu-items">
                             <a class="nav-link" href="/admin-trainers-list">
                                 <span class="menu-icon">
                                     <i class="mdi mdi-run-fast"></i>
@@ -444,19 +452,19 @@
 
                                     </div>
                         </div>
-                        
+
                     </div>
                     <nav class="d-flex justify-content-center mt-3">
-                                            <ul class="pagination">
-                                                <% for(let i=1; i <=totalPages; i++) { %>
-                                                    <li class="page-item <%= i === currentPage ? 'active' : '' %>">
-                                                        <a class="page-link" href="?page=<%= i %>">
-                                                            <%= i %>
-                                                        </a>
-                                                    </li>
-                                                    <% } %>
-                                            </ul>
-                                        </nav>
+                        <ul class="pagination">
+                            <% for(let i=1; i <=totalPages; i++) { %>
+                                <li class="page-item <%= i === currentPage ? 'active' : '' %>">
+                                    <a class="page-link" href="?page=<%= i %>">
+                                        <%= i %>
+                                    </a>
+                                </li>
+                                <% } %>
+                        </ul>
+                    </nav>
                 </div>
                 <!-- content-wrapper ends -->
                 <!-- partial:../../partials/_footer.html -->
