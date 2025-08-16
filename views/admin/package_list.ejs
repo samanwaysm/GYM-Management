@@ -433,6 +433,11 @@
                                             required>
                                     </div>
                                     <div class="form-group">
+                                        <label>Duration in Days</label>
+                                        <input type="number" class="form-control" id="durationInDays" name="durationInDays" required
+                                            min="0">
+                                    </div>
+                                    <div class="form-group">
                                         <label>Price</label>
                                         <input type="number" class="form-control" id="price" name="price" required
                                             min="0">
@@ -482,15 +487,11 @@
 
                     // If backend sends {packages: [...]}, use data.packages
                     const packageList = Array.isArray(data) ? data : data.packages;
-                    console.log('data ------- ', data);
-                    console.log('pkg -------- ', packageList);
-
-
-
                     data.data.forEach((pkg, index) => {
                         tbody.innerHTML += `
                 <tr>
                     <td>${pkg.packageType}</td>
+                    <td>${pkg.durationInDays}</td>
                     <td>${pkg.price}</td>
                     <td><button class="btn btn-outline-secondary">Edit</button></td>
                     <td><button class="btn btn-outline-danger">Delete</button></td>
@@ -504,9 +505,10 @@
         // Add new package
         function addPackage() {
             const packageType = document.getElementById("packageType").value.trim();
+            const durationInDays = document.getElementById("durationInDays").value.trim();
             const price = document.getElementById("price").value.trim();
 
-            if (!packageType || !price) {
+            if (!packageType || !price || !durationInDays) {
                 Swal.fire("Error", "Package Type and Price are required", "error");
                 return;
             }
@@ -514,7 +516,7 @@
             fetch("/admin/add-packages", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ packageType, price })
+                body: JSON.stringify({ packageType, durationInDays, price })
             })
                 .then(res => res.json())
                 .then(data => {

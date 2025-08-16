@@ -1199,7 +1199,7 @@ exports.getPackageList = async (req, res) => {
 
 exports.addPackages = async (req, res) => {
   try {
-    const { packageType, price } = req.body;
+    const { packageType, durationInDays, price } = req.body;
     console.log(req.body);
     
     // Validate required fields
@@ -1208,7 +1208,7 @@ exports.addPackages = async (req, res) => {
     }
 
     // Create and save new package
-    const newPackage = new Package({ packageType, price });
+    const newPackage = new Package({ packageType, durationInDays, price });
     await newPackage.save();
 
     res.status(201).json({

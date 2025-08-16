@@ -55,6 +55,10 @@ const schema = new mongoose.Schema({
     enum: ['Active', 'Inactive', 'Cancelled'],
     default: 'Active',
   },
+  isActive: {
+    type: Boolean,
+    default: true
+  }
 });
 
 const clients_schema = mongoose.model('client', schema);

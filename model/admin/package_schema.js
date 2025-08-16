@@ -6,6 +6,11 @@ const schema = new mongoose.Schema({
         type: String,
         required: true,
     },
+    durationInDays: {
+      type: Number,
+      required: true,
+      min: 1, // at least 1 day
+    },
     price: {
         type: Number,
         required: true,
