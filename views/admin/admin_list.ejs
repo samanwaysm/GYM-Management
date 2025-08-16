@@ -405,9 +405,10 @@
                             <!-- <h4 class="card-title">Hoverable Table</h4>
                             <p class="card-description"> Add class <code>.table-hover</code>
                             </p> -->
-                            <% if (admins.length===0) { %>
-                                <p>No admins found.</p>
-                                <% } else { %>
+                                    <!-- Search box -->
+                                    <div class="mb-3">
+                                        <input type="text" id="searchBox" class="form-control" placeholder="Search by name, email, phone...">
+                                    </div>
                                     <div class="table-responsive">
                                         <table class="table table-hover">
                                             <thead>
@@ -420,38 +421,9 @@
                                                 </tr>
                                             </thead>
 
-                                            <tbody>
-                                                <% admins.forEach(admin=> { %>
-                                                    <tr>
-                                                        <td>
-                                                            <%= admin.username %>
-                                                        </td>
-                                                        <td>
-                                                            <%= admin.email %>
-                                                        </td>
-                                                        <td>
-                                                            <%= admin.phone %>
-                                                        </td>
-                                                        <td><button type="button"
-                                                                class="btn btn-outline-secondary btn-icon-text"> Edit <i
-                                                                    class="mdi mdi-file-check btn-icon-append"></i></button>
-                                                        </td>
-                                                        <td>
-                                                            <button type="button"
-                                                                class="btn btn-outline-danger btn-icon-text"
-                                                                onclick="confirmUnlist('<%= admin._id %>')">
-                                                                <i class="mdi mdi-bucket btn-icon-prepend"></i> Unlist
-                                                            </button>
-                                                        </td>
+                                            <tbody id="adminsTableBody">
 
-                                                        <!-- <td><button type="button"
-                                                                class="btn btn-outline-danger btn-icon-text"><i
-                                                                    class="mdi mdi-bucket btn-icon-prepend"></i> Unlist
-                                                            </button></td> -->
-                                                    </tr>
-                                                    <% }) %>
                                             </tbody>
-                                            <% } %>
                                         </table>
                                     </div>
                         </div>
@@ -472,51 +444,7 @@
         <!-- page-body-wrapper ends -->
     </div>
     <!-- container-scroller -->
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script>
-        function confirmUnlist(branchId) {
-            console.log(hiiiiiiiii);
 
-            const swalWithBootstrapButtons = Swal.mixin({
-                customClass: {
-                    confirmButton: "btn btn-success",
-                    cancelButton: "btn btn-danger"
-                },
-                buttonsStyling: false
-            });
-
-            swalWithBootstrapButtons.fire({
-                title: "Are you sure?",
-                text: "You won't be able to revert this!",
-                icon: "warning",
-                showCancelButton: true,
-                confirmButtonText: "Yes, unlist it!",
-                cancelButtonText: "No, cancel!",
-                reverseButtons: true
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    // Call your backend to unlist
-                    fetch(`/admin/branches/${branchId}/unlist`, { method: 'POST' })
-                        .then(res => res.json())
-                        .then(data => {
-                            swalWithBootstrapButtons.fire({
-                                title: "Unlisted!",
-                                text: "The branch has been unlisted.",
-                                icon: "success"
-                            }).then(() => {
-                                location.reload(); // reload table
-                            });
-                        });
-                } else if (result.dismiss === Swal.DismissReason.cancel) {
-                    swalWithBootstrapButtons.fire({
-                        title: "Cancelled",
-                        text: "The branch remains active.",
-                        icon: "error"
-                    });
-                }
-            });
-        }
-    </script>
     <!-- plugins:js -->
     <script src="/vendors/js/vendor.bundle.base.js"></script>
     <!-- endinject -->
@@ -536,7 +464,62 @@
     <script src="/js/typeahead.js"></script>
     <script src="/js/select2.js"></script>
     <!-- End custom js for this page -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        // Fetch admins via AJAX
+        function loadAdmins(query = "") {
+            $.ajax({
+                url: "/superadmin/admin-list",   // backend API route
+                type: "GET",
+                data: { search: query },    // send search query
+                success: function (response) {
+                    console.log(response);
+                    
+                    let rows = "";
 
+                    if (response.length === 0) {
+                        rows = `<tr><td colspan="5" class="text-center">No admins found.</td></tr>`;
+                    } else {
+                        response.forEach(admin => {
+                            rows += `
+                            <tr>
+                                <td>${admin.name}</td>
+                                <td>${admin.email}</td>
+                                <td>${admin.phone}</td>
+                                <td>
+                                    <button type="button" class="btn btn-outline-secondary btn-icon-text"> 
+                                        Edit <i class="mdi mdi-file-check btn-icon-append"></i>
+                                    </button>
+                                </td>
+                                <td>
+                                    <button type="button" class="btn btn-outline-danger btn-icon-text" 
+                                        onclick="confirmUnlist('${admin._id}')">
+                                        <i class="mdi mdi-bucket btn-icon-prepend"></i> Unlist
+                                    </button>
+                                </td>
+                            </tr>`;
+                        });
+                    }
+
+                    $("#adminsTableBody").html(rows);
+                },
+                error: function () {
+                    $("#adminsTableBody").html(`<tr><td colspan="5" class="text-center text-danger">Error loading admins.</td></tr>`);
+                }
+            });
+        }
+
+        // Load all admins on page load
+        $(document).ready(function () {
+            loadAdmins();
+
+            // Search functionality
+            $("#searchBox").on("keyup", function () {
+                const query = $(this).val();
+                loadAdmins(query);
+            });
+        });
+    </script>
 
 </body>
 

@@ -97,72 +97,72 @@
                         <span class="menu-title">Dashboard</span>
                     </a>
                 </li>
-                          <% if (isSuperAdminAuthenticated) { %>
-                <li class="nav-item menu-items">
-                    <a class="nav-link" href="/superadmin-admin-list">
-                        <span class="menu-icon">
-                            <i class="mdi mdi-account-key"></i>
-                        </span>
-                        <span class="menu-title">Admins</span>
-                    </a>
-                </li>
-            <% } %>
-            <li class="nav-item menu-items">
-                <a class="nav-link" href="/admin-branches-list">
-                <span class="menu-icon">
-                    <i class="mdi mdi-domain"></i>
-                </span>
-                <span class="menu-title">Branches</span>
-                </a> 
-            </li>
-            <li class="nav-item menu-items">
-                <a class="nav-link" href="/admin-package-list">
-                <span class="menu-icon">
-                    <i class="mdi mdi-package-variant-closed"></i>
-                </span>
-                <span class="menu-title">Package</span>
-                </a>
-            </li>
-            <li class="nav-item menu-items">
-                <a class="nav-link" href="/admin-trainers-list">
-                <span class="menu-icon">
-                    <i class="mdi mdi-run-fast"></i>
-                </span>
-                <span class="menu-title">Trainers</span>
-                </a>
-            </li>
-            <li class="nav-item menu-items">
-                <a class="nav-link" href="/admin-clients-list">
-                <span class="menu-icon">
-                    <i class="mdi mdi-account-group"></i>
-                </span>
-                <span class="menu-title">Clients</span>
-                </a>
-            </li>
-            <li class="nav-item menu-items">
-                <a class="nav-link" href="#">
-                <span class="menu-icon">
-                    <i class="mdi mdi-credit-card"></i>
-                </span>
-                <span class="menu-title">Payments</span>
-                </a>
-            </li>
-            <li class="nav-item menu-items">
-                <a class="nav-link" href="#">
-                <span class="menu-icon">
-                    <i class="mdi mdi-cash-multiple"></i>
-                </span>
-                <span class="menu-title">Salary</span>
-                </a>
-            </li>
-            <li class="nav-item menu-items">
-                <a class="nav-link" href="#">
-                <span class="menu-icon">
-                    <i class="mdi mdi-calendar-check"></i>
-                </span>
-                <span class="menu-title">Attendance</span>
-                </a>
-            </li>
+                <% if (isSuperAdminAuthenticated) { %>
+                    <li class="nav-item menu-items">
+                        <a class="nav-link" href="/superadmin-admin-list">
+                            <span class="menu-icon">
+                                <i class="mdi mdi-account-key"></i>
+                            </span>
+                            <span class="menu-title">Admins</span>
+                        </a>
+                    </li>
+                    <% } %>
+                        <li class="nav-item menu-items">
+                            <a class="nav-link" href="/admin-branches-list">
+                                <span class="menu-icon">
+                                    <i class="mdi mdi-domain"></i>
+                                </span>
+                                <span class="menu-title">Branches</span>
+                            </a>
+                        </li>
+                        <li class="nav-item menu-items">
+                            <a class="nav-link" href="/admin-package-list">
+                                <span class="menu-icon">
+                                    <i class="mdi mdi-package-variant-closed"></i>
+                                </span>
+                                <span class="menu-title">Package</span>
+                            </a>
+                        </li>
+                        <li class="nav-item menu-items">
+                            <a class="nav-link" href="/admin-trainers-list">
+                                <span class="menu-icon">
+                                    <i class="mdi mdi-run-fast"></i>
+                                </span>
+                                <span class="menu-title">Trainers</span>
+                            </a>
+                        </li>
+                        <li class="nav-item menu-items">
+                            <a class="nav-link" href="/admin-clients-list">
+                                <span class="menu-icon">
+                                    <i class="mdi mdi-account-group"></i>
+                                </span>
+                                <span class="menu-title">Clients</span>
+                            </a>
+                        </li>
+                        <li class="nav-item menu-items">
+                            <a class="nav-link" href="#">
+                                <span class="menu-icon">
+                                    <i class="mdi mdi-credit-card"></i>
+                                </span>
+                                <span class="menu-title">Payments</span>
+                            </a>
+                        </li>
+                        <li class="nav-item menu-items">
+                            <a class="nav-link" href="#">
+                                <span class="menu-icon">
+                                    <i class="mdi mdi-cash-multiple"></i>
+                                </span>
+                                <span class="menu-title">Salary</span>
+                            </a>
+                        </li>
+                        <li class="nav-item menu-items">
+                            <a class="nav-link" href="#">
+                                <span class="menu-icon">
+                                    <i class="mdi mdi-calendar-check"></i>
+                                </span>
+                                <span class="menu-title">Attendance</span>
+                            </a>
+                        </li>
             </ul>
         </nav>
         <!-- partial -->
@@ -396,12 +396,10 @@
                     </div>
                     <div class="card">
                         <div class="card-body">
-                            <!-- <h4 class="card-title">Hoverable Table</h4>
-                            <p class="card-description"> Add class <code>.table-hover</code>
-                            </p> -->
-                            <% if (branches.length===0) { %>
-                                        <p>No Branches found.</p>
-                                        <% } else { %>
+                            <!-- Search Box -->
+                            <div class="mb-3">
+                                <input type="text" id="searchBox" class="form-control" placeholder="Search branch...">
+                            </div>
                             <div class="table-responsive">
                                 <table class="table table-hover">
                                     <thead>
@@ -413,43 +411,18 @@
                                             <th>ShutDown</th>
                                         </tr>
                                     </thead>
-                                    
-                                            <tbody>
-                                                <% branches.forEach(branch=> { %>
-                                                    <tr>
-                                                        <td>
-                                                            <%= branch.name %>
-                                                        </td>
-                                                        <td>
-                                                            <%= branch.trainersCount %>
-                                                        </td>
-                                                        <td>
-                                                            <%= branch.clientsCount %>
-                                                        </td>
-                                                        <td><button type="button"
-                                                                class="btn btn-outline-secondary btn-icon-text"> Edit <i
-                                                                    class="mdi mdi-file-check btn-icon-append"></i></button>
-                                                        </td>
-                                                        <td><button type="button"
-                                                                class="btn btn-outline-danger btn-icon-text"><i
-                                                                    class="mdi mdi-bucket btn-icon-prepend"></i> ShutDown
-                                                            </button></td>
-                                                    </tr>
-                                                    <% }) %>
-                                            </tbody>
-                                            <% } %>
+                                    <tbody id="branchesTableBody">
+                                        <!-- Rows inserted by AJAX -->
+                                    </tbody>
                                 </table>
                             </div>
                         </div>
                     </div>
+                    <!-- Pagination -->
                     <nav class="d-flex justify-content-center mt-3">
-                            <ul class="pagination">
-                                <% for(let i = 1; i <= totalPages; i++) { %>
-                                <li class="page-item <%= i === currentPage ? 'active' : '' %>">
-                                    <a class="page-link" href="?page=<%= i %>"><%= i %></a>
-                                </li>
-                                <% } %>
-                            </ul>
+                        <ul class="pagination" id="pagination">
+                            <!-- Pages inserted by AJAX -->
+                        </ul>
                     </nav>
                 </div>
                 <!-- content-wrapper ends -->
@@ -486,6 +459,73 @@
     <script src="/js/typeahead.js"></script>
     <script src="/js/select2.js"></script>
     <!-- End custom js for this page -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        let currentPage = 1;
+
+        function loadBranches(page = 1, query = "") {
+            $.ajax({
+                url: "/admin/branch-list",  // your backend route
+                type: "GET",
+                data: { page: page, search: query },
+                success: function (res) {
+                    let rows = "";
+                    if (!res.branches || res.branches.length === 0) {
+                        rows = `<tr><td colspan="5" class="text-center">No Branches found.</td></tr>`;
+                    } else {
+                        res.branches.forEach(branch => {
+                            rows += `
+                            <tr>
+                                <td>${branch.name}</td>
+                                <td>${branch.trainersCount}</td>
+                                <td>${branch.clientsCount}</td>
+                                <td>
+                                    <button class="btn btn-outline-secondary btn-icon-text">
+                                        Edit <i class="mdi mdi-file-check btn-icon-append"></i>
+                                    </button>
+                                </td>
+                                <td>
+                                    <button class="btn btn-outline-danger btn-icon-text">
+                                        <i class="mdi mdi-bucket btn-icon-prepend"></i> ShutDown
+                                    </button>
+                                </td>
+                            </tr>`;
+                        });
+                    }
+                    $("#branchesTableBody").html(rows);
+
+                    // Build pagination
+                    let paginationHtml = "";
+                    for (let i = 1; i <= res.totalPages; i++) {
+                        paginationHtml += `
+                        <li class="page-item ${i === res.currentPage ? "active" : ""}">
+                            <a class="page-link" href="javascript:void(0)" onclick="changePage(${i})">${i}</a>
+                        </li>`;
+                    }
+                    $("#pagination").html(paginationHtml);
+                },
+                error: function () {
+                    $("#branchesTableBody").html(`<tr><td colspan="5" class="text-center text-danger">Error loading branches.</td></tr>`);
+                }
+            });
+        }
+
+        function changePage(page) {
+            currentPage = page;
+            const query = $("#searchBox").val();
+            loadBranches(currentPage, query);
+        }
+
+        $(document).ready(function () {
+            loadBranches();
+
+            // Search box
+            $("#searchBox").on("keyup", function () {
+                const query = $(this).val();
+                loadBranches(1, query); // reset to page 1 on search
+            });
+        });
+    </script>
 </body>
 
 </html>

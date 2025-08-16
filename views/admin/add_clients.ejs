@@ -114,12 +114,12 @@
               </a>
             </li>
             <li class="nav-item menu-items">
-                <a class="nav-link" href="/admin-package-list">
+              <a class="nav-link" href="/admin-package-list">
                 <span class="menu-icon">
-                    <i class="mdi mdi-package-variant-closed"></i>
+                  <i class="mdi mdi-package-variant-closed"></i>
                 </span>
                 <span class="menu-title">Package</span>
-                </a>
+              </a>
             </li>
             <li class="nav-item menu-items">
               <a class="nav-link" href="/admin-trainers-list">
@@ -479,11 +479,6 @@
                           <div class="col-sm-9">
                             <select class="form-control" name="branch" id="branch" required>
                               <option class="form-control" value="">-- Select Branch --</option>
-                              <% branches.forEach(branch=> { %>
-                                <option class="form-control" value="<%= branch._id %>">
-                                  <%= branch.name %>
-                                </option>
-                                <% }) %>
                             </select>
                           </div>
                         </div>
@@ -518,22 +513,7 @@
                         </div>
                       </div>
                     </div>
-                    <div class="row">
-                      <div class="col-md-6">
-                        <div class="form-group row">
-                          <label class="col-sm-3 col-form-label">Password : </label>
-                          <div class="col-sm-9">
-                            <input type="password" id="password" name="password" class="form-control" />
-                            <% if (errors && errors.password) { %>
-                              <div class="text-danger small">
-                                <%= errors.password %>
-                              </div>
-                              <% } %>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
+                    
                     <div class="text-center mt-2">
                       <button type="submit" class="btn btn-primary mr-2">Submit</button>
                     </div>
@@ -556,12 +536,9 @@
 
               <div class="modal-body">
                 <div class="mb-3">
-                  <label for="membership" class="form-label">Membership Plan</label>
-                  <select class="form-control" id="membership" name="membership" required>
-                    <option value="">-- Select Membership --</option>
-                    <option value="Monthly">Monthly</option>
-                    <option value="Quarterly">Quarterly</option>
-                    <option value="Yearly">Yearly</option>
+                  <label for="package" class="form-label">Package</label>
+                  <select class="form-control" id="package" name="package" required>
+                    <option value="">-- Select Package --</option>
                   </select>
                 </div>
 
@@ -570,7 +547,6 @@
                   <select class="form-control" id="paymentMethod" name="paymentMethod" required>
                     <option value="">-- Select Payment Method --</option>
                     <option value="Cash">Cash</option>
-                    <option value="Card">Card</option>
                     <option value="UPI">UPI</option>
                   </select>
                 </div>
@@ -598,33 +574,57 @@
     <!-- page-body-wrapper ends -->
   </div>
   <script>
-document.addEventListener("DOMContentLoaded", () => {
-  const form = document.getElementById("admin_register");
-  const membershipModal = new bootstrap.Modal(document.getElementById("membershipModal"));
-  const confirmSave = document.getElementById("confirmSave");
+    document.addEventListener("DOMContentLoaded", () => {
 
-  // When clicking Submit → show modal instead
-  form.addEventListener("submit", function (e) {
-    e.preventDefault();
-    membershipModal.show();
-  });
+      fetchPackagesForSelect();
 
-  // When clicking Save & Submit in modal → actually submit
-  confirmSave.addEventListener("click", function () {
-    // Validate modal fields
-    const membership = document.getElementById("membership").value;
-    const paymentMethod = document.getElementById("paymentMethod").value;
+      const form = document.getElementById("admin_register");
+      const membershipModal = new bootstrap.Modal(document.getElementById("membershipModal"));
+      const confirmSave = document.getElementById("confirmSave");
 
-    if (!membership || !paymentMethod) {
-      alert("Please select both membership and payment method.");
-      return;
+      // When clicking Submit → show modal instead
+      form.addEventListener("submit", function (e) {
+        e.preventDefault();
+        membershipModal.show();
+      });
+
+      // When clicking Save & Submit in modal → actually submit
+      confirmSave.addEventListener("click", function () {
+        // Validate modal fields
+        const membership = document.getElementById("membership").value;
+        const paymentMethod = document.getElementById("paymentMethod").value;
+
+        if (!membership || !paymentMethod) {
+          alert("Please select both membership and payment method.");
+          return;
+        }
+
+        membershipModal.hide();
+        form.submit();
+      });
+    });
+    function fetchPackagesForSelect() {
+      console.log('hjhjhj');
+
+      fetch("/admin/package-list")
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            const packageSelect = document.getElementById("package");
+            packageSelect.innerHTML = '<option value="">-- Select Package --</option>';
+            data.data.forEach(pkg => {
+              const opt = document.createElement("option");
+              opt.value = pkg._id;
+              opt.textContent = `${pkg.packageType} - ₹${pkg.price}`;
+              packageSelect.appendChild(opt);
+            });
+          } else {
+            console.error("Failed to load packages");
+          }
+        })
+        .catch(err => console.error(err));
     }
-
-    membershipModal.hide();
-    form.submit();
-  });
-});
-</script>
+  </script>
 
   <!-- container-scroller -->
   <!-- plugins:js -->
@@ -649,7 +649,7 @@ document.addEventListener("DOMContentLoaded", () => {
   <!-- Make sure jQuery is included -->
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
-  <script>
+  <!-- <script>
     $(document).ready(function () {
       $('#branch').change(function () {
         const branchId = $(this).val();
@@ -662,6 +662,56 @@ document.addEventListener("DOMContentLoaded", () => {
               $('#trainer').empty();
               $('#trainer').append('<option value="">-- Select Trainer --</option>');
 
+              response.trainers.forEach(trainer => {
+                $('#trainer').append(`<option value="${trainer._id}">${trainer.name}</option>`);
+              });
+            },
+            error: function () {
+              alert('Error fetching trainers.');
+            }
+          });
+        } else {
+          $('#trainer').html('<option value="">-- Select Trainer --</option>');
+        }
+      });
+    });
+  </script> -->
+
+  <script>
+    $(document).ready(function () {
+      // Load branches when page loads
+      $.ajax({
+        url: '/admin/get-branches-name',
+        type: 'GET',
+        success: function (response) {
+          console.log(response);
+          
+          if (response.success) {
+            $('#branch').empty();
+            $('#branch').append('<option value="">-- Select Branch --</option>');
+            response.branches.forEach(branch => {
+              $('#branch').append(`<option value="${branch._id}">${branch.name}</option>`);
+            });
+          } else {
+            alert('Error loading branches.');
+          }
+        },
+        error: function () {
+          alert('Error fetching branches.');
+        }
+      });
+
+      // Load trainers when branch changes
+      $('#branch').change(function () {
+        const branchId = $(this).val();
+
+        if (branchId) {
+          $.ajax({
+            url: `/admin/get-trainers-by-branch/${branchId}`,
+            type: 'GET',
+            success: function (response) {
+              $('#trainer').empty();
+              $('#trainer').append('<option value="">-- Select Trainer --</option>');
               response.trainers.forEach(trainer => {
                 $('#trainer').append(`<option value="${trainer._id}">${trainer.name}</option>`);
               });

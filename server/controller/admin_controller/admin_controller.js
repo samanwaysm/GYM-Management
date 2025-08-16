@@ -128,7 +128,7 @@ exports.adminLogin = async (req, res) => {
       req.session.isAdminAuthenticated = true;
       req.session.isAnyAdminAuthenticated = true;
       req.session.userId = admin._id;
-      req.session.user = admin.username;
+      req.session.user = admin.name;
       return res.redirect("/admin-dashboard");
     }
 
@@ -351,12 +351,12 @@ exports.change_password = async (req, res) => {
 }
 
 exports.addAdmin = async (req, res) => {
-  const { username, email, phone, password } = req.body;
+  const { name, email, phone } = req.body;
   const errors = {};
 
   // Validation
-  if (!username || username.trim().length < 3) {
-    errors.usernameError = "Username must be at least 3 characters.";
+  if (!name || name.trim().length < 3) {
+    errors.nameError = "name must be at least 3 characters.";
   }
 
   if (!email) {
@@ -372,16 +372,9 @@ exports.addAdmin = async (req, res) => {
     errors.phoneError = "Phone number is required.";
   }
 
-  if (!password) {
-    errors.passwordError = "Password is required.";
-  } else if (password.length < 8) {
-    errors.passwordError = "Password must be at least 8 characters long.";
-  } else {
-    const passwordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
-    if (!passwordPattern.test(password)) {
-      errors.passwordError = "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character.";
-    }
-  }
+  const firstFour = name.substring(0, 4); // first 4 letters of name
+  const lastFour = phone.slice(-4);       // last 4 digits of phone
+  const rawPassword = firstFour + lastFour;
 
   try {
     const existingUser = await Admin.findOne({ email });
@@ -395,11 +388,11 @@ exports.addAdmin = async (req, res) => {
     }
 
     // Hash the password
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(rawPassword, 10);
 
     // Save admin data
     const newAdmin = new Admin({
-      username,
+      name,
       email,
       phone,
       password: hashedPassword
@@ -420,35 +413,76 @@ exports.addAdmin = async (req, res) => {
 
 exports.adminList = async (req, res) => {
   try {
-    const admins = await Admin.find();
-    console.log(admins);
+        const search = req.query.search || "";
+        const query = {};
 
-    res.status(200).json(admins);
-  } catch (error) {
-    console.error("Error fetching users: ", error);
-    res.status(500).json({ message: "Server Error" });
-  }
+        if (search) {
+            query.$or = [
+                { name: { $regex: search, $options: "i" } },
+                { email: { $regex: search, $options: "i" } },
+                { phone: { $regex: search, $options: "i" } }
+            ];
+        }
+
+        const admins = await Admin.find(query).lean();
+        res.json(admins);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json([]);
+    }
 };
 
+// exports.getAdminProfile = async (req, res) => {
+//   try {
+//     const adminId = req.query.adminId;
+//     if (!adminId) {
+//       return res.status(401).json({ error: "Not authorized. Please log in." });
+//     }
+
+//     const admin = await Admin.findById(adminId).select('-password'); // exclude password
+
+//     if (!admin) {
+//       return res.status(404).json({ error: "Admin not found." });
+//     }
+
+//     res.status(200).json(admin);
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).json({ error: "Server error while fetching profile data." });
+//   }
+// }
+
 exports.getAdminProfile = async (req, res) => {
-  try {
-    const adminId = req.query.adminId;
-    if (!adminId) {
+    try {
+    const userId = req.query.userId;
+    
+    if (!userId) {
       return res.status(401).json({ error: "Not authorized. Please log in." });
     }
 
-    const admin = await Admin.findById(adminId).select('-password'); // exclude password
+    // Try finding as Admin
+    let user = await Admin.findById(userId).select("-password");
+    let role = "admin";
 
-    if (!admin) {
-      return res.status(404).json({ error: "Admin not found." });
+    // If not found as Admin, try Trainer
+    if (!user) {
+      user = await Trainer.findById(userId).select("-password");
+      role = "trainer";
     }
 
-    res.status(200).json(admin);
+    if (!user) {
+      return res.status(404).json({ error: "User not found." });
+    }    
+    res.status(200).json({
+      role,
+      user,
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Server error while fetching profile data." });
   }
-}
+};
+
 
 exports.sendAdminOTP = async (req, res) => {
   try {
@@ -524,10 +558,11 @@ exports.sendAdminOTP = async (req, res) => {
 };
 
 exports.verifyAdminOTP = async (req, res) => {
-  const { email, otp, name, phone, password, newPassword, confirmPassword } = req.body;
-  try {
-    const otpRecord = await OtpDb.findOne({ email }).sort({ createdAt: -1 });
+  const { role, email, otp, name, phone, password, newPassword, confirmPassword } = req.body;
 
+  try {
+    // 1️⃣ Check OTP
+    const otpRecord = await OtpDb.findOne({ email }).sort({ createdAt: -1 });
     if (!otpRecord) {
       return res.json({ success: false, message: 'OTP not found.' });
     }
@@ -545,24 +580,34 @@ exports.verifyAdminOTP = async (req, res) => {
       return res.json({ success: false, message: 'Passwords do not match.' });
     }
 
-    const admin = await Admin.findOne({ email });
-    if (!admin) {
+    // 2️⃣ Find user depending on role
+    let user;
+    if (role === "admin") {
+      user = await Admin.findOne({ email });
+    } else if (role === "trainer") {
+      user = await Trainer.findOne({ email });
+    } else {
+      return res.json({ success: false, message: 'Invalid role.' });
+    }
+
+    if (!user) {
       return res.json({ success: false, message: 'User not found.' });
     }
 
-    const isMatch = await bcrypt.compare(password, admin.password);
+    // 3️⃣ Verify current password
+    const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.json({ success: false, message: 'Current password is incorrect.' });
     }
 
+    // 4️⃣ Hash new password & update fields
     const hashedPassword = await bcrypt.hash(newPassword, 10);
 
-    // ✅ Update existing admin document
-    admin.password = hashedPassword;
-    admin.name = name;
-    admin.phone = phone;
+    user.password = hashedPassword;
+    user.name = name;   // ⚠️ in your schema it’s probably "username", not "name"
+    user.phone = phone;
 
-    await admin.save(); // ✅ correct call here
+    await user.save();
     await OtpDb.deleteOne({ _id: otpRecord._id });
 
     return res.json({ success: true });
@@ -571,6 +616,7 @@ exports.verifyAdminOTP = async (req, res) => {
     res.json({ success: false, message: 'Server error.' });
   }
 };
+
 
 exports.addBranch = async (req, res) => {
   try {
@@ -615,31 +661,76 @@ exports.addBranch = async (req, res) => {
 
 // exports.branchList = async (req, res) => {
 //   try {
-//     const branches = await Branch.find();
-//     console.log(branches);
+//     let page = parseInt(req.query.page) || 1;
+//     let limit = 1;
+//     let skip = (page - 1) * limit;
 
-//     res.status(200).json(branches);
+//     // Count total branches for pagination
+//     const totalBranches = await Branch.countDocuments();
+
+//     const branches = await Branch.aggregate([
+//       {
+//         $lookup: {
+//           from: "trainers",            // collection name
+//           localField: "_id",
+//           foreignField: "branch",      // trainer schema field
+//           as: "trainersList"
+//         }
+//       },
+//       {
+//         $lookup: {
+//           from: "clients",
+//           localField: "_id",
+//           foreignField: "branchId",    // client schema field
+//           as: "clientsList"
+//         }
+//       },
+//       {
+//         $project: {
+//           _id: 0,                      // hide _id
+//           name: 1,
+//           trainersCount: { $size: "$trainersList" },
+//           clientsCount: { $size: "$clientsList" }
+//         }
+//       },
+//       { $skip: skip },
+//       { $limit: limit }
+//     ]);
+
+//     res.status(200).json({
+//       branches,
+//       totalPages: Math.ceil(totalBranches / limit),
+//       currentPage: page
+//     });
 //   } catch (error) {
-//     console.error("Error fetching users: ", error);
+//     console.error("Error fetching branches: ", error);
 //     res.status(500).json({ message: "Server Error" });
 //   }
-// }
+// };
 
 exports.branchList = async (req, res) => {
   try {
     let page = parseInt(req.query.page) || 1;
-    let limit = 1;
+    let limit = 5; // adjust as needed
     let skip = (page - 1) * limit;
 
-    // Count total branches for pagination
-    const totalBranches = await Branch.countDocuments();
+    let search = req.query.search || "";
+
+    // search condition
+    let match = {};
+    if (search) {
+      match = { name: { $regex: search, $options: "i" } };
+    }
+
+    const totalBranches = await Branch.countDocuments(match);
 
     const branches = await Branch.aggregate([
+      { $match: match },
       {
         $lookup: {
-          from: "trainers",            // collection name
+          from: "trainers",
           localField: "_id",
-          foreignField: "branch",      // trainer schema field
+          foreignField: "branch",
           as: "trainersList"
         }
       },
@@ -647,13 +738,12 @@ exports.branchList = async (req, res) => {
         $lookup: {
           from: "clients",
           localField: "_id",
-          foreignField: "branchId",    // client schema field
+          foreignField: "branchId",
           as: "clientsList"
         }
       },
       {
         $project: {
-          _id: 0,                      // hide _id
           name: 1,
           trainersCount: { $size: "$trainersList" },
           clientsCount: { $size: "$clientsList" }
@@ -662,7 +752,8 @@ exports.branchList = async (req, res) => {
       { $skip: skip },
       { $limit: limit }
     ]);
-
+    console.log(branches);
+    
     res.status(200).json({
       branches,
       totalPages: Math.ceil(totalBranches / limit),
@@ -679,7 +770,7 @@ exports.getBranchNames = async (req, res) => {
   try {
     const branches = await Branch.find({}, { name: 1, _id: 1 });
 
-    res.status(200).json(branches);
+    res.status(200).json({ success: true, branches });
   } catch (error) {
     console.error("Error fetching branch names: ", error);
     res.status(500).json({ message: "Server Error" });
@@ -688,7 +779,7 @@ exports.getBranchNames = async (req, res) => {
 
 exports.addTrainers = async (req, res) => {
   try {
-    const { name, email, phone, branch, password } = req.body;
+    const { name, email, phone, branch } = req.body;
 
     // Check if email already exists
     const existingTrainer = await Trainer.findOne({ email });
@@ -697,8 +788,11 @@ exports.addTrainers = async (req, res) => {
       return res.redirect('/admin-add-trainer');
     }
 
+    const firstFour = name.substring(0, 4); // first 4 letters of name
+    const lastFour = phone.slice(-4);       // last 4 digits of phone
+    const rawPassword = firstFour + lastFour;
     // Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(rawPassword, 10);
 
     // Create trainer object
     const newTrainer = new Trainer({
@@ -721,44 +815,18 @@ exports.addTrainers = async (req, res) => {
 
 // exports.trainersList = async (req, res) => {
 //   try {
+//     let page = parseInt(req.query.page) || 1;
+//     let limit = 1;
+//     let skip = (page - 1) * limit;
+
+//     // Get total trainers count
+//     const totalTrainers = await Trainer.countDocuments();
+
 //     const trainers = await Trainer.aggregate([
 //       {
 //         $lookup: {
-//           from: "branches",             // collection name in DB
-//           localField: "branch",         // field in Trainer schema
-//           foreignField: "_id",          // matching _id in branch collection
-//           as: "branchInfo"
-//         }
-//       },
-//       {
-//         $unwind: "$branchInfo" // convert array to single object
-//       },
-//       {
-//         $project: {
-//           name: 1,
-//           email: 1,
-//           phone: 1,
-//           password: 1,
-//           branchName: "$branchInfo.name" // extract only branch name
-//         }
-//       }
-//     ]);
-//     console.log(trainers);
-
-//     res.status(200).json(trainers);
-//   } catch (error) {
-//     console.error("Error fetching users: ", error);
-//     res.status(500).json({ message: "Server Error" });
-//   }
-// }
-
-// exports.trainersList = async (req, res) => {
-//   try {
-//     const trainers = await Trainer.aggregate([
-//       {
-//         $lookup: {
-//           from: "branches",               // Branch collection name
-//           localField: "branch",           // field in Trainer schema
+//           from: "branches",
+//           localField: "branch",
 //           foreignField: "_id",
 //           as: "branchInfo"
 //         }
@@ -798,73 +866,47 @@ exports.addTrainers = async (req, res) => {
 //           branchName: "$branchInfo.name",
 //           clientsCount: 1
 //         }
-//       }
+//       },
+//       { $skip: skip },
+//       { $limit: limit }
 //     ]);
-//     console.log(trainers);
-//     res.status(200).json(trainers);
+
+//     res.status(200).json({
+//       trainers,
+//       totalPages: Math.ceil(totalTrainers / limit),
+//       currentPage: page
+//     });
 //   } catch (error) {
 //     console.error("Error fetching trainers: ", error);
 //     res.status(500).json({ message: "Server Error" });
 //   }
 // };
 
-
-// exports.clientsList = async (req, res) => {
-//   try {
-//     const clients = await Client.aggregate([
-//       // Join with Branch collection
-//       {
-//         $lookup: {
-//           from: "branches",            // Branch collection name
-//           localField: "branchId",      // field in client schema
-//           foreignField: "_id",         // match _id in branch collection
-//           as: "branchInfo"
-//         }
-//       },
-//       { $unwind: { path: "$branchInfo", preserveNullAndEmptyArrays: true } },
-
-//       // Join with Trainer collection
-//       {
-//         $lookup: {
-//           from: "trainers",            // Trainer collection name
-//           localField: "trainerId",     // field in client schema
-//           foreignField: "_id",         // match _id in trainer collection
-//           as: "trainerInfo"
-//         }
-//       },
-//       { $unwind: { path: "$trainerInfo", preserveNullAndEmptyArrays: true } },
-
-//       // Select only needed fields
-//       {
-//         $project: {
-//           _id: 0,
-//           name: 1,
-//           email: 1,
-//           phone: 1,
-//           branch: "$branchInfo.name",   // branch name
-//           trainer: "$trainerInfo.name"  // trainer name
-//         }
-//       }
-//     ]);
-//     console.log(clients);
-    
-//     res.status(200).json(clients);
-//   } catch (error) {
-//     console.error("Error fetching clients list: ", error);
-//     res.status(500).json({ message: "Server Error" });
-//   }
-// }
-
 exports.trainersList = async (req, res) => {
   try {
     let page = parseInt(req.query.page) || 1;
-    let limit = 1;
+    let limit = 5;  // adjust as needed
     let skip = (page - 1) * limit;
 
-    // Get total trainers count
-    const totalTrainers = await Trainer.countDocuments();
+    let search = req.query.search || "";
+
+    // search condition
+    let match = {};
+    if (search) {
+      match = {
+        $or: [
+          { name: { $regex: search, $options: "i" } },
+          { email: { $regex: search, $options: "i" } },
+          { phone: { $regex: search, $options: "i" } }
+        ]
+      };
+    }
+
+    // Count trainers with filter
+    const totalTrainers = await Trainer.countDocuments(match);
 
     const trainers = await Trainer.aggregate([
+      { $match: match },
       {
         $lookup: {
           from: "branches",
@@ -873,12 +915,7 @@ exports.trainersList = async (req, res) => {
           as: "branchInfo"
         }
       },
-      {
-        $unwind: {
-          path: "$branchInfo",
-          preserveNullAndEmptyArrays: true
-        }
-      },
+      { $unwind: { path: "$branchInfo", preserveNullAndEmptyArrays: true } },
       {
         $lookup: {
           from: "clients",
@@ -904,7 +941,6 @@ exports.trainersList = async (req, res) => {
           name: 1,
           email: 1,
           phone: 1,
-          password: 1,
           branchName: "$branchInfo.name",
           clientsCount: 1
         }
@@ -943,7 +979,7 @@ exports.getTrainersByBranch = async (req, res) => {
 
 exports.addClients = async (req, res) => {
   try {
-    const { name, email, phone, altphone, gender, age, branch, trainer, height, weight, password } = req.body;
+    const { name, email, phone, altphone, gender, age, branch, trainer, height, weight } = req.body;
     const errors = {};
     
     // ✅ Required field checks
@@ -954,7 +990,6 @@ exports.addClients = async (req, res) => {
     if (!gender) errors.gender = "Gender is required.";
     if (!branch) errors.branch = "Branch is required.";
     if (!trainer) errors.trainer = "Trainer is required.";
-    if (!password) errors.password = "Password is required.";
 
     // ✅ Email format check
     const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -989,8 +1024,12 @@ exports.addClients = async (req, res) => {
       return res.redirect("/admin-add-clients");
     }
 
+    const firstFour = name.substring(0, 4); // first 4 letters of name
+    const lastFour = phone.slice(-4);       // last 4 digits of phone
+    const rawPassword = firstFour + lastFour;
+
     // ✅ Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(rawPassword, 10);
 
     // ✅ Save new client
     const newClient = new Client({
@@ -1020,15 +1059,81 @@ exports.addClients = async (req, res) => {
   }
 };
 
+// exports.clientsList = async (req, res) => {
+//   try {
+//     let page = parseInt(req.query.page) || 1;
+//     let limit = 1;
+//     let skip = (page - 1) * limit;
+
+//     const totalClients = await Client.countDocuments();
+
+//     const clients = await Client.aggregate([
+//       {
+//         $lookup: {
+//           from: "branches",
+//           localField: "branchId",
+//           foreignField: "_id",
+//           as: "branchInfo"
+//         }
+//       },
+//       { $unwind: { path: "$branchInfo", preserveNullAndEmptyArrays: true } },
+//       {
+//         $lookup: {
+//           from: "trainers",
+//           localField: "trainerId",
+//           foreignField: "_id",
+//           as: "trainerInfo"
+//         }
+//       },
+//       { $unwind: { path: "$trainerInfo", preserveNullAndEmptyArrays: true } },
+//       {
+//         $project: {
+//           name: 1,
+//           email: 1,
+//           phone: 1,
+//           branch: "$branchInfo.name",
+//           trainer: "$trainerInfo.name"
+//         }
+//       },
+//       { $skip: skip },
+//       { $limit: limit }
+//     ]);
+
+//     res.status(200).json({
+//       clients,
+//       totalPages: Math.ceil(totalClients / limit),
+//       currentPage: page
+//     });
+//   } catch (error) {
+//     res.status(500).json({ message: "Server Error" });
+//   }
+// };
+
 exports.clientsList = async (req, res) => {
   try {
     let page = parseInt(req.query.page) || 1;
-    let limit = 1;
+    let limit = 2;  // adjust page size
     let skip = (page - 1) * limit;
 
-    const totalClients = await Client.countDocuments();
+    let search = req.query.search || "";
+
+    // Search filter
+    let match = {};
+    if (search) {
+      match = {
+        $or: [
+          { name: { $regex: search, $options: "i" } },
+          { email: { $regex: search, $options: "i" } },
+          { phone: { $regex: search, $options: "i" } }
+        ]
+      };
+    }
+
+    // Count clients
+    const totalClients = await Client.countDocuments(match);
 
     const clients = await Client.aggregate([
+      { $match: match },
       {
         $lookup: {
           from: "branches",
@@ -1066,9 +1171,11 @@ exports.clientsList = async (req, res) => {
       currentPage: page
     });
   } catch (error) {
+    console.error("Error fetching clients: ", error);
     res.status(500).json({ message: "Server Error" });
   }
 };
+
 
 exports.getPackageList = async (req, res) => {
     try {

@@ -20,7 +20,7 @@ route.get("/admin-login",isAnyStaffNotAuthenticated,services.adminLogin);
 route.get("/admin-dashboard",isAnyAdminAuthenticated,gateCheck(['superadmin','admin']),services.dashboard);
 route.get("/superadmin-add-admin",isSuperAdminAuthenticated,gateCheck(['superadmin']),services.add_admin);
 route.get("/superadmin-admin-list",isSuperAdminAuthenticated,services.admin_list);
-route.get("/admin-profile",isAdminAuthenticated,services.admin_profile);
+route.get("/admin-profile",isAnyStaffAuthenticated,services.admin_profile);
 route.get("/admin-branches-list",isAnyAdminAuthenticated,services.branches_list);
 route.get("/admin-add-branch",isAnyAdminAuthenticated,services.add_branch);
 route.get("/admin-add-trainers",isAnyAdminAuthenticated,services.add_trainers);

@@ -122,12 +122,12 @@
               </a>
             </li>
             <li class="nav-item menu-items">
-                <a class="nav-link" href="/admin-package-list">
+              <a class="nav-link" href="/admin-package-list">
                 <span class="menu-icon">
-                    <i class="mdi mdi-package-variant-closed"></i>
+                  <i class="mdi mdi-package-variant-closed"></i>
                 </span>
                 <span class="menu-title">Package</span>
-                </a>
+              </a>
             </li>
             <li class="nav-item menu-items">
               <a class="nav-link" href="/admin-trainers-list">
@@ -401,8 +401,7 @@
                         <div class="form-group row">
                           <label class="col-sm-3 col-form-label">Name : </label>
                           <div class="col-sm-9">
-                            <input type="text" id="username" name="username" class="form-control"
-                              value="<%= admin.username %>" required />
+                            <input type="text" id="name" name="name" class="form-control" required />
                           </div>
                         </div>
                       </div>
@@ -410,8 +409,7 @@
                         <div class="form-group row">
                           <label class="col-sm-3 col-form-label">Email : </label>
                           <div class="col-sm-9">
-                            <input type="email" id="email" name="email" class="form-control" value="<%= admin.email %>"
-                              required />
+                            <input type="email" id="email" name="email" class="form-control" required />
                           </div>
                         </div>
                       </div>
@@ -421,8 +419,7 @@
                         <div class="form-group row">
                           <label class="col-sm-3 col-form-label">Phone Number : </label>
                           <div class="col-sm-9">
-                            <input type="tel" id="phone" name="phone" class="form-control" value="<%= admin.phone %>"
-                              required />
+                            <input type="tel" id="phone" name="phone" class="form-control" required />
                           </div>
                         </div>
                       </div>
@@ -510,6 +507,39 @@
   </div>
   <!-- container-scroller -->
   <script>
+    let userRole = null;
+
+    document.addEventListener("DOMContentLoaded", function () {
+      const userId = "<%= userId %>"; // from session or server
+      console.log('dcsdv',userId);
+      
+      fetch(`/admin/admin-profile?userId=${userId}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.error) {
+            alert(data.error);
+            return;
+          }
+          userRole = data.role;
+          
+
+          // Hide loader (if you have one)
+          const profileLoader = document.getElementById("profile-loader");
+          const profileForm = document.getElementById("admin_register");
+          if (profileLoader) profileLoader.style.display = "none";
+          if (profileForm) profileForm.style.display = "block";
+
+          // Fill form fields with backend data
+          document.getElementById("name").value = data.user.name || "";
+          document.getElementById("email").value = data.user.email || "";
+          document.getElementById("phone").value = data.user.phone || "";
+        })
+        .catch(err => {
+          console.error("Error fetching admin profile:", err);
+          alert("Failed to load profile.");
+        });
+    });
+
     // Send OTP to email
     document.getElementById('sendOtpBtn').addEventListener('click', function () {
       const email = document.getElementById('email').value;
@@ -562,7 +592,7 @@
       console.log(otp);
       const email = document.getElementById('email').value;
       console.log(email);
-      const name = document.getElementById('username').value;
+      const name = document.getElementById('name').value;
       console.log(name);
       const phone = document.getElementById('phone').value;
       console.log(phone);
@@ -578,6 +608,7 @@
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          role: userRole,
           email,
           name,
           phone,
