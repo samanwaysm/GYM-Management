@@ -2,6 +2,8 @@ const bcrypt = require("bcrypt");
 const mongoose = require("mongoose");
 const nodemailer = require('nodemailer');
 const Mailgen = require('mailgen');
+const twilio = require("twilio");
+const Razorpay = require("razorpay");
 
 const Admin = require("../../../model/admin/admin_schema");
 const OtpDb = require("../../../model/admin/otp_schema")
@@ -10,6 +12,11 @@ const Package = require("../../../model/admin/package_schema")
 
 const Trainer = require("../../../model/trainers/trainers_schema");
 const Client = require("../../../model/clients/clients_schema")
+
+const Membership = require("../../../model/clients/membership_schema")
+
+
+const clientTwilio = new twilio(process.env.TWILIO_SID, process.env.TWILIO_AUTH_TOKEN);
 
 // exports.adminLogin = async (req, res) => {
 //   const superAdmin = {
@@ -144,7 +151,7 @@ exports.adminLogin = async (req, res) => {
       req.session.userId = trainer._id;
       req.session.user = trainer.name;
       console.log(req.session);
-      
+
       return res.redirect("/trainer-dashboard");
     }
 
@@ -249,7 +256,7 @@ exports.send_otp = async (req, res) => {
     req.session.showOtp = true;
     req.session.emailOtp = req.session.email;
     console.log(req.session.emailOtp);
-    
+
     return res.redirect("/admin-forgot-password");
 
   } catch (error) {
@@ -261,7 +268,7 @@ exports.send_otp = async (req, res) => {
 
 exports.verify_OTP = async (req, res) => {
   const { otp } = req.body;
-  const {email} = req.params;
+  const { email } = req.params;
   console.log(req.body);
   console.log(req.params);
 
@@ -413,23 +420,23 @@ exports.addAdmin = async (req, res) => {
 
 exports.adminList = async (req, res) => {
   try {
-        const search = req.query.search || "";
-        const query = {};
+    const search = req.query.search || "";
+    const query = {};
 
-        if (search) {
-            query.$or = [
-                { name: { $regex: search, $options: "i" } },
-                { email: { $regex: search, $options: "i" } },
-                { phone: { $regex: search, $options: "i" } }
-            ];
-        }
-
-        const admins = await Admin.find(query).lean();
-        res.json(admins);
-    } catch (error) {
-        console.error(error);
-        res.status(500).json([]);
+    if (search) {
+      query.$or = [
+        { name: { $regex: search, $options: "i" } },
+        { email: { $regex: search, $options: "i" } },
+        { phone: { $regex: search, $options: "i" } }
+      ];
     }
+
+    const admins = await Admin.find(query).lean();
+    res.json(admins);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json([]);
+  }
 };
 
 // exports.getAdminProfile = async (req, res) => {
@@ -453,9 +460,9 @@ exports.adminList = async (req, res) => {
 // }
 
 exports.getAdminProfile = async (req, res) => {
-    try {
+  try {
     const userId = req.query.userId;
-    
+
     if (!userId) {
       return res.status(401).json({ error: "Not authorized. Please log in." });
     }
@@ -472,7 +479,7 @@ exports.getAdminProfile = async (req, res) => {
 
     if (!user) {
       return res.status(404).json({ error: "User not found." });
-    }    
+    }
     res.status(200).json({
       role,
       user,
@@ -753,7 +760,7 @@ exports.branchList = async (req, res) => {
       { $limit: limit }
     ]);
     console.log(branches);
-    
+
     res.status(200).json({
       branches,
       totalPages: Math.ceil(totalBranches / limit),
@@ -969,7 +976,7 @@ exports.getTrainersByBranch = async (req, res) => {
       return res.status(400).json({ message: 'Branch ID is required' });
     }
 
-    const trainers = await Trainer.find({ branch: branchId }).select('name _id');    
+    const trainers = await Trainer.find({ branch: branchId }).select('name _id');
     res.status(200).json({ trainers });
   } catch (error) {
     console.error('Error fetching trainers:', error);
@@ -977,12 +984,251 @@ exports.getTrainersByBranch = async (req, res) => {
   }
 }
 
+// exports.addClients = async (req, res) => {
+//   try {
+//     console.log(req.body);
+
+//     const { name, email, phone, altphone, gender, age, branch, trainer, height, weight } = req.body;
+//     const errors = {};
+
+//     // ✅ Required field checks
+//     if (!name) errors.name = "Name is required.";
+//     if (!email) errors.email = "Email is required.";
+//     if (!phone) errors.phone = "Phone number is required.";
+//     if (!age) errors.age = "Age is required.";
+//     if (!gender) errors.gender = "Gender is required.";
+//     if (!branch) errors.branch = "Branch is required.";
+//     if (!trainer) errors.trainer = "Trainer is required.";
+
+//     // ✅ Email format check
+//     const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+//     if (email && !emailPattern.test(email)) {
+//       errors.email = "Invalid email format.";
+//     }
+
+//     // ✅ If errors → back to form
+//     if (Object.keys(errors).length > 0) {
+//       req.session.errors = errors;
+//       return res.redirect("/admin-add-clients");
+//     }
+
+//     // ✅ Check if client already exists
+//     const existingClient = await Client.findOne({ email });
+//     if (existingClient) {
+//       req.session.errors = { email: "Email is already registered." };
+//       return res.redirect("/admin-add-clients");
+//     }
+
+//     // ✅ Check Branch exists
+//     const branchExists = await Branch.findById(branch);
+//     if (!branchExists) {
+//       req.session.errors = { branch: "Selected branch does not exist." };
+//       return res.redirect("/admin-add-clients");
+//     }
+
+//     // ✅ Check Trainer exists
+//     const trainerExists = await Trainer.findById(trainer);
+//     if (!trainerExists) {
+//       req.session.errors = { trainer: "Selected trainer does not exist." };
+//       return res.redirect("/admin-add-clients");
+//     }
+
+//     const firstFour = name.substring(0, 4); // first 4 letters of name
+//     const lastFour = phone.slice(-4);       // last 4 digits of phone
+//     const rawPassword = firstFour + lastFour;
+
+//     // ✅ Hash password
+//     const hashedPassword = await bcrypt.hash(rawPassword, 10);
+
+//     // ✅ Save new client
+//     const newClient = new Client({
+//       name,
+//       email,
+//       phone,
+//       altphone: altphone || null, // optional
+//       gender,
+//       age,
+//       branchId: branchExists._id,
+//       trainerId: trainerExists._id,
+//       height: height || null,
+//       weight: weight || null,
+//       password: hashedPassword
+//     });
+
+//     await newClient.save();
+
+//     // ✅ Redirect with success
+//     req.session.success = "Client added successfully.";
+//     return res.redirect("/admin-clients-list");
+
+//   } catch (err) {
+//     console.error("Error adding client:", err);
+//     req.session.errors = { server: "Something went wrong while adding the client." };
+//     return res.redirect("/admin-add-clients");
+//   }
+// };
+
+// exports.addClients = async (req, res) => {
+//   try {
+//     console.log(req.body);
+
+//     const {
+//       name, email, phone, altphone, gender, age,
+//       branch, trainer, height, weight,
+//       package: packageId, paymentMethod
+//     } = req.body;
+
+//     const errors = {};
+
+//     // 🟢 Validation same as before ...
+//     if (!name) errors.name = "Name is required.";
+//     if (!email) errors.email = "Email is required.";
+//     if (!phone) errors.phone = "Phone number is required.";
+//     if (!age) errors.age = "Age is required.";
+//     if (!gender) errors.gender = "Gender is required.";
+//     if (!branch) errors.branch = "Branch is required.";
+//     if (!trainer) errors.trainer = "Trainer is required.";
+//     if (!packageId) errors.package = "Package is required.";
+//     if (!paymentMethod) errors.paymentMethod = "Payment Method is required.";
+
+//     if (Object.keys(errors).length > 0) {
+//       req.session.errors = errors;
+//       return res.redirect("/admin-add-clients");
+//     }
+
+//     // Check email
+//     const existingClient = await Client.findOne({ email });
+//     if (existingClient) {
+//       req.session.errors = { email: "Email is already registered." };
+//       return res.redirect("/admin-add-clients");
+//     }
+
+//     const branchExists = await Branch.findById(branch);
+//     if (!branchExists) {
+//       req.session.errors = { branch: "Selected branch does not exist." };
+//       return res.redirect("/admin-add-clients");
+//     }
+
+//     const trainerExists = await Trainer.findById(trainer);
+//     if (!trainerExists) {
+//       req.session.errors = { trainer: "Selected trainer does not exist." };
+//       return res.redirect("/admin-add-clients");
+//     }
+
+//     const packageExists = await Package.findById(packageId);
+//     if (!packageExists) {
+//       req.session.errors = { package: "Selected package does not exist." };
+//       return res.redirect("/admin-add-clients");
+//     }
+
+//     // Generate password
+//     const firstFour = name.substring(0, 4);
+//     const lastFour = phone.slice(-4);
+//     const rawPassword = firstFour + lastFour;
+//     const hashedPassword = await bcrypt.hash(rawPassword, 10);
+
+//     // Save Client
+//     const newClient = new Client({
+//       name,
+//       email,
+//       phone,
+//       altphone: altphone || null,
+//       gender,
+//       age,
+//       branchId: branchExists._id,
+//       trainerId: trainerExists._id,
+//       height: height || null,
+//       weight: weight || null,
+//       password: hashedPassword
+//     });
+
+//     const savedClient = await newClient.save();
+
+//     // Save Membership
+//     const paidDate = new Date();
+//     const expiredDate = new Date(paidDate);
+//     expiredDate.setDate(paidDate.getDate() + packageExists.durationInDays);
+
+//     let paymentStatus = "Pending";
+
+//     // check confirmedPayment
+//     if (confirmedPayment === true || confirmedPayment === "true") {
+//       paymentStatus = "Completed";
+//     }
+
+//     const newMembership = new Membership({
+//       clientId: savedClient._id,
+//       package: packageExists._id,
+//       price: packageExists.price,
+//       paymentMethod,
+//       paymentStatus,
+//       confirmedPayment,
+//       paidDate,
+//       expiredDate,
+//       status: "Active"
+//     });
+
+//     await newMembership.save();
+
+//     // 🔹 If payment method is UPI → generate Razorpay Payment Link
+//     if (paymentMethod === "UPI") {
+//       const razorpay = new Razorpay({
+//         key_id: process.env.RAZORPAY_KEY_ID,
+//         key_secret: process.env.RAZORPAY_SECRET
+//       });
+
+//       const order = await razorpay.orders.create({
+//         amount: packageExists.price * 100, // in paise
+//         currency: "INR",
+//         receipt: `receipt_${savedClient._id}`,
+//         payment_capture: 1
+//       });
+
+//       const paymentLink = `https://rzp.io/i/${order.id}`; // Or use short_url if you create Payment Links API
+
+//       // 🔹 Send WhatsApp via Twilio
+//       await clientTwilio.messages.create({
+//         from: "whatsapp:+14155238886", // Twilio sandbox number
+//         to: `whatsapp:+91${phone}`,    // Client's phone
+//         body: `Hi ${name}, please complete your gym membership payment using this link: ${paymentLink}`
+//       });
+//     }
+
+//     req.session.success = "Client & Membership added successfully.";
+//     return res.redirect("/admin-clients-list");
+
+//   } catch (err) {
+//     console.error("Error adding client:", err);
+//     req.session.errors = { server: "Something went wrong while adding the client." };
+//     return res.redirect("/admin-add-clients");
+//   }
+
+//   //   // ✅ Done
+//   //   req.session.success = "Client & Membership added successfully.";
+//   //   return res.redirect("/admin-clients-list");
+
+//   // } catch (err) {
+//   //   console.error("Error adding client:", err);
+//   //   req.session.errors = { server: "Something went wrong while adding the client." };
+//   //   return res.redirect("/admin-add-clients");
+//   // }
+// };
+
+
 exports.addClients = async (req, res) => {
   try {
-    const { name, email, phone, altphone, gender, age, branch, trainer, height, weight } = req.body;
+    console.log("📥 Incoming Body:", req.body);
+
+    const {
+      name, email, phone, altphone, gender, age,
+      branch, trainer, height, weight,
+      package: packageId, paymentMethod,
+      confirmedPayment // ⚠️ comes from form as "true" or "false"
+    } = req.body;
+
     const errors = {};
-    
-    // ✅ Required field checks
+
+    // 🔹 Basic validation
     if (!name) errors.name = "Name is required.";
     if (!email) errors.email = "Email is required.";
     if (!phone) errors.phone = "Phone number is required.";
@@ -990,53 +1236,52 @@ exports.addClients = async (req, res) => {
     if (!gender) errors.gender = "Gender is required.";
     if (!branch) errors.branch = "Branch is required.";
     if (!trainer) errors.trainer = "Trainer is required.";
+    if (!packageId) errors.package = "Package is required.";
+    if (!paymentMethod) errors.paymentMethod = "Payment Method is required.";
 
-    // ✅ Email format check
-    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (email && !emailPattern.test(email)) {
-      errors.email = "Invalid email format.";
-    }
-
-    // ✅ If errors → back to form
     if (Object.keys(errors).length > 0) {
       req.session.errors = errors;
       return res.redirect("/admin-add-clients");
     }
 
-    // ✅ Check if client already exists
+    // 🔹 Ensure no duplicate email
     const existingClient = await Client.findOne({ email });
     if (existingClient) {
       req.session.errors = { email: "Email is already registered." };
       return res.redirect("/admin-add-clients");
     }
 
-    // ✅ Check Branch exists
+    // 🔹 Ensure branch/trainer/package exist
     const branchExists = await Branch.findById(branch);
     if (!branchExists) {
       req.session.errors = { branch: "Selected branch does not exist." };
       return res.redirect("/admin-add-clients");
     }
 
-    // ✅ Check Trainer exists
     const trainerExists = await Trainer.findById(trainer);
     if (!trainerExists) {
       req.session.errors = { trainer: "Selected trainer does not exist." };
       return res.redirect("/admin-add-clients");
     }
 
-    const firstFour = name.substring(0, 4); // first 4 letters of name
-    const lastFour = phone.slice(-4);       // last 4 digits of phone
-    const rawPassword = firstFour + lastFour;
+    const packageExists = await Package.findById(packageId);
+    if (!packageExists) {
+      req.session.errors = { package: "Selected package does not exist." };
+      return res.redirect("/admin-add-clients");
+    }
 
-    // ✅ Hash password
+    // 🔹 Generate password from name + phone
+    const firstFour = name.substring(0, 4);
+    const lastFour = phone.slice(-4);
+    const rawPassword = firstFour + lastFour;
     const hashedPassword = await bcrypt.hash(rawPassword, 10);
 
-    // ✅ Save new client
+    // 🔹 Save client
     const newClient = new Client({
       name,
       email,
       phone,
-      altphone: altphone || null, // optional
+      altphone: altphone || null,
       gender,
       age,
       branchId: branchExists._id,
@@ -1046,68 +1291,92 @@ exports.addClients = async (req, res) => {
       password: hashedPassword
     });
 
-    await newClient.save();
+    const savedClient = await newClient.save();
 
-    // ✅ Redirect with success
-    req.session.success = "Client added successfully.";
+    // 🔹 Normalize inputs
+    const normalizedPaymentMethod = String(paymentMethod).toLowerCase();
+    console.log(normalizedPaymentMethod);
+    
+    const isConfirmed = confirmedPayment === true || confirmedPayment === "true";
+
+    console.log(isConfirmed);
+    
+    // 🔹 Payment fields
+    let paymentStatus = "Pending";
+    let paidDate = null;
+    let expiredDate = null;
+
+    if (isConfirmed) {
+      paymentStatus = "Completed";
+      paidDate = new Date();
+      expiredDate = new Date(paidDate);
+      expiredDate.setDate(paidDate.getDate() + packageExists.durationInDays);
+    }
+
+    // 🔹 Save Membership
+    const newMembership = new Membership({
+      clientId: savedClient._id,
+      package: packageExists._id,
+      price: packageExists.price,
+      paymentMethod,
+      paymentStatus,
+      confirmedPayment: isConfirmed,
+      paidDate,
+      expiredDate,
+      status: "Active"
+    });
+
+    await newMembership.save();
+
+    // ✅ If UPI → call paymentController (don’t create Razorpay here!)
+    if (paymentMethod.toLowerCase() === "upi") {
+      return res.redirect(`/payment/create-order?clientId=${savedClient._id}&packageId=${packageExists._id}`);
+    }
+
+    // 🔹 If UPI and not confirmed → Send payment link via WhatsApp
+    // if (normalizedPaymentMethod === "upi") {
+    //   console.log("✅ Entering UPI Payment Block");
+
+    //   const razorpay = new Razorpay({
+    //     key_id: process.env.RAZORPAY_KEY_ID,
+    //     key_secret: process.env.RAZORPAY_SECRET
+    //   });
+
+    //   const paymentLink = await razorpay.paymentLink.create({
+    //     amount: packageExists.price * 100, // paise
+    //     currency: "INR",
+    //     accept_partial: false,
+    //     description: `Membership Payment for ${name}`,
+    //     customer: {
+    //       name: name,
+    //       email: email,
+    //       contact: `+91${phone}`
+    //     },
+    //     notify: { sms: false, email: false },
+    //     reminder_enable: true
+    //   });
+
+    //   console.log("🔗 Razorpay Link:", paymentLink.short_url);
+
+    //   // WhatsApp message via Twilio
+    //   await clientTwilio.messages.create({
+    //     from: "whatsapp:+14155238886", // Twilio sandbox
+    //     to: `whatsapp:+91${phone}`,
+    //     body: `Hi ${name}, please complete your gym membership payment using this link: ${paymentLink.short_url}`
+    //   });
+    // }
+
+    // ✅ Success response
+    req.session.success = "Client & Membership added successfully.";
     return res.redirect("/admin-clients-list");
 
   } catch (err) {
-    console.error("Error adding client:", err);
+    console.error("❌ Error adding client:", err);
     req.session.errors = { server: "Something went wrong while adding the client." };
     return res.redirect("/admin-add-clients");
   }
 };
 
-// exports.clientsList = async (req, res) => {
-//   try {
-//     let page = parseInt(req.query.page) || 1;
-//     let limit = 1;
-//     let skip = (page - 1) * limit;
-
-//     const totalClients = await Client.countDocuments();
-
-//     const clients = await Client.aggregate([
-//       {
-//         $lookup: {
-//           from: "branches",
-//           localField: "branchId",
-//           foreignField: "_id",
-//           as: "branchInfo"
-//         }
-//       },
-//       { $unwind: { path: "$branchInfo", preserveNullAndEmptyArrays: true } },
-//       {
-//         $lookup: {
-//           from: "trainers",
-//           localField: "trainerId",
-//           foreignField: "_id",
-//           as: "trainerInfo"
-//         }
-//       },
-//       { $unwind: { path: "$trainerInfo", preserveNullAndEmptyArrays: true } },
-//       {
-//         $project: {
-//           name: 1,
-//           email: 1,
-//           phone: 1,
-//           branch: "$branchInfo.name",
-//           trainer: "$trainerInfo.name"
-//         }
-//       },
-//       { $skip: skip },
-//       { $limit: limit }
-//     ]);
-
-//     res.status(200).json({
-//       clients,
-//       totalPages: Math.ceil(totalClients / limit),
-//       currentPage: page
-//     });
-//   } catch (error) {
-//     res.status(500).json({ message: "Server Error" });
-//   }
-// };
 
 exports.clientsList = async (req, res) => {
   try {
@@ -1178,22 +1447,22 @@ exports.clientsList = async (req, res) => {
 
 
 exports.getPackageList = async (req, res) => {
-    try {
-        const packages = await Package.find().sort({ createdAt: -1 }); // Latest first
-        console.log(packages);
-        res.status(200).json({
-            success: true,
-            count: packages.length,
-            data: packages
-        });
-        
-    } catch (error) {
-        console.error("Error fetching package list:", error);
-        res.status(500).json({
-            success: false,
-            message: "Server error while fetching package list"
-        });
-    }
+  try {
+    const packages = await Package.find().sort({ createdAt: -1 }); // Latest first
+    console.log(packages);
+    res.status(200).json({
+      success: true,
+      count: packages.length,
+      data: packages
+    });
+
+  } catch (error) {
+    console.error("Error fetching package list:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error while fetching package list"
+    });
+  }
 };
 
 
@@ -1201,7 +1470,7 @@ exports.addPackages = async (req, res) => {
   try {
     const { packageType, durationInDays, price } = req.body;
     console.log(req.body);
-    
+
     // Validate required fields
     if (!packageType || !price) {
       return res.status(400).json({ success: false, message: "Duration and price are required." });

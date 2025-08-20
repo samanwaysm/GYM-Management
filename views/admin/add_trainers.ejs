@@ -409,9 +409,16 @@
                       <div class="col-md-6">
                         <div class="form-group row">
                           <label class="col-sm-3 col-form-label">Phone Number : </label>
-                          <div class="col-sm-9">
-                            <input type="tel" id="phone" name="phone" class="form-control" />
+                          <div class="col-sm-9 d-flex align-items-center">
+                            <!-- <span class="input-group-text">+91</span> -->
+                            <input type="tel" id="phone" name="phone" class="form-control" maxlength="10"
+                              pattern="[0-9]{10}" oninput="this.value=this.value.replace(/[^0-9]/g,'')" required />
                           </div>
+                          <% if (errors && errors.phoneError) { %>
+                            <div class="text-danger small mt-1">
+                              <%= errors.phoneError %>
+                            </div>
+                          <% } %>
                         </div>
                       </div>
                       <div class="col-md-6">

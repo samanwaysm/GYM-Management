@@ -419,14 +419,16 @@
                       <div class="col-md-6">
                         <div class="form-group row">
                           <label class="col-sm-3 col-form-label">Phone Number : </label>
-                          <div class="col-sm-9">
-                            <input type="tel" id="phone" name="phone" class="form-control" />
-                            <% if (errors && errors.phone) { %>
-                              <div class="text-danger small">
-                                <%= errors.phone %>
-                              </div>
-                              <% } %>
+                          <div class="col-sm-9 d-flex align-items-center">
+                            <!-- <span class="input-group-text">+91</span> -->
+                            <input type="tel" id="phone" name="phone" class="form-control" maxlength="10"
+                              pattern="[0-9]{10}" oninput="this.value=this.value.replace(/[^0-9]/g,'')" required />
                           </div>
+                          <% if (errors && errors.phoneError) { %>
+                            <div class="text-danger small mt-1">
+                              <%= errors.phoneError %>
+                            </div>
+                            <% } %>
                         </div>
                       </div>
                       <div class="col-md-6">
@@ -513,7 +515,10 @@
                         </div>
                       </div>
                     </div>
-                    
+                    <!-- hidden inputs to carry modal values -->
+                    <input type="hidden" name="package" id="hiddenPackage">
+                    <input type="hidden" name="paymentMethod" id="hiddenPaymentMethod">
+                    <input type="hidden" id="hiddenConfirmedPayment" name="confirmedPayment">
                     <div class="text-center mt-2">
                       <button type="submit" class="btn btn-primary mr-2">Submit</button>
                     </div>
@@ -573,7 +578,183 @@
     </div>
     <!-- page-body-wrapper ends -->
   </div>
+
+
   <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      fetchPackagesForSelect();
+
+      const form = document.getElementById("admin_register");
+      const membershipModal = new bootstrap.Modal(document.getElementById("membershipModal"));
+      const confirmSave = document.getElementById("confirmSave");
+      const paymentMethodSelect = document.getElementById("paymentMethod");
+
+      // Show modal instead of direct submit
+      form.addEventListener("submit", function (e) {
+        e.preventDefault();
+        membershipModal.show();
+      });
+
+      // Toggle confirm button text
+      paymentMethodSelect.addEventListener("change", function () {
+        if (this.value === "Cash") {
+          confirmSave.textContent = "Confirm Cash Payment";
+        } else if (this.value === "UPI") {
+          confirmSave.textContent = "Submit & Send WhatsApp Link";
+        } else {
+          confirmSave.textContent = "Save & Submit";
+        }
+      });
+
+      // Handle save / payment
+      confirmSave.addEventListener("click", function () {
+        const membership = document.getElementById("package").value.trim();
+        const paymentMethod = paymentMethodSelect.value.trim();
+
+        if (!membership || !paymentMethod) {
+          alert("Please select both membership and payment method.");
+          return;
+        }
+
+        document.getElementById("hiddenPackage").value = membership;
+        document.getElementById("hiddenPaymentMethod").value = paymentMethod;
+
+        if (paymentMethod === "Cash") {
+          if (confirm("Are you sure you want to confirm Cash Payment?")) {
+            document.getElementById("hiddenConfirmedPayment").value = true;
+            membershipModal.hide();
+            form.submit();
+          }
+        } else if (paymentMethod === "UPI") {
+          // let backend handle sending WhatsApp link
+          document.getElementById("hiddenConfirmedPayment").value = false;
+          membershipModal.hide();
+          form.submit();
+        } else {
+          // Other methods
+          document.getElementById("hiddenConfirmedPayment").value = false;
+          membershipModal.hide();
+          form.submit();
+        }
+      });
+    });
+
+    function fetchPackagesForSelect() {
+      fetch("/admin/package-list")
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            const packageSelect = document.getElementById("package");
+            packageSelect.innerHTML = '<option value="">-- Select Package --</option>';
+            data.data.forEach(pkg => {
+              const opt = document.createElement("option");
+              opt.value = pkg._id;
+              opt.textContent = `${pkg.packageType} - ₹${pkg.price} - ${pkg.durationInDays} Days`;
+              packageSelect.appendChild(opt);
+            });
+          }
+        })
+        .catch(err => console.error(err));
+    }
+  </script>
+
+
+
+
+
+  <!-- <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      fetchPackagesForSelect();
+
+      const form = document.getElementById("admin_register");
+      const membershipModal = new bootstrap.Modal(document.getElementById("membershipModal"));
+      const confirmSave = document.getElementById("confirmSave");
+      const paymentMethodSelect = document.getElementById("paymentMethod");
+
+      // Show modal instead of direct submit
+      form.addEventListener("submit", function (e) {
+        e.preventDefault();
+        membershipModal.show();
+      });
+
+      // Toggle confirm button text
+      paymentMethodSelect.addEventListener("change", function () {
+        if (this.value === "Cash") {
+          confirmSave.textContent = "Confirm Cash Payment";
+        } else if (this.value === "UPI") {
+          confirmSave.textContent = "Send WhatsApp Payment Link";
+        } else {
+          confirmSave.textContent = "Save & Submit";
+        }
+      });
+
+      // Handle save / payment
+      confirmSave.addEventListener("click", function () {
+        const membership = document.getElementById("package").value.trim();
+        const paymentMethod = paymentMethodSelect.value.trim();
+
+        if (!membership || !paymentMethod) {
+          alert("Please select both membership and payment method.");
+          return;
+        }
+
+        if (paymentMethod === "Cash") {
+          // For cash → confirm payment directly
+          document.getElementById("hiddenPackage").value = membership;
+          document.getElementById("hiddenPaymentMethod").value = "Cash";
+          document.getElementById("hiddenConfirmedPayment").value = true;
+
+          membershipModal.hide();
+          form.submit();
+
+        } else if (paymentMethod === "UPI") {
+          // For UPI → Ask backend to send WhatsApp link
+          const phone = document.getElementById("phone").value.trim(); // from your client form
+          fetch("/admin/send-payment-link", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ phone, packageId: membership })
+          })
+            .then(res => res.json())
+            .then(data => {
+              if (data.success) {
+                alert("Payment link sent via WhatsApp!");
+                document.getElementById("hiddenPackage").value = membership;
+                document.getElementById("hiddenPaymentMethod").value = "UPI";
+                document.getElementById("hiddenConfirmedPayment").value = false; // not yet paid
+
+                membershipModal.hide();
+                form.submit();
+              } else {
+                alert("Failed to send payment link");
+              }
+            })
+            .catch(err => console.error("WhatsApp Error:", err));
+        }
+      });
+    });
+
+    function fetchPackagesForSelect() {
+      fetch("/admin/package-list")
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            const packageSelect = document.getElementById("package");
+            packageSelect.innerHTML = '<option value="">-- Select Package --</option>';
+            data.data.forEach(pkg => {
+              const opt = document.createElement("option");
+              opt.value = pkg._id;
+              opt.textContent = `${pkg.packageType} - ₹${pkg.price} - ${pkg.durationInDays} Days`;
+              packageSelect.appendChild(opt);
+            });
+          }
+        })
+        .catch(err => console.error(err));
+    }
+  </script> -->
+
+
+  <!-- <script>
     document.addEventListener("DOMContentLoaded", () => {
 
       fetchPackagesForSelect();
@@ -591,20 +772,23 @@
       // When clicking Save & Submit in modal → actually submit
       confirmSave.addEventListener("click", function () {
         // Validate modal fields
-        const membership = document.getElementById("membership").value;
-        const paymentMethod = document.getElementById("paymentMethod").value;
+        const membership = document.getElementById("package").value.trim();
+        const paymentMethod = document.getElementById("paymentMethod").value.trim();
 
         if (!membership || !paymentMethod) {
           alert("Please select both membership and payment method.");
           return;
         }
+        console.log('-----------', membership, paymentMethod);
+        // copy values into hidden inputs
+        document.getElementById("hiddenPackage").value = membership;
+        document.getElementById("hiddenPaymentMethod").value = paymentMethod;
 
         membershipModal.hide();
         form.submit();
       });
     });
     function fetchPackagesForSelect() {
-      console.log('hjhjhj');
 
       fetch("/admin/package-list")
         .then(res => res.json())
@@ -615,7 +799,7 @@
             data.data.forEach(pkg => {
               const opt = document.createElement("option");
               opt.value = pkg._id;
-              opt.textContent = `${pkg.packageType} - ₹${pkg.price}`;
+              opt.textContent = `${pkg.packageType} - ₹${pkg.price} - ${pkg.durationInDays} Days`;
               packageSelect.appendChild(opt);
             });
           } else {
@@ -624,7 +808,7 @@
         })
         .catch(err => console.error(err));
     }
-  </script>
+  </script> -->
 
   <!-- container-scroller -->
   <!-- plugins:js -->
@@ -684,8 +868,6 @@
         url: '/admin/get-branches-name',
         type: 'GET',
         success: function (response) {
-          console.log(response);
-          
           if (response.success) {
             $('#branch').empty();
             $('#branch').append('<option value="">-- Select Branch --</option>');

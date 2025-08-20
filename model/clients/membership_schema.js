@@ -21,6 +21,11 @@ const schema = new mongoose.Schema(
       enum: ["Cash","UPI",],
       required: true,
     },
+    paymentStatus: {
+      type: String,
+      enum: ["Pending", "Completed"],
+      default: "Pending",
+    },
     confirmedPayment: {
       type: Boolean,
       default: false,
@@ -31,7 +36,6 @@ const schema = new mongoose.Schema(
     },
     expiredDate: {
       type: Date,
-      required: true,
     },
     status: {
       type: String,

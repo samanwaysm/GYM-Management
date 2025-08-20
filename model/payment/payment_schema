@@ -1,0 +1,49 @@
+// models/Payment.js
+const mongoose = require("mongoose");
+
+const schema = new mongoose.Schema(
+  {
+    clientId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Client", // reference to Client schema
+      required: true,
+    },
+    razorpayOrderId: {
+      type: String,
+      required: true,
+    },
+    razorpayPaymentId: {
+      type: String,
+    },
+    razorpaySignature: {
+      type: String,
+    },
+    amount: {
+      type: Number,
+      required: true,
+    },
+    currency: {
+      type: String,
+      default: "INR",
+    },
+    status: {
+      type: String,
+      enum: ["Pending", "Completed", "Failed"],
+      default: "Pending",
+    },
+    paymentDate: {
+      type: Date,
+      default: Date.now,
+    },
+    confirmedPayment: {
+      type: Boolean,
+      default: false,
+    },
+  },
+  { timestamps: true }
+);
+
+const payment_schema = mongoose.model("payment", schema);
+
+module.exports = payment_schema
+

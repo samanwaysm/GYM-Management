@@ -14,6 +14,7 @@ const connectDB = require('./server/database/connection')
 const admin_router = require('./server/routes/admin/admin_routes');
 const trainers_router = require('./server/routes/trainers/trainers_routes');
 const clients_router = require('./server/routes/clients/clients_routes');
+const payment_router = require('./server/routes/payment_routes/payment_routes');
 
 const PORT = process.env.PORT || 8080;
 
@@ -50,6 +51,7 @@ app.use(session({
 
 app.use('/',admin_router );
 app.use('/',trainers_router);
+app.use("/payment", payment_router);
 
 app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
