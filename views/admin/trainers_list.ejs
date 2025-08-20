@@ -397,9 +397,16 @@
                     <div class="card">
                         <div class="card-body">
                             <!-- Search Box -->
-                            <div class="mb-3">
+                            <!-- <div class="mb-3">
                                 <input type="text" id="searchBox" class="form-control"
                                     placeholder="Search trainer (name, email, phone...)">
+                            </div> -->
+                            <div class="mb-3 d-flex" style="gap: 1rem;">
+                                <input type="text" id="searchBox" class="form-control w-75"
+                                    placeholder="Search client (name, email, phone...)">
+                                <select id="branchFilter" class="form-control w-25">
+                                    <option value="">-- Select Branch --</option>
+                                </select>
                             </div>
                             <div class="table-responsive">
                                 <table class="table table-hover">
@@ -469,6 +476,98 @@
     <script>
         let currentPage = 1;
 
+        function loadTrainers(page = 1, query = "", branch = "") {
+            $.ajax({
+                url: "/admin/trainers-list",
+                type: "GET",
+                data: { page: page, search: query, branch: branch },
+                success: function (res) {
+                    let rows = "";
+
+                    if (!res.trainers || res.trainers.length === 0) {
+                        rows = `<tr><td colspan="7" class="text-center">No Trainers found.</td></tr>`;
+                    } else {
+                        res.trainers.forEach(trainer => {
+                            rows += `
+          <tr>
+            <td>${trainer.name}</td>
+            <td>${trainer.email}</td>
+            <td>${trainer.phone}</td>
+            <td>${trainer.clientsCount}</td>
+            <td>${trainer.branchName || "-"}</td>
+            <td>
+              <button type="button" class="btn btn-outline-secondary btn-icon-text">
+                Edit <i class="mdi mdi-file-check btn-icon-append"></i>
+              </button>
+            </td>
+            <td>
+              <button type="button" class="btn btn-outline-danger btn-icon-text">
+                <i class="mdi mdi-bucket btn-icon-prepend"></i> Unlist
+              </button>
+            </td>
+          </tr>`;
+                        });
+                    }
+
+                    $("#trainersTableBody").html(rows);
+
+                    // Pagination
+                    let paginationHtml = "";
+                    for (let i = 1; i <= res.totalPages; i++) {
+                        paginationHtml += `
+        <li class="page-item ${i === res.currentPage ? "active" : ""}">
+          <a class="page-link" href="javascript:void(0)" onclick="changePage(${i})">${i}</a>
+        </li>`;
+                    }
+                    $("#pagination").html(paginationHtml);
+                },
+                error: function () {
+                    $("#trainersTableBody").html(`<tr><td colspan="7" class="text-center text-danger">Error loading trainers.</td></tr>`);
+                }
+            });
+        }
+
+        function changePage(page) {
+            currentPage = page;
+            const query = $("#searchBox").val();
+            const branch = $("#branchFilter").val();
+            loadTrainers(currentPage, query, branch);
+        }
+
+        $(document).ready(function () {
+
+            // Load branches for dropdown
+            $.ajax({
+                url: "/admin/get-branches-name",
+                type: "GET",
+                success: function (branches) {
+                    branches.branches.forEach(branch => {
+                        $("#branchFilter").append(`<option value="${branch._id}">${branch.name}</option>`);
+                    });
+                }
+            });
+
+            loadTrainers();
+
+            // Search handler
+            $("#searchBox").on("keyup", function () {
+                const query = $(this).val();
+                const branch = $("#branchFilter").val();
+                loadTrainers(1, query, branch);
+            });
+
+            // Branch filter handler
+            $("#branchFilter").on("change", function () {
+                const query = $("#searchBox").val();
+                const branch = $(this).val();
+                loadTrainers(1, query, branch);
+            });
+        });
+
+    </script>
+    <!-- <script>
+        let currentPage = 1;
+
         function loadTrainers(page = 1, query = "") {
             $.ajax({
                 url: "/admin/trainers-list",   // backend route
@@ -535,7 +634,7 @@
                 loadTrainers(1, query); // reset to page 1 when searching
             });
         });
-    </script>
+    </script> -->
 </body>
 
 </html>

@@ -889,27 +889,109 @@ exports.addTrainers = async (req, res) => {
 //   }
 // };
 
+// exports.trainersList = async (req, res) => {
+//   try {
+//     let page = parseInt(req.query.page) || 1;
+//     let limit = 5;  // adjust as needed
+//     let skip = (page - 1) * limit;
+
+//     let search = req.query.search || "";
+
+//     // search condition
+//     let match = {};
+//     if (search) {
+//       match = {
+//         $or: [
+//           { name: { $regex: search, $options: "i" } },
+//           { email: { $regex: search, $options: "i" } },
+//           { phone: { $regex: search, $options: "i" } }
+//         ]
+//       };
+//     }
+
+//     // Count trainers with filter
+//     const totalTrainers = await Trainer.countDocuments(match);
+
+//     const trainers = await Trainer.aggregate([
+//       { $match: match },
+//       {
+//         $lookup: {
+//           from: "branches",
+//           localField: "branch",
+//           foreignField: "_id",
+//           as: "branchInfo"
+//         }
+//       },
+//       { $unwind: { path: "$branchInfo", preserveNullAndEmptyArrays: true } },
+//       {
+//         $lookup: {
+//           from: "clients",
+//           let: { trainerId: "$_id" },
+//           pipeline: [
+//             {
+//               $match: {
+//                 $expr: { $eq: ["$trainerId", "$$trainerId"] },
+//                 status: "Active"
+//               }
+//             }
+//           ],
+//           as: "clientsHandled"
+//         }
+//       },
+//       {
+//         $addFields: {
+//           clientsCount: { $size: "$clientsHandled" }
+//         }
+//       },
+//       {
+//         $project: {
+//           name: 1,
+//           email: 1,
+//           phone: 1,
+//           branchName: "$branchInfo.name",
+//           clientsCount: 1
+//         }
+//       },
+//       { $skip: skip },
+//       { $limit: limit }
+//     ]);
+
+//     res.status(200).json({
+//       trainers,
+//       totalPages: Math.ceil(totalTrainers / limit),
+//       currentPage: page
+//     });
+//   } catch (error) {
+//     console.error("Error fetching trainers: ", error);
+//     res.status(500).json({ message: "Server Error" });
+//   }
+// };
+
 exports.trainersList = async (req, res) => {
   try {
     let page = parseInt(req.query.page) || 1;
-    let limit = 5;  // adjust as needed
+    let limit = 5;
     let skip = (page - 1) * limit;
 
     let search = req.query.search || "";
+    let branch = req.query.branch || "";
 
-    // search condition
+    // Base filter
     let match = {};
     if (search) {
-      match = {
-        $or: [
-          { name: { $regex: search, $options: "i" } },
-          { email: { $regex: search, $options: "i" } },
-          { phone: { $regex: search, $options: "i" } }
-        ]
-      };
+      match.$or = [
+        { name: { $regex: search, $options: "i" } },
+        { email: { $regex: search, $options: "i" } },
+        { phone: { $regex: search, $options: "i" } }
+      ];
     }
 
-    // Count trainers with filter
+    // Branch filter
+    if (branch) {
+      match.branch = new mongoose.Types.ObjectId(branch);
+    }
+
+    // Count trainers
     const totalTrainers = await Trainer.countDocuments(match);
 
     const trainers = await Trainer.aggregate([
@@ -966,6 +1048,7 @@ exports.trainersList = async (req, res) => {
     res.status(500).json({ message: "Server Error" });
   }
 };
+
 
 
 exports.getTrainersByBranch = async (req, res) => {
@@ -1378,27 +1461,96 @@ exports.addClients = async (req, res) => {
 };
 
 
+// exports.clientsList = async (req, res) => {
+//   try {
+//     let page = parseInt(req.query.page) || 1;
+//     let limit = 2;  // adjust page size
+//     let skip = (page - 1) * limit;
+
+//     let search = req.query.search || "";
+
+//     // Search filter
+//     let match = {};
+//     if (search) {
+//       match = {
+//         $or: [
+//           { name: { $regex: search, $options: "i" } },
+//           { email: { $regex: search, $options: "i" } },
+//           { phone: { $regex: search, $options: "i" } }
+//         ]
+//       };
+//     }
+
+//     // Count clients
+//     const totalClients = await Client.countDocuments(match);
+
+//     const clients = await Client.aggregate([
+//       { $match: match },
+//       {
+//         $lookup: {
+//           from: "branches",
+//           localField: "branchId",
+//           foreignField: "_id",
+//           as: "branchInfo"
+//         }
+//       },
+//       { $unwind: { path: "$branchInfo", preserveNullAndEmptyArrays: true } },
+//       {
+//         $lookup: {
+//           from: "trainers",
+//           localField: "trainerId",
+//           foreignField: "_id",
+//           as: "trainerInfo"
+//         }
+//       },
+//       { $unwind: { path: "$trainerInfo", preserveNullAndEmptyArrays: true } },
+//       {
+//         $project: {
+//           name: 1,
+//           email: 1,
+//           phone: 1,
+//           branch: "$branchInfo.name",
+//           trainer: "$trainerInfo.name"
+//         }
+//       },
+//       { $skip: skip },
+//       { $limit: limit }
+//     ]);
+
+//     res.status(200).json({
+//       clients,
+//       totalPages: Math.ceil(totalClients / limit),
+//       currentPage: page
+//     });
+//   } catch (error) {
+//     console.error("Error fetching clients: ", error);
+//     res.status(500).json({ message: "Server Error" });
+//   }
+// };
+
 exports.clientsList = async (req, res) => {
   try {
     let page = parseInt(req.query.page) || 1;
-    let limit = 2;  // adjust page size
+    let limit = 2;
     let skip = (page - 1) * limit;
 
     let search = req.query.search || "";
+    let branchId = req.query.branchId || "";
 
     // Search filter
     let match = {};
     if (search) {
-      match = {
-        $or: [
-          { name: { $regex: search, $options: "i" } },
-          { email: { $regex: search, $options: "i" } },
-          { phone: { $regex: search, $options: "i" } }
-        ]
-      };
+      match.$or = [
+        { name: { $regex: search, $options: "i" } },
+        { email: { $regex: search, $options: "i" } },
+        { phone: { $regex: search, $options: "i" } }
+      ];
     }
 
-    // Count clients
+    if (branchId) {
+      match.branchId = new mongoose.Types.ObjectId(branchId);
+    }
+
     const totalClients = await Client.countDocuments(match);
 
     const clients = await Client.aggregate([

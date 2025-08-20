@@ -1,6 +1,8 @@
 const Razorpay = require("razorpay");
 const crypto = require("crypto");
 const twilio = require("twilio");
+const cron = require("node-cron");
+
 const Payment = require("../../../model/payment/payment_schema");
 const Membership = require("../../../model/clients/membership_schema");
 
@@ -84,6 +86,7 @@ exports.handleWebhook = async (req, res) => {
         {
           razorpayPaymentId: paymentData.id,
           status: "Success",
+          confirmedPayment: true,
           paidAt: new Date()
         }
       );

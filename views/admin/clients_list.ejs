@@ -397,9 +397,12 @@
                     <div class="card">
                         <div class="card-body">
                             <!-- Search Box -->
-                            <div class="mb-3">
-                                <input type="text" id="searchBox" class="form-control"
+                            <div class="mb-3 d-flex" style="gap: 1rem;">
+                                <input type="text" id="searchBox" class="form-control w-75"
                                     placeholder="Search client (name, email, phone...)">
+                                <select id="branchFilter" class="form-control w-25">
+                                    <option value="">-- Select Branch --</option>
+                                </select>
                             </div>
                             <div class="table-responsive">
                                 <table class="table table-hover">
@@ -469,6 +472,98 @@
     <script>
         let currentPage = 1;
 
+        function loadClients(page = 1, query = "", branchId = "") {
+            $.ajax({
+                url: "/admin/clients-list",
+                type: "GET",
+                data: { page: page, search: query, branchId: branchId },
+                success: function (res) {
+                    let rows = "";
+
+                    if (!res.clients || res.clients.length === 0) {
+                        rows = `<tr><td colspan="7" class="text-center">No Clients found.</td></tr>`;
+                    } else {
+                        res.clients.forEach(client => {
+                            rows += `
+                    <tr>
+                        <td>${client.name}</td>
+                        <td>${client.email}</td>
+                        <td>${client.phone}</td>
+                        <td>${client.branch || "-"}</td>
+                        <td>${client.trainer || "-"}</td>
+                        <td>
+                            <button class="btn btn-outline-secondary btn-icon-text">
+                                Edit <i class="mdi mdi-file-check btn-icon-append"></i>
+                            </button>
+                        </td>
+                        <td>
+                            <button class="btn btn-outline-danger btn-icon-text">
+                                <i class="mdi mdi-bucket btn-icon-prepend"></i> Delete
+                            </button>
+                        </td>
+                    </tr>`;
+                        });
+                    }
+
+                    $("#clientsTableBody").html(rows);
+
+                    // Pagination
+                    let paginationHtml = "";
+                    for (let i = 1; i <= res.totalPages; i++) {
+                        paginationHtml += `
+                <li class="page-item ${i === res.currentPage ? "active" : ""}">
+                    <a class="page-link" href="javascript:void(0)" onclick="changePage(${i})">${i}</a>
+                </li>`;
+                    }
+                    $("#pagination").html(paginationHtml);
+                },
+                error: function () {
+                    $("#clientsTableBody").html(`<tr><td colspan="7" class="text-center text-danger">Error loading clients.</td></tr>`);
+                }
+            });
+        }
+
+        function changePage(page) {
+            currentPage = page;
+            const query = $("#searchBox").val();
+            const branchId = $("#branchFilter").val();
+            loadClients(currentPage, query, branchId);
+        }
+
+        $(document).ready(function () {
+            // Load branches for dropdown
+            $.ajax({
+                url: "/admin/get-branches-name",
+                type: "GET",
+                success: function (branches) {
+                    branches.branches.forEach(branch => {
+                        $("#branchFilter").append(`<option value="${branch._id}">${branch.name}</option>`);
+                    });
+                }
+            });
+
+            // Load clients initially
+            loadClients();
+
+            // Live Search
+            $("#searchBox").on("keyup", function () {
+                const query = $(this).val();
+                const branchId = $("#branchFilter").val();
+                loadClients(1, query, branchId);
+            });
+
+            // Branch filter
+            $("#branchFilter").on("change", function () {
+                const branchId = $(this).val();
+                const query = $("#searchBox").val();
+                loadClients(1, query, branchId);
+            });
+        });
+
+    </script>
+    <!-- <script>
+        let currentPage = 1;
+
         function loadClients(page = 1, query = "") {
             $.ajax({
                 url: "/admin/clients-list",   // backend route
@@ -535,7 +630,7 @@
                 loadClients(1, query); // reset to page 1 on search
             });
         });
-    </script>
+    </script> -->
 </body>
 
 </html>
