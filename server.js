@@ -20,6 +20,8 @@ const PORT = process.env.PORT || 8080;
 
 connectDB();
 
+// ✅ Require cron after DB connection
+require('./cron');   // <-- this will load cron jobs
 
 app.use(express.json());
 // parse request to body-parser
