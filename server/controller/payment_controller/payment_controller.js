@@ -58,7 +58,7 @@ exports.createOrder = async (req, res) => {
     });
 
     // ✅ Redirect admin back to client list after sending message
-    res.redirect("/admin-client-list");
+    res.redirect("admin-clients-list");
 
   } catch (err) {
     console.error("❌ Payment creation failed:", err);
