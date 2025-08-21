@@ -10,6 +10,7 @@ const clientTwilio = new twilio(process.env.TWILIO_SID, process.env.TWILIO_AUTH_
 // // 🔹 Run daily at midnight
 // cron.schedule("0 0 * * *", async () => {
 //   console.log("⏰ Running cron job for expired memberships");
+
 cron.schedule("0 9 * * *", async () => {
   console.log("⏰ Cron job running at 9:00 AM every day!");
 
@@ -31,7 +32,9 @@ cron.schedule("0 9 * * *", async () => {
 
       // Update membership status
       membership.confirmedPayment = false;
-      membership.paymentStatus = "Expired";
+      membership.paymentStatus = "Pending";
+      membership.status = "Expired";
+
       await membership.save();
     }
   } catch (err) {
