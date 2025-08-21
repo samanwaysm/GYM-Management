@@ -7,7 +7,7 @@ const Membership = require("./model/clients/membership_schema");
 
 const clientTwilio = new twilio(process.env.TWILIO_SID, process.env.TWILIO_AUTH_TOKEN);
 
-cron.schedule("*/2 * * * *", () => {
+cron.schedule("*/1 * * * *", () => {
   console.log("⏰ Cron job running every 2 minutes!");
   // here you can put your membership expiry check + WhatsApp message
 });
