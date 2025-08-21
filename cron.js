@@ -7,14 +7,11 @@ const Membership = require("./model/clients/membership_schema");
 
 const clientTwilio = new twilio(process.env.TWILIO_SID, process.env.TWILIO_AUTH_TOKEN);
 
-cron.schedule("*/1 * * * *", () => {
-  console.log("⏰ Cron job running every 1 minutes!");
-  // here you can put your membership expiry check + WhatsApp message
-});
-
-// 🔹 Run daily at midnight
-cron.schedule("0 0 * * *", async () => {
-  console.log("⏰ Running cron job for expired memberships");
+// // 🔹 Run daily at midnight
+// cron.schedule("0 0 * * *", async () => {
+//   console.log("⏰ Running cron job for expired memberships");
+cron.schedule("0 9 * * *", async () => {
+  console.log("⏰ Cron job running at 9:00 AM every day!");
 
   try {
     const expiredMemberships = await Membership.find({
