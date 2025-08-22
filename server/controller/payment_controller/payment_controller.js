@@ -5,12 +5,13 @@ const cron = require("node-cron");
 
 const Payment = require("../../../model/payment/payment_schema");
 const Membership = require("../../../model/clients/membership_schema");
+const Package = require("../../../model/admin/package_schema")
 
 const clientTwilio = new twilio(process.env.TWILIO_SID, process.env.TWILIO_AUTH_TOKEN);
 
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
-  key_secret: process.env.RAZORPAY_SECRET,
+  key_secret: process.env.RAZORPAY_KEY_SECRET,
 });
 
 // 🔹 Step 1: Create Razorpay Payment Link
@@ -36,7 +37,8 @@ exports.createOrder = async (req, res) => {
       reminder_enable: true,
       notes: {
         clientId: clientId,
-        membershipId: membership._id.toString()
+        membershipId: membership._id.toString(),
+        packageId: packageId
       }
     });
 
@@ -81,6 +83,11 @@ exports.handleWebhook = async (req, res) => {
       const paymentData = req.body.payload.payment.entity;
       const notes = req.body.payload.payment_link.entity.notes;
 
+      const package = await Package.findById({_id: notes.packageId});
+      paidDate = new Date();
+      expiredDate = new Date(paidDate);
+      expiredDate.setDate(paidDate.getDate() + package.durationInDays);
+
       await Payment.findOneAndUpdate(
         { razorpayOrderId: req.body.payload.payment_link.entity.id },
         {
@@ -91,13 +98,15 @@ exports.handleWebhook = async (req, res) => {
         }
       );
 
+
+
       await Membership.findOneAndUpdate(
         { _id: notes.membershipId },
         {
           paymentStatus: "Completed",
           confirmedPayment: true,
-          paidDate: new Date(),
-          expiredDate: new Date(Date.now() + (30 * 24 * 60 * 60 * 1000)) // +30 days
+          paidDate,
+          expiredDate
         }
       );
 

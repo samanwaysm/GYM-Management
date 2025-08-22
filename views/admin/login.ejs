@@ -14,7 +14,7 @@
   <!-- Layout styles -->
   <link rel="stylesheet" href="/admin/css/style.css">
   <!-- End layout styles -->
-  <link rel="shortcut icon" href="/admin/images/favicon.png" />
+  <link rel="shortcut icon" href="/admin/images/fevicon/fevicon.png" />
 </head>
 
 <body>
@@ -27,7 +27,7 @@
               <h3 class="card-title text-left mb-3">Login</h3>
               <form id="loginForm" method="POST" action="/admin/adminlogin" class="needs-validation" novalidate>
                 <div class="form-group mb-3">
-                  <label for="email">Username or Email *</label>
+                  <label for="email"> Email </label>
                   <input type="email" id="email" name="email" class="form-control p_input" required>
                   <div class="invalid-feedback">Please enter a valid email address.</div>
                   <% if (errors && errors.email) { %>
@@ -38,7 +38,7 @@
                 </div>
 
                 <div class="form-group mb-3">
-                  <label for="password">Password *</label>
+                  <label for="password"> Password </label>
                   <input type="password" id="password" name="password" class="form-control p_input" required
                     minlength="6">
                   <div class="invalid-feedback">Password must be at least 6 characters.</div>

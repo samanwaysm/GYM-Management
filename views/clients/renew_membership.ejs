@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="zxx">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="description" content="Activitar Template">
+    <meta name="keywords" content="Activitar, unica, creative, html">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Activitar | Template</title>
+
+    <!-- Google Font -->
+    <link href="https://fonts.googleapis.com/css?family=Nunito+Sans:400,600,700,800,900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Oswald:300,400,500,600,700&display=swap" rel="stylesheet">
+
+    <!-- Css Styles -->
+    <link rel="stylesheet" href="/client/css/bootstrap.min.css" type="text/css">
+    <link rel="stylesheet" href="/client/css/font-awesome.min.css" type="text/css">
+    <link rel="stylesheet" href="/client/css/elegant-icons.css" type="text/css">
+    <link rel="stylesheet" href="/client/css/nice-select.css" type="text/css">
+    <link rel="stylesheet" href="/client/css/owl.carousel.min.css" type="text/css">
+    <link rel="stylesheet" href="/client/css/magnific-popup.css" type="text/css">
+    <link rel="stylesheet" href="/client/css/slicknav.min.css" type="text/css">
+    <link rel="stylesheet" href="/client/css/style.css" type="text/css">
+    <link rel="shortcut icon" href="/client/img/fevicon/fevicon.png" />
+    <style>
+        body {
+            background-color: #121212;
+            /* dark theme background */
+            color: #f5f5f5;
+            font-family: 'Nunito Sans', sans-serif;
+        }
+
+        .profile-card {
+            background: #1e1e1e;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+            margin-bottom: 25px;
+        }
+
+        .profile-img {
+            width: 130px;
+            height: 130px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid rgb(228, 56, 28);
+        }
+
+        .expired {
+            color: rgb(228, 56, 28);
+            font-weight: 600;
+        }
+
+        .renew-card {
+            background: #1e1e1e;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+        }
+
+        .btn-danger {
+            background-color: rgb(228, 56, 28) !important;
+            border: none;
+            font-weight: 600;
+            border-radius: 8px;
+            padding: 10px 20px;
+        }
+
+        .form-select {
+            background-color: #121212;
+            color: #f5f5f5;
+            border: 1px solid #444;
+        }
+    </style>
+
+</head>
+
+<body>
+    <!-- Page Preloder -->
+    <div id="preloder">
+        <div class="loader"></div>
+    </div>
+
+    <!-- Header Section Begin -->
+    <header class="header-section">
+        <div class="container-fluid">
+            <div class="logo">
+                <a href="./index.html">
+                    <img src="/client/img/logo.png" alt="">
+                </a>
+            </div>
+            <div class="top-social">
+                <a href="#"><i class="fa fa-pinterest-p"></i></a>
+                <a href="#"><i class="fa fa-linkedin"></i></a>
+                <a href="#"><i class="fa fa-pinterest-p"></i></a>
+                <a href="#"><i class="fa fa-youtube-play"></i></a>
+                <a href="#"><i class="fa fa-instagram"></i></a>
+            </div>
+            <div class="container">
+                <div class="nav-menu">
+                    <nav class="mainmenu mobile-menu">
+                        <ul>
+                            <li class="active"><a href="./index.html">Home</a></li>
+                            <!-- <li><a href="./about-us.html">About us</a></li> -->
+                            <!-- <li><a href="./schedule.html">Schedule</a></li> -->
+                            <li><a href="./gallery.html">Gallery</a></li>
+                            <!-- <li><a href="./blog.html">Blog</a>
+                                <ul class="dropdown">
+                                    <li><a href="./about-us.html">About Us</a></li>
+                                    <li><a href="./blog-single.html">Blog Details</a></li>
+                                </ul>
+                            </li> -->
+                            <li><a href="./contact.html">Contacts</a></li>
+                            <li><a href="/login">Renew Membership</a></li>
+                        </ul>
+                    </nav>
+                </div>
+                <!-- 🔹 Login Button -->
+                <!-- <div class="d-flex justify-content-center mt-3">
+                    <a href="/login" class="btn btn-danger w-100"
+                        style="background-color:rgb(228,56,28); border:none; padding:10px; border-radius:25px; font-weight:600;">
+                        Login
+                    </a>
+                </div> -->
+
+            </div>
+            <div id="mobile-menu-wrap"></div>
+        </div>
+    </header>
+
+    <div class="container py-5 mt-5">
+
+        <!-- Profile Card -->
+        <div id="profile-card" class="profile-card d-flex align-items-center" style="display:none;">
+            <div>
+                <img id="user-photo" src="https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250"
+                    alt="User Photo" class="profile-img">
+            </div>
+            <div class="ms-4">
+                <h4 class="mb-1" id="user-name"></h4>
+                <p class="mb-1"><i class="fa fa-envelope me-2"></i> <span id="user-email"></span></p>
+                <p class="mb-1"><i class="fa fa-phone me-2"></i> <span id="user-phone"></span></p>
+                <p class="mb-1"><i class="fa fa-map-marker me-2"></i> Branch: <span id="user-branch"></span></p>
+                <p class="mb-1"><i class="fa fa-user me-2"></i> Trainer: <span id="user-trainer"></span></p>
+                <p class="mb-0"><i class="fa fa-calendar me-2"></i> Renewal Date:
+                    <span id="renewal-date"></span>
+                </p>
+            </div>
+        </div>
+
+        <!-- Membership Renewal -->
+        <div id="renew-card" class="renew-card d-none">
+            <h5 class="mb-3">Your membership has expired. Please renew:</h5>
+            <div class="row g-3">
+                <div class="col-md-8">
+                    <select id="packageSelect" class="form-select">
+                        <option selected>Select Membership Plan</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <button id="payOnlineBtn" class="btn btn-danger w-100">Pay Online</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <footer class="footer-section">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-3">
+                    <div class="footer-logo-item">
+                        <div class="f-logo">
+                            <a href="#"><img src="/client/img/logo.png" alt=""></a>
+                        </div>
+                        <p>Despite growth of the Internet over the past seven years, the use of toll-free phone numbers
+                            in television advertising continues.</p>
+                        <div class="social-links">
+                            <h6>Follow us</h6>
+                            <a href="#"><i class="fa fa-facebook"></i></a>
+                            <a href="#"><i class="fa fa-twitter"></i></a>
+                            <a href="#"><i class="fa fa-google-plus"></i></a>
+                            <a href="#"><i class="fa fa-linkedin"></i></a>
+                            <a href="#"><i class="fa fa-instagram"></i></a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 offset-lg-1">
+                    <div class="footer-widget">
+                        <h5>Our Blog</h5>
+                        <div class="footer-blog">
+                            <a href="#" class="fb-item">
+                                <h6>Most people who work</h6>
+                                <span class="blog-time"><i class="fa fa-clock-o"></i> Jan 02, 2019</span>
+                            </a>
+                            <a href="#" class="fb-item">
+                                <h6>Freelance Design Tricks How </h6>
+                                <span class="blog-time"><i class="fa fa-clock-o"></i> Jan 02, 2019</span>
+                            </a>
+                            <a href="#" class="fb-item">
+                                <h6>have a computer at home have had </h6>
+                                <span class="blog-time"><i class="fa fa-clock-o"></i> Jan 02, 2019</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-2">
+                    <div class="footer-widget">
+                        <h5>Program</h5>
+                        <ul class="workout-program">
+                            <li><a href="#">Bodybuilding</a></li>
+                            <li><a href="#">Running</a></li>
+                            <li><a href="#">Streching</a></li>
+                            <li><a href="#">Weight Loss</a></li>
+                            <li><a href="#">Gym Fitness</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-lg-3">
+                    <div class="footer-widget">
+                        <h5>Get Info</h5>
+                        <ul class="footer-info">
+                            <li>
+                                <i class="fa fa-phone"></i>
+                                <span>Phone:</span>
+                                (12) 345 6789
+                            </li>
+                            <li>
+                                <i class="fa fa-envelope-o"></i>
+                                <span>Email:</span>
+                                Colorlib.info@gmail.com
+                            </li>
+                            <li>
+                                <i class="fa fa-map-marker"></i>
+                                <span>Address</span>
+                                Iris Watson, Box 283 8562, NY
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="copyright-text">
+            <div class="container">
+                <div class="row">
+                    <div class="col-lg-12 text-center">
+                        <div class="ct-inside">
+                            <!-- Link back to Colorlib can't be removed. Template is licensed under CC BY 3.0. -->
+                            Copyright &copy;
+                            <script>document.write(new Date().getFullYear());</script> All rights reserved | This
+                            template is made with <i class="fa fa-heart-o" aria-hidden="true"></i> by <a
+                                href="https://colorlib.com" target="_blank">Colorlib</a>
+                            <!-- Link back to Colorlib can't be removed. Template is licensed under CC BY 3.0. -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+    <!-- Footer Section End -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <script>
+        $(document).ready(function () {
+            const clientId = "<%= userId %>"; // passed from server
+
+            // Fetch user + membership
+            $.get(`/client/user-data-fetch/${clientId}`, function (res) {
+                if (res.success) {
+                    const c = res.client;
+                    const m = res.membership;
+
+                    let membershipText = m && m.status === "Active"
+                        ? `<span class="text-success">Active until ${new Date(m.expiredDate).toLocaleDateString()}</span>`
+                        : `<span class="expired">Expired</span>`;
+
+                    $("#profile-card").html(`
+        <div class="profile-card d-flex align-items-center">
+          <img src="https://www.gravatar.com/avatar/${c._id}?s=200" class="profile-img" alt="User"/>
+          <div class="ms-4">
+            <h4>${c.name}</h4>
+            <p><i class="fa fa-envelope"></i> ${c.email}</p>
+            <p><i class="fa fa-phone"></i> ${c.phone}</p>
+            <p><i class="fa fa-map-marker"></i> Branch: ${c.branchId?.name || "-"}</p>
+            <p><i class="fa fa-user"></i> Trainer: ${c.trainerId?.name || "-"}</p>
+            <p><i class="fa fa-calendar"></i> Renewal Date: ${membershipText}</p>
+          </div>
+        </div>
+      `);
+
+                    if (!m || m.status === "Expired") {
+                        $("#renew-card").removeClass("d-none");
+                        loadPackages();
+                    }
+                }
+            });
+
+            // Load packages function
+            // Load packages only the first time the user clicks
+            $("#packageSelect").one("click", function () {
+                $.get("/admin/package-list", function (res) {
+                    if (res.success) {
+                        $("#packageSelect").empty();
+                        $("#packageSelect").append(`<option disabled selected>Select Membership Plan</option>`);
+                        res.data.forEach(p => {
+                            $("#packageSelect").append(
+                                `<option value="${p._id}" data-price="${p.price}">
+                            ${p.packageType} - ₹${p.price} - ${p.durationInDays} Days
+                         </option>`
+                            );
+                        });
+                    }
+                });
+            });
+            // Load packages
+            // function loadPackages() {
+            //     $.get("/admin/package-list", function (res) {
+            //         if (res.success) {
+            //             console.log(res);
+            //             $("#packageSelect").empty();
+            //             res.data.forEach(p => {
+            //                 $("#packageSelect").append(`<option value="${p._id}" data-price="${p.price}">${p.packageType} - ₹${p.price} - ${p.durationInDays} Days </option>`);
+            //             });
+            //         }
+            //     });
+            // }
+
+            // Pay online
+            $("#payOnlineBtn").on("click", function () {
+                const packageId = $("#packageSelect").val();
+
+                if (!packageId) return alert("Please select a package");
+
+                $.ajax({
+                    url: "/client/update-membership",
+                    method: "POST",
+                    contentType: "application/json",
+                    data: JSON.stringify({ clientId: clientId, packageId }),
+                    success: function (res) {
+                        if (res.success) {                            
+                            var options = {
+                                key: res.key,
+                                amount: res.amount,
+                                currency: res.currency,
+                                name: "Gym Membership",
+                                description: "Membership Payment",
+                                order_id: res.orderId,
+                                handler: function (response) {                                    
+                                    $.ajax({
+                                        url: "/client/verify-payment",
+                                        method: "POST",
+                                        contentType: "application/json",
+                                        data: JSON.stringify({
+                                            razorpay_payment_id: response.razorpay_payment_id,
+                                            razorpay_order_id: response.razorpay_order_id,
+                                            razorpay_signature: response.razorpay_signature,
+                                            membershipId: res.membershipId,
+                                            packageId: res.packageId
+                                        }),
+                                        success: function (verifyRes) {
+                                            if (verifyRes.success) {
+                                                alert("✅ Payment Successful!");
+                                                location.reload();
+                                            } else {
+                                                alert("❌ Payment Verification Failed");
+                                            }
+                                        }
+                                    });
+                                },
+                                theme: { color: "#e4381c" }
+                            };
+                            var rzp = new Razorpay(options);
+                            rzp.open();
+                        } else {
+                            alert(res.message);
+                        }
+                    }
+                });
+            });
+
+        });
+    </script>
+
+    <!-- <script>
+        $(document).ready(function () {
+
+            // ✅ 1. Fetch user data
+            $.get('/user/data', function (res) {
+                if (res.success) {
+                    const user = res.user;
+
+                    if (user.expired) {
+                        // Show renew section
+                        $("#renew-card").show();
+
+                        // Load packages
+                        $.get('/user/packages', function (pkgRes) {
+                            if (pkgRes.success) {
+                                let options = '<option disabled selected>Select Membership Plan</option>';
+                                pkgRes.packages.forEach(p => {
+                                    options += `<option value="${p._id}">${p.name} - $${p.price}</option>`;
+                                });
+                                $("#package-select").html(options);
+                            }
+                        });
+
+                    } else {
+                        // Show profile
+                        $("#profile-card").show();
+                        $("#user-photo").attr("src", user.photo || "https://via.placeholder.com/130");
+                        $("#user-name").text(user.name);
+                        $("#user-email").text(user.email);
+                        $("#user-phone").text(user.phone);
+                        $("#user-branch").text(user.branch);
+                        $("#user-trainer").text(user.trainer);
+                        $("#renewal-date").text(user.expiryDate);
+                    }
+                }
+            });
+
+            // ✅ 2. Pay button click
+            $("#pay-btn").click(function () {
+                let pkgId = $("#package-select").val();
+                if (!pkgId) return alert("Please select a package");
+
+                $.post('/user/pay', { packageId: pkgId }, function (res) {
+                    if (res.success) {
+                        alert("Redirecting to payment...");
+                        window.location.href = res.paymentUrl;
+                    } else {
+                        alert(res.message);
+                    }
+                });
+            });
+
+        });
+    </script> -->
+    <!-- Js Plugins -->
+    <script src="/client/js/jquery-3.3.1.min.js"></script>
+    <script src="/client/js/bootstrap.min.js"></script>
+    <script src="/client/js/jquery.magnific-popup.min.js"></script>
+    <script src="/client/js/mixitup.min.js"></script>
+    <script src="/client/js/jquery.nice-select.min.js"></script>
+    <script src="/client/js/jquery.slicknav.js"></script>
+    <script src="/client/js/owl.carousel.min.js"></script>
+    <script src="/client/js/masonry.pkgd.min.js"></script>
+    <script src="/client/js/main.js"></script>
+</body>
+
+</html>

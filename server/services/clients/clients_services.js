@@ -1,10 +1,10 @@
 const session = require('express-session');
 
 exports.home = (req, res) => {
-    const { errors,} = req.session
+    const { errors,userId} = req.session
     
     delete req.session.errors
-    res.render("clients/home",{errors},(err, html) => {
+    res.render("clients/home",{errors,userId},(err, html) => {
         if (err) {
             console.log(err);
         }
@@ -13,10 +13,22 @@ exports.home = (req, res) => {
 }
 
 exports.login = (req, res) => {
-    const { errors,} = req.session
+    const { errors,userId} = req.session
     
     delete req.session.errors
-    res.render("clients/login",{errors},(err, html) => {
+    res.render("clients/login",{errors,userId},(err, html) => {
+        if (err) {
+            console.log(err);
+        }
+        res.send(html)
+    })
+}
+
+exports.renew_membership = (req, res) => {
+    const { errors, userId} = req.session
+    
+    delete req.session.errors
+    res.render("clients/renew_membership",{errors,userId},(err, html) => {
         if (err) {
             console.log(err);
         }

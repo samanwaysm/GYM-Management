@@ -11,6 +11,9 @@ const clientTwilio = new twilio(process.env.TWILIO_SID, process.env.TWILIO_AUTH_
 // cron.schedule("0 0 * * *", async () => {
 //   console.log("⏰ Running cron job for expired memberships");
 
+// cron.schedule("*/1 * * * *", async () => {
+//   console.log("⏰ Cron job running every 2 minutes!");
+
 cron.schedule("0 9 * * *", async () => {
   console.log("⏰ Cron job running at 9:00 AM every day!");
 
