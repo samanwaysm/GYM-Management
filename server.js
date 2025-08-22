@@ -54,7 +54,7 @@ app.use(session({
 app.use('/',admin_router );
 app.use('/',trainers_router);
 app.use('/',clients_router);
-app.use("/payment", payment_router);
+app.use("/", payment_router);
 
 app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
