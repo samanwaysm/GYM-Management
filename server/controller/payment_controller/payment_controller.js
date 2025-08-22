@@ -37,10 +37,12 @@ exports.createOrder = async (req, res) => {
       reminder_enable: true,
       notes: {
         clientId: clientId,
-        membershipId: membership._id.toString(),
-        packageId: packageId
+        packageId: packageId,
+        membershipId: membership._id.toString()
       }
     });
+    console.log(paymentLink);
+    
 
     // Save Payment
     const newPayment = new Payment({
@@ -82,7 +84,7 @@ exports.handleWebhook = async (req, res) => {
     if (event === "payment_link.paid") {
       const paymentData = req.body.payload.payment.entity;
       const notes = req.body.payload.payment_link.entity.notes;
-
+      console.log(notes);
       const package = await Package.findById({_id: notes.packageId});
       paidDate = new Date();
       expiredDate = new Date(paidDate);
