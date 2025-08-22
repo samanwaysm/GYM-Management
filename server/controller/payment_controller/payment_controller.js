@@ -37,7 +37,6 @@ exports.createOrder = async (req, res) => {
       reminder_enable: true,
       notes: {
         clientId: clientId,
-        packageId: packageId,
         membershipId: membership._id.toString()
       }
     });
