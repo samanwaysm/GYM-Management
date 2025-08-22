@@ -41,7 +41,6 @@ exports.createOrder = async (req, res) => {
         membershipId: membership._id.toString()
       }
     });
-    console.log(paymentLink);
     
 
     // Save Payment
@@ -62,7 +61,7 @@ exports.createOrder = async (req, res) => {
     });
 
     // ✅ Redirect admin back to client list after sending message
-    res.redirect("admin-clients-list");
+    res.redirect("/admin-clients-list");
 
   } catch (err) {
     console.error("❌ Payment creation failed:", err);
@@ -84,7 +83,6 @@ exports.handleWebhook = async (req, res) => {
     if (event === "payment_link.paid") {
       const paymentData = req.body.payload.payment.entity;
       const notes = req.body.payload.payment_link.entity.notes;
-      console.log(notes);
       const package = await Package.findById({_id: notes.packageId});
       paidDate = new Date();
       expiredDate = new Date(paidDate);

@@ -1300,7 +1300,6 @@ exports.getTrainersByBranch = async (req, res) => {
 
 exports.addClients = async (req, res) => {
   try {
-    console.log("📥 Incoming Body:", req.body);
 
     const {
       name, email, phone, altphone, gender, age,
@@ -1378,11 +1377,9 @@ exports.addClients = async (req, res) => {
 
     // 🔹 Normalize inputs
     const normalizedPaymentMethod = String(paymentMethod).toLowerCase();
-    console.log(normalizedPaymentMethod);
     
     const isConfirmed = confirmedPayment === true || confirmedPayment === "true";
 
-    console.log(isConfirmed);
     
     // 🔹 Payment fields
     let paymentStatus = "Pending";
