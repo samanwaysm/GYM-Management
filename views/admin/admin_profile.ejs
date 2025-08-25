@@ -507,7 +507,7 @@
   </div>
   <!-- container-scroller -->
   <script>
-    let userRole = null;
+    let userType = null;
 
     document.addEventListener("DOMContentLoaded", function () {
       const userId = "<%= userId %>"; // from session or server
@@ -520,7 +520,7 @@
             alert(data.error);
             return;
           }
-          userRole = data.role;
+          userType = data.role;
           
 
           // Hide loader (if you have one)
@@ -589,26 +589,18 @@
 
       const otpInputs = document.querySelectorAll('.otp-input');
       const otp = Array.from(otpInputs).map(input => input.value).join('');
-      console.log(otp);
       const email = document.getElementById('email').value;
-      console.log(email);
       const name = document.getElementById('name').value;
-      console.log(name);
       const phone = document.getElementById('phone').value;
-      console.log(phone);
       const password = document.getElementById('password').value;
-      console.log(password);
       const newPassword = document.getElementById('new-password').value;
-      console.log(newPassword);
       const confirmPassword = document.getElementById('confirm-password').value;
-      console.log(confirmPassword);
-
 
       fetch('/admin/verify-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          role: userRole,
+          userType: userType,
           email,
           name,
           phone,

@@ -80,6 +80,11 @@
       <div class="mb-3">
         <label class="form-label">Email address</label>
         <input type="email" name="email" class="form-control" placeholder="Enter email">
+        <% if (errors && errors.email) { %>
+          <div class="text-danger small">
+            <%= errors.email %>
+          </div>
+          <% } %>
       </div>
       <div class="mb-3">
         <label class="form-label">Password</label>
@@ -89,6 +94,11 @@
             <i class="fa-solid fa-eye" id="toggleEye"></i>
           </span>
         </div>
+        <% if (errors && errors.password) { %>
+          <div class="text-danger small">
+            <%= errors.password %>
+          </div>
+        <% } %>
       </div>
       <div class="form-group d-flex align-items-center justify-content-between mb-3">
         <div class="form-check">

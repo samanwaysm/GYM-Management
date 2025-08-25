@@ -1,13 +1,14 @@
 const mongoose = require("mongoose");
-const nodemailer = require('nodemailer');
-const Mailgen = require('mailgen');
 const Razorpay = require("razorpay");
 const bcrypt = require("bcrypt");
 const crypto = require("crypto");
 
-const User = require("../../../model/clients/clients_schema")
+// const User = require("../../../model/clients/ClientDetails_schema")
+const User = require("../../../model/user/user_schema")
 const Membership = require("../../../model/clients/membership_schema")
 const Package = require("../../../model/admin/package_schema")
+const ClientDetails = require("../../../model/clients/ClientDetails_schema")
+
 
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
@@ -18,74 +19,252 @@ exports.user_login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
+    const errors = {};
 
-    // ✅ Check if fields are empty
-    if (!email || !password) {
-      return res.status(400).json({ success: false, message: "All fields are required" });
+    // ✅ Validation
+    if (!email) errors.email = "Email is required";
+    if (!password) errors.password = "Password is required";
+
+    if (Object.keys(errors).length > 0) {
+      req.session.errors = errors;
+      return res.redirect("/login"); // redirect back to login page
     }
 
     // ✅ Find user by email
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(404).json({ success: false, message: "User not found" });
+      req.session.errors = { email: "User not found" };
+      return res.redirect("/login");
     }
 
     // ✅ Compare password
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(401).json({ success: false, message: "Invalid credentials" });
+      req.session.errors = { password: "Invalid password" };
+      return res.redirect("/login");
+    }
+
+    // ✅ Check userType
+    if (user.userType !== "client") {
+      req.session.errors = { email: "Only clients can log in" };
+      return res.redirect("/login");
     }
 
     // ✅ Save session (no JWT)
     req.session.userId = user._id;
-    console.log('hiiiiii loged');
-    
+    console.log(`✅ Client logged in: ${user.name}`);
 
     // ✅ Redirect to home/dashboard
-    return res.redirect("/");  
-
-    // return res.status(200).json({
-    //   success: true,
-    //   message: "Login successful",
-    //   user: {
-    //     id: user._id,
-    //     name: user.name,
-    //     email: user.email
-    //   }
-    // });
+    return res.redirect("/");
 
   } catch (err) {
     console.error("❌ Login Error:", err);
-    return res.status(500).json({ success: false, message: "Server error" });
+    req.session.errors = { server: "Something went wrong while logging in" };
+    return res.redirect("/login");
   }
-}
+};
 
 exports.userDataFetch = async (req, res) => {
   try {
-    const clientId = req.params.clientId; // userId from route
+    const clientId = new mongoose.Types.ObjectId(req.params.clientId);
 
-    const client = await User.findById(clientId)
-      .populate("trainerId")
-      .populate("branchId");
+    const clientData = await ClientDetails.aggregate([
+      { $match: { clientId: clientId } },
 
-    if (!client) {
+      // Join with User (to get name, email, phone)
+      {
+        $lookup: {
+          from: "users",
+          localField: "clientId",
+          foreignField: "_id",
+          as: "userInfo"
+        }
+      },
+      { $unwind: "$userInfo" },
+
+      // Join with Branch
+      {
+        $lookup: {
+          from: "branches",
+          localField: "branch",
+          foreignField: "_id",
+          as: "branchInfo"
+        }
+      },
+      { $unwind: { path: "$branchInfo", preserveNullAndEmptyArrays: true } },
+
+      // Join with Trainer
+      {
+        $lookup: {
+          from: "users",
+          localField: "trainerId",
+          foreignField: "_id",
+          as: "trainerInfo"
+        }
+      },
+      { $unwind: { path: "$trainerInfo", preserveNullAndEmptyArrays: true } },
+
+      // Join with Membership
+      {
+        $lookup: {
+          from: "memberships",
+          localField: "clientId",
+          foreignField: "clientId",
+          as: "membershipInfo"
+        }
+      },
+      { $unwind: { path: "$membershipInfo", preserveNullAndEmptyArrays: true } },
+
+      // Project only needed fields
+      {
+        $project: {
+          _id: 0,
+          name: "$userInfo.name",
+          email: "$userInfo.email",
+          phone: "$userInfo.phone",
+          gender: 1,
+          age: 1,
+          height: 1,
+          weight: 1,
+          img: 1,
+          branch: "$branchInfo.name",
+          trainer: "$trainerInfo.name",
+          joinedDate: 1,
+          membership: {
+            status: "$membershipInfo.status",
+            expiredDate: "$membershipInfo.expiredDate",
+            packageId: "$membershipInfo.packageId"
+          }
+        }
+      }
+    ]);
+
+    if (!clientData || clientData.length === 0) {
       return res.status(404).json({ success: false, message: "Client not found" });
     }
 
-    const membership = await Membership.findOne({ clientId });
+    console.log(clientData);
     
     res.json({
       success: true,
-      client,
-      membership,
+      client: clientData[0]
     });
+
   } catch (err) {
+    console.error("❌ Error fetching client data:", err);
     res.status(500).json({ success: false, message: err.message });
   }
-}
+};
+
+// exports.userDataFetch = async (req, res) => {
+//   try {
+//     const clientId = new mongoose.Types.ObjectId(req.params.clientId);
+
+//     const clientData = await ClientDetails.aggregate([
+//       { $match: { clientId: clientId } },
+
+//       // Join with User (to get name, email, phone)
+//       {
+//         $lookup: {
+//           from: "users",
+//           localField: "clientId",
+//           foreignField: "_id",
+//           as: "userInfo"
+//         }
+//       },
+//       { $unwind: "$userInfo" },
+
+//       // Join with Branch
+//       {
+//         $lookup: {
+//           from: "branches",
+//           localField: "branch",
+//           foreignField: "_id",
+//           as: "branchInfo"
+//         }
+//       },
+//       { $unwind: { path: "$branchInfo", preserveNullAndEmptyArrays: true } },
+
+//       // Join with Trainer
+//       {
+//         $lookup: {
+//           from: "users",
+//           localField: "trainerId",
+//           foreignField: "_id",
+//           as: "trainerInfo"
+//         }
+//       },
+//       { $unwind: { path: "$trainerInfo", preserveNullAndEmptyArrays: true } },
+
+//       // Project only needed fields
+//       {
+//         $project: {
+//           _id: 0,
+//           name: "$userInfo.name",
+//           email: "$userInfo.email",
+//           phone: "$userInfo.phone",
+//           gender: 1,
+//           age: 1,
+//           height: 1,
+//           weight: 1,
+//           img: 1,
+//           branch: "$branchInfo.name",
+//           trainer: "$trainerInfo.name",
+//           joinedDate: 1
+//         }
+//       }
+//     ]);
+
+//     if (!clientData || clientData.length === 0) {
+//       return res.status(404).json({ success: false, message: "Client not found" });
+//     }
+
+//     // 🔹 Membership lookup separately
+//     const membership = await Membership.findOne({ clientId }).lean();
+
+//     console.log(clientData,membership);
+    
+
+//     res.json({
+//       success: true,
+//       client: clientData[0],
+//       membership
+//     });
+//   } catch (err) {
+//     console.error("❌ Error fetching client data:", err);
+//     res.status(500).json({ success: false, message: err.message });
+//   }
+// };
+
+
+// exports.userDataFetch = async (req, res) => {
+//   try {
+//     const clientId = req.params.clientId; // userId from route
+
+//     const client = await User.findById(clientId)
+//       .populate("trainerId")
+//       .populate("branchId");
+
+//     if (!client) {
+//       return res.status(404).json({ success: false, message: "Client not found" });
+//     }
+
+//     const membership = await Membership.findOne({ clientId });
+    
+//     res.json({
+//       success: true,
+//       client,
+//       membership,
+//     });
+//   } catch (err) {
+//     res.status(500).json({ success: false, message: err.message });
+//   }
+// }
 
 
 // 🔹 Step 1: Create Razorpay Order
+
+
 exports.updateMembership = async (req, res) => {
   try {
     const { clientId, packageId } = req.body;

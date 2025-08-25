@@ -269,25 +269,25 @@
             $.get(`/client/user-data-fetch/${clientId}`, function (res) {
                 if (res.success) {
                     const c = res.client;
-                    const m = res.membership;
+                    const m = res.client.membership;
 
                     let membershipText = m && m.status === "Active"
                         ? `<span class="text-success">Active until ${new Date(m.expiredDate).toLocaleDateString()}</span>`
                         : `<span class="expired">Expired</span>`;
 
-                    $("#profile-card").html(`
-        <div class="profile-card d-flex align-items-center">
-          <img src="https://www.gravatar.com/avatar/${c._id}?s=200" class="profile-img" alt="User"/>
-          <div class="ms-4">
-            <h4>${c.name}</h4>
-            <p><i class="fa fa-envelope"></i> ${c.email}</p>
-            <p><i class="fa fa-phone"></i> ${c.phone}</p>
-            <p><i class="fa fa-map-marker"></i> Branch: ${c.branchId?.name || "-"}</p>
-            <p><i class="fa fa-user"></i> Trainer: ${c.trainerId?.name || "-"}</p>
-            <p><i class="fa fa-calendar"></i> Renewal Date: ${membershipText}</p>
-          </div>
-        </div>
-      `);
+                        $("#profile-card").html(`
+                            <div class="profile-card d-flex align-items-center">
+                            <img src="https://www.gravatar.com/avatar/${c._id}?s=200" class="profile-img" alt="User"/>
+                            <div class="ms-4">
+                                <h4>${c.name}</h4>
+                                <p><i class="fa fa-envelope"></i> ${c.email}</p>
+                                <p><i class="fa fa-phone"></i> ${c.phone}</p>
+                                <p><i class="fa fa-map-marker"></i> Branch: ${c.branch || "-"}</p>
+                                <p><i class="fa fa-user"></i> Trainer: ${c.trainer || "-"}</p>
+                                <p><i class="fa fa-calendar"></i> Renewal Date: ${membershipText}</p>
+                            </div>
+                            </div>
+                        `);
 
                     if (!m || m.status === "Expired") {
                         $("#renew-card").removeClass("d-none");
@@ -338,7 +338,7 @@
                     contentType: "application/json",
                     data: JSON.stringify({ clientId: clientId, packageId }),
                     success: function (res) {
-                        if (res.success) {                            
+                        if (res.success) {
                             var options = {
                                 key: res.key,
                                 amount: res.amount,
@@ -346,7 +346,7 @@
                                 name: "Gym Membership",
                                 description: "Membership Payment",
                                 order_id: res.orderId,
-                                handler: function (response) {                                    
+                                handler: function (response) {
                                     $.ajax({
                                         url: "/client/verify-payment",
                                         method: "POST",

@@ -385,7 +385,8 @@
               <div class="card">
                 <div class="card-body mt-3">
                   <!-- <h4 class="card-title">Horizontal Two column</h4> -->
-                  <form class="form-sample" id="admin_register" method="POST" action="/admin/add-clients">
+                  <form class="form-sample" id="admin_register" method="POST" action="/admin/add-clients"
+                    enctype="multipart/form-data">
                     <!-- <p class="card-description"> Personal info </p> -->
                     <div class="row">
                       <div class="col-md-6">
@@ -515,6 +516,26 @@
                         </div>
                       </div>
                     </div>
+                    <div class="row">
+                      <div class="col-md-6">
+                        <div class="form-group row">
+                          <label class="col-sm-3 col-form-label">Profile Image : </label>
+                          <div class="col-sm-9">
+                            <input type="file" id="img" name="img" class="form-control" accept="image/*"
+                              onchange="previewImage(event)" />
+                            <div class="mt-2">
+                              <img id="imgPreview" src="" alt="Image Preview"
+                                style="max-width: 150px; display: none; border: 1px solid #ccc; border-radius: 5px; padding: 3px;" />
+                            </div>
+                            <% if (errors && errors.profileImg) { %>
+                              <div class="text-danger small">
+                                <%= errors.profileImg %>
+                              </div>
+                              <% } %>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                     <!-- hidden inputs to carry modal values -->
                     <input type="hidden" name="package" id="hiddenPackage">
                     <input type="hidden" name="paymentMethod" id="hiddenPaymentMethod">
@@ -579,8 +600,25 @@
     <!-- page-body-wrapper ends -->
   </div>
 
-
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <script>
+    function previewImage(event) {
+      const file = event.target.files[0];
+      const preview = document.getElementById("imgPreview");
+
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          preview.src = e.target.result;
+          preview.style.display = "block";
+        };
+        reader.readAsDataURL(file);
+      } else {
+        preview.src = "";
+        preview.style.display = "none";
+      }
+    }
+
     document.addEventListener("DOMContentLoaded", () => {
       fetchPackagesForSelect();
 
@@ -656,212 +694,7 @@
         })
         .catch(err => console.error(err));
     }
-  </script>
 
-
-
-
-
-  <!-- <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      fetchPackagesForSelect();
-
-      const form = document.getElementById("admin_register");
-      const membershipModal = new bootstrap.Modal(document.getElementById("membershipModal"));
-      const confirmSave = document.getElementById("confirmSave");
-      const paymentMethodSelect = document.getElementById("paymentMethod");
-
-      // Show modal instead of direct submit
-      form.addEventListener("submit", function (e) {
-        e.preventDefault();
-        membershipModal.show();
-      });
-
-      // Toggle confirm button text
-      paymentMethodSelect.addEventListener("change", function () {
-        if (this.value === "Cash") {
-          confirmSave.textContent = "Confirm Cash Payment";
-        } else if (this.value === "UPI") {
-          confirmSave.textContent = "Send WhatsApp Payment Link";
-        } else {
-          confirmSave.textContent = "Save & Submit";
-        }
-      });
-
-      // Handle save / payment
-      confirmSave.addEventListener("click", function () {
-        const membership = document.getElementById("package").value.trim();
-        const paymentMethod = paymentMethodSelect.value.trim();
-
-        if (!membership || !paymentMethod) {
-          alert("Please select both membership and payment method.");
-          return;
-        }
-
-        if (paymentMethod === "Cash") {
-          // For cash → confirm payment directly
-          document.getElementById("hiddenPackage").value = membership;
-          document.getElementById("hiddenPaymentMethod").value = "Cash";
-          document.getElementById("hiddenConfirmedPayment").value = true;
-
-          membershipModal.hide();
-          form.submit();
-
-        } else if (paymentMethod === "UPI") {
-          // For UPI → Ask backend to send WhatsApp link
-          const phone = document.getElementById("phone").value.trim(); // from your client form
-          fetch("/admin/send-payment-link", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ phone, packageId: membership })
-          })
-            .then(res => res.json())
-            .then(data => {
-              if (data.success) {
-                alert("Payment link sent via WhatsApp!");
-                document.getElementById("hiddenPackage").value = membership;
-                document.getElementById("hiddenPaymentMethod").value = "UPI";
-                document.getElementById("hiddenConfirmedPayment").value = false; // not yet paid
-
-                membershipModal.hide();
-                form.submit();
-              } else {
-                alert("Failed to send payment link");
-              }
-            })
-            .catch(err => console.error("WhatsApp Error:", err));
-        }
-      });
-    });
-
-    function fetchPackagesForSelect() {
-      fetch("/admin/package-list")
-        .then(res => res.json())
-        .then(data => {
-          if (data.success) {
-            const packageSelect = document.getElementById("package");
-            packageSelect.innerHTML = '<option value="">-- Select Package --</option>';
-            data.data.forEach(pkg => {
-              const opt = document.createElement("option");
-              opt.value = pkg._id;
-              opt.textContent = `${pkg.packageType} - ₹${pkg.price} - ${pkg.durationInDays} Days`;
-              packageSelect.appendChild(opt);
-            });
-          }
-        })
-        .catch(err => console.error(err));
-    }
-  </script> -->
-
-
-  <!-- <script>
-    document.addEventListener("DOMContentLoaded", () => {
-
-      fetchPackagesForSelect();
-
-      const form = document.getElementById("admin_register");
-      const membershipModal = new bootstrap.Modal(document.getElementById("membershipModal"));
-      const confirmSave = document.getElementById("confirmSave");
-
-      // When clicking Submit → show modal instead
-      form.addEventListener("submit", function (e) {
-        e.preventDefault();
-        membershipModal.show();
-      });
-
-      // When clicking Save & Submit in modal → actually submit
-      confirmSave.addEventListener("click", function () {
-        // Validate modal fields
-        const membership = document.getElementById("package").value.trim();
-        const paymentMethod = document.getElementById("paymentMethod").value.trim();
-
-        if (!membership || !paymentMethod) {
-          alert("Please select both membership and payment method.");
-          return;
-        }
-        console.log('-----------', membership, paymentMethod);
-        // copy values into hidden inputs
-        document.getElementById("hiddenPackage").value = membership;
-        document.getElementById("hiddenPaymentMethod").value = paymentMethod;
-
-        membershipModal.hide();
-        form.submit();
-      });
-    });
-    function fetchPackagesForSelect() {
-
-      fetch("/admin/package-list")
-        .then(res => res.json())
-        .then(data => {
-          if (data.success) {
-            const packageSelect = document.getElementById("package");
-            packageSelect.innerHTML = '<option value="">-- Select Package --</option>';
-            data.data.forEach(pkg => {
-              const opt = document.createElement("option");
-              opt.value = pkg._id;
-              opt.textContent = `${pkg.packageType} - ₹${pkg.price} - ${pkg.durationInDays} Days`;
-              packageSelect.appendChild(opt);
-            });
-          } else {
-            console.error("Failed to load packages");
-          }
-        })
-        .catch(err => console.error(err));
-    }
-  </script> -->
-
-  <!-- container-scroller -->
-  <!-- plugins:js -->
-  <script src="/admin/vendors/js/vendor.bundle.base.js"></script>
-  <!-- endinject -->
-  <!-- Plugin js for this page -->
-  <script src="/admin/vendors/select2/select2.min.js"></script>
-  <script src="/admin/vendors/typeahead.js/typeahead.bundle.min.js"></script>
-  <!-- End plugin js for this page -->
-  <!-- inject:js -->
-  <script src="/admin/js/off-canvas.js"></script>
-  <script src="/admin/js/hoverable-collapse.js"></script>
-  <script src="/admin/js/misc.js"></script>
-  <script src="/admin/js/settings.js"></script>
-  <script src="/admin/js/todolist.js"></script>
-  <!-- endinject -->
-  <!-- Custom js for this page -->
-  <script src="/admin/js/file-upload.js"></script>
-  <script src="/admin/js/typeahead.js"></script>
-  <script src="/admin/js/select2.js"></script>
-  <!-- End custom js for this page -->
-  <!-- Make sure jQuery is included -->
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
-  <!-- <script>
-    $(document).ready(function () {
-      $('#branch').change(function () {
-        const branchId = $(this).val();
-
-        if (branchId) {
-          $.ajax({
-            url: `/admin/get-trainers-by-branch/${branchId}`,
-            type: 'GET',
-            success: function (response) {
-              $('#trainer').empty();
-              $('#trainer').append('<option value="">-- Select Trainer --</option>');
-
-              response.trainers.forEach(trainer => {
-                $('#trainer').append(`<option value="${trainer._id}">${trainer.name}</option>`);
-              });
-            },
-            error: function () {
-              alert('Error fetching trainers.');
-            }
-          });
-        } else {
-          $('#trainer').html('<option value="">-- Select Trainer --</option>');
-        }
-      });
-    });
-  </script> -->
-
-  <script>
     $(document).ready(function () {
       // Load branches when page loads
       $.ajax({
@@ -908,6 +741,28 @@
       });
     });
   </script>
+
+  <!-- container-scroller -->
+  <!-- plugins:js -->
+  <script src="/admin/vendors/js/vendor.bundle.base.js"></script>
+  <!-- endinject -->
+  <!-- Plugin js for this page -->
+  <script src="/admin/vendors/select2/select2.min.js"></script>
+  <script src="/admin/vendors/typeahead.js/typeahead.bundle.min.js"></script>
+  <!-- End plugin js for this page -->
+  <!-- inject:js -->
+  <script src="/admin/js/off-canvas.js"></script>
+  <script src="/admin/js/hoverable-collapse.js"></script>
+  <script src="/admin/js/misc.js"></script>
+  <script src="/admin/js/settings.js"></script>
+  <script src="/admin/js/todolist.js"></script>
+  <!-- endinject -->
+  <!-- Custom js for this page -->
+  <script src="/admin/js/file-upload.js"></script>
+  <script src="/admin/js/typeahead.js"></script>
+  <script src="/admin/js/select2.js"></script>
+  <!-- End custom js for this page -->
+  <!-- Make sure jQuery is included -->
 
 </body>
 

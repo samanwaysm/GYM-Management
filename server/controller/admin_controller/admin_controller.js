@@ -2,87 +2,16 @@ const bcrypt = require("bcrypt");
 const mongoose = require("mongoose");
 const nodemailer = require('nodemailer');
 const Mailgen = require('mailgen');
-const twilio = require("twilio");
-const Razorpay = require("razorpay");
 
-const Admin = require("../../../model/admin/admin_schema");
+const User = require("../../../model/user/user_schema"); // import your new user schema
 const OtpDb = require("../../../model/admin/otp_schema")
 const Branch = require("../../../model/admin/branch_schema");
 const Package = require("../../../model/admin/package_schema")
-
-const Trainer = require("../../../model/trainers/trainers_schema");
-const Client = require("../../../model/clients/clients_schema")
-
+const TrainerDetails = require("../../../model/trainers/trainerDetails_schema");
+const ClientDetails = require("../../../model/clients/ClientDetails_schema")
 const Membership = require("../../../model/clients/membership_schema")
 
-
-const clientTwilio = new twilio(process.env.TWILIO_SID, process.env.TWILIO_AUTH_TOKEN);
-
-// exports.adminLogin = async (req, res) => {
-//   const superAdmin = {
-//     email: process.env.ADMIN_EMAIL,
-//     password: process.env.ADMIN_PASS,
-//   };
-
-//   const { email, password } = req.body;
-//   const errors = {};
-
-//   // Required fields
-//   if (!email) errors.email = "Email is required.";
-//   if (!password) errors.password = "Password is required.";
-
-//   if (Object.keys(errors).length > 0) {
-//     req.session.errors = errors;
-//     return res.redirect("/admin-login");
-//   }
-
-//   // Email format validation
-//   const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-//   if (!emailPattern.test(email)) {
-//     req.session.errors = { email: "Invalid email format." };
-//     return res.redirect("/admin-login");
-//   }
-
-//   try {
-//     // Check for SuperAdmin login
-//     if (email === superAdmin.email) {
-//       if (password === superAdmin.password) {
-//         req.session.isSuperAdminAuthenticated = true;
-//         req.session.isAnyAdminAuthenticated = true;
-//         req.session.user = 'superAdmin'
-//         return res.redirect("/admin-dashboard"); // Or "/superadmin-dashboard"
-//       } else {
-//         req.session.errors = { password: "Incorrect SuperAdmin password." };
-//         return res.redirect("/admin-login");
-//       }
-//     }
-
-//     // Check for normal Admin in DB
-//     const admin = await Admin.findOne({ email });
-//     if (!admin) {
-//       req.session.errors = { email: "Admin not found." };
-//       return res.redirect("/admin-login");
-//     }
-
-//     // Compare password (if hashed)
-//     const isMatch = await bcrypt.compare(password, admin.password);
-//     if (!isMatch) {
-//       req.session.errors = { password: "Incorrect password." };
-//       return res.redirect("/admin-login");
-//     }
-
-//     // Authenticated as Admin
-//     req.session.isAdminAuthenticated = true;
-//     req.session.isAnyAdminAuthenticated = true;
-//     req.session.adminId = admin._id;
-//     req.session.adminName = admin.username;
-//     return res.redirect("/admin-dashboard");
-//   } catch (err) {
-//     console.error(err);
-//     req.session.errors = { loginError: "Something went wrong during login." };
-//     return res.redirect("/admin-login");
-//   }
-// };
+const { uploadFileToS3 } = require("../../services/s3_service/s3_service");
 
 
 exports.adminLogin = async (req, res) => {
@@ -111,12 +40,12 @@ exports.adminLogin = async (req, res) => {
   }
 
   try {
-    // 1️⃣ Check for SuperAdmin login
+    // 1️⃣ SuperAdmin Login
     if (email === superAdmin.email) {
       if (password === superAdmin.password) {
         req.session.isSuperAdminAuthenticated = true;
         req.session.isAnyAdminAuthenticated = true;
-        req.session.user = 'superAdmin';
+        req.session.user = "superAdmin";
         return res.redirect("/admin-dashboard");
       } else {
         req.session.errors = { password: "Incorrect SuperAdmin password." };
@@ -124,39 +53,37 @@ exports.adminLogin = async (req, res) => {
       }
     }
 
-    // 2️⃣ Check for normal Admin
-    const admin = await Admin.findOne({ email });
-    if (admin) {
-      const isMatch = await bcrypt.compare(password, admin.password);
-      if (!isMatch) {
-        req.session.errors = { password: "Incorrect password." };
-        return res.redirect("/admin-login");
-      }
+    // 2️⃣ Find User in DB
+    const user = await User.findOne({ email, userType: { $in: ["admin", "trainer"] } });
+    if (!user) {
+      req.session.errors = { email: "No admin or trainer account found with this email." };
+      return res.redirect("/admin-login");
+    }
+
+    // ✅ Compare password
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      req.session.errors = { password: "Incorrect password." };
+      return res.redirect("/admin-login");
+    }
+
+    // 3️⃣ Handle login by role
+    req.session.userId = user._id;
+    req.session.user = user.name;
+
+    if (user.userType === "admin") {
       req.session.isAdminAuthenticated = true;
       req.session.isAnyAdminAuthenticated = true;
-      req.session.userId = admin._id;
-      req.session.user = admin.name;
       return res.redirect("/admin-dashboard");
     }
 
-    // 3️⃣ Check for Trainer
-    const trainer = await Trainer.findOne({ email });
-    if (trainer) {
-      const isMatch = await bcrypt.compare(password, trainer.password);
-      if (!isMatch) {
-        req.session.errors = { password: "Incorrect password." };
-        return res.redirect("/admin-login");
-      }
+    if (user.userType === "trainer") {
       req.session.isTrainerAuthenticated = true;
-      req.session.userId = trainer._id;
-      req.session.user = trainer.name;
-      console.log(req.session);
-
       return res.redirect("/trainer-dashboard");
     }
 
-    // ❌ If no match found
-    req.session.errors = { email: "No account found with this email." };
+    // ❌ Just in case
+    req.session.errors = { loginError: "Invalid user role." };
     return res.redirect("/admin-login");
 
   } catch (err) {
@@ -308,6 +235,7 @@ exports.verify_OTP = async (req, res) => {
     return res.redirect("/admin-forgot-password");
   }
 };
+
 exports.change_password = async (req, res) => {
   const { new_password, confirm_password } = req.body;
   const email = req.session?.resetEmail; // ✅ Get email from session
@@ -330,32 +258,29 @@ exports.change_password = async (req, res) => {
       return res.json({ success: false, errors });
     }
 
-    // ✅ Search in Admin or Trainer collections
-    let user = await Admin.findOne({ email });
-    if (!user) {
-      user = await Trainer.findOne({ email });
-    }
-
+    // ✅ Find user in single User schema
+    const user = await User.findOne({ email });
     if (!user) {
       return res.json({ success: false, message: "User not found." });
     }
 
-    // ✅ Hash and save password
+    // ✅ Hash and save new password
     const hashedPassword = await bcrypt.hash(new_password, 10);
     user.password = hashedPassword;
     await user.save();
 
     // Optional: Flash success message
-    req.session.success = `password updated successfully.`;
+    req.session.success = `Password updated successfully.`;
 
-    // Redirect to admin login
-    return res.redirect("/admin-login");
+    // Redirect to login (can be role-based if needed)
+    return res.redirect("/admin-login"); // or "/login" for common login
 
   } catch (err) {
     console.error(err);
     return res.json({ success: false, message: "Server error." });
   }
-}
+};
+
 
 exports.addAdmin = async (req, res) => {
   const { name, email, phone } = req.body;
@@ -363,7 +288,7 @@ exports.addAdmin = async (req, res) => {
 
   // Validation
   if (!name || name.trim().length < 3) {
-    errors.nameError = "name must be at least 3 characters.";
+    errors.nameError = "Name must be at least 3 characters.";
   }
 
   if (!email) {
@@ -379,14 +304,23 @@ exports.addAdmin = async (req, res) => {
     errors.phoneError = "Phone number is required.";
   }
 
-  const firstFour = name.substring(0, 4); // first 4 letters of name
-  const lastFour = phone.slice(-4);       // last 4 digits of phone
+  const firstFour = name.substring(0, 4);
+  const lastFour = phone.slice(-4);
   const rawPassword = firstFour + lastFour;
 
   try {
-    const existingUser = await Admin.findOne({ email });
+    // Check for duplicates (email or phone)
+    const existingUser = await User.findOne({ 
+      $or: [{ email }, { phone }] 
+    });
+
     if (existingUser) {
-      errors.emailError = "User already exists with this email.";
+      if (existingUser.email === email) {
+        errors.emailError = "User already exists with this email.";
+      }
+      if (existingUser.phone === phone) {
+        errors.phoneError = "User already exists with this phone number.";
+      }
     }
 
     if (Object.keys(errors).length > 0) {
@@ -394,23 +328,20 @@ exports.addAdmin = async (req, res) => {
       return res.redirect('/superadmin-add-admin');
     }
 
-    // Hash the password
     const hashedPassword = await bcrypt.hash(rawPassword, 10);
 
-    // Save admin data
-    const newAdmin = new Admin({
+    const newAdmin = new User({
       name,
       email,
       phone,
-      password: hashedPassword
+      password: hashedPassword,
+      userType: "admin"
     });
 
-    await newAdmin.save(); // Save to the database
+    await newAdmin.save();
 
     req.session.success = "Admin added successfully.";
-    console.log(req.session.success);
-
-    res.redirect('/superadmin-admin-list');
+    return res.redirect('/superadmin-admin-list');
   } catch (err) {
     console.error(err);
     req.session.errors = { signUpError: "An error occurred during signup." };
@@ -421,7 +352,7 @@ exports.addAdmin = async (req, res) => {
 exports.adminList = async (req, res) => {
   try {
     const search = req.query.search || "";
-    const query = {};
+    const query = { userType: "admin" }; // ✅ only fetch admins
 
     if (search) {
       query.$or = [
@@ -431,33 +362,21 @@ exports.adminList = async (req, res) => {
       ];
     }
 
-    const admins = await Admin.find(query).lean();
+    const admins = await User.find(query).lean();
     res.json(admins);
   } catch (error) {
-    console.error(error);
+    console.error("Error fetching admin list:", error);
     res.status(500).json([]);
   }
 };
 
-// exports.getAdminProfile = async (req, res) => {
-//   try {
-//     const adminId = req.query.adminId;
-//     if (!adminId) {
-//       return res.status(401).json({ error: "Not authorized. Please log in." });
-//     }
+exports.editAdmin = async (req, res) => {
 
-//     const admin = await Admin.findById(adminId).select('-password'); // exclude password
+}
 
-//     if (!admin) {
-//       return res.status(404).json({ error: "Admin not found." });
-//     }
+exports.deleteAdmin = async (req, res) => {
 
-//     res.status(200).json(admin);
-//   } catch (err) {
-//     console.error(err);
-//     res.status(500).json({ error: "Server error while fetching profile data." });
-//   }
-// }
+}
 
 exports.getAdminProfile = async (req, res) => {
   try {
@@ -467,21 +386,15 @@ exports.getAdminProfile = async (req, res) => {
       return res.status(401).json({ error: "Not authorized. Please log in." });
     }
 
-    // Try finding as Admin
-    let user = await Admin.findById(userId).select("-password");
-    let role = "admin";
-
-    // If not found as Admin, try Trainer
-    if (!user) {
-      user = await Trainer.findById(userId).select("-password");
-      role = "trainer";
-    }
+    // Find user by ID, exclude password
+    const user = await User.findById(userId).select("-password");
 
     if (!user) {
       return res.status(404).json({ error: "User not found." });
     }
+
     res.status(200).json({
-      role,
+      role: user.userType, // now role comes from schema
       user,
     });
   } catch (err) {
@@ -565,62 +478,55 @@ exports.sendAdminOTP = async (req, res) => {
 };
 
 exports.verifyAdminOTP = async (req, res) => {
-  const { role, email, otp, name, phone, password, newPassword, confirmPassword } = req.body;
-
+  const { userType, email, otp, name, phone, password, newPassword, confirmPassword } = req.body;
+  console.log(req.body);
+  
   try {
     // 1️⃣ Check OTP
     const otpRecord = await OtpDb.findOne({ email }).sort({ createdAt: -1 });
     if (!otpRecord) {
-      return res.json({ success: false, message: 'OTP not found.' });
+      return res.json({ success: false, message: "OTP not found." });
     }
 
     if (Date.now() > otpRecord.expiresAt) {
       await OtpDb.deleteOne({ _id: otpRecord._id });
-      return res.json({ success: false, message: 'OTP expired.' });
+      return res.json({ success: false, message: "OTP expired." });
     }
 
     if (otpRecord.otp !== otp) {
-      return res.json({ success: false, message: 'Invalid OTP.' });
+      return res.json({ success: false, message: "Invalid OTP." });
     }
 
     if (newPassword !== confirmPassword) {
-      return res.json({ success: false, message: 'Passwords do not match.' });
+      return res.json({ success: false, message: "Passwords do not match." });
     }
 
-    // 2️⃣ Find user depending on role
-    let user;
-    if (role === "admin") {
-      user = await Admin.findOne({ email });
-    } else if (role === "trainer") {
-      user = await Trainer.findOne({ email });
-    } else {
-      return res.json({ success: false, message: 'Invalid role.' });
-    }
-
+    // 2️⃣ Find user by role and email
+    const user = await User.findOne({ email, userType: userType });
     if (!user) {
-      return res.json({ success: false, message: 'User not found.' });
+      return res.json({ success: false, message: "User not found." });
     }
 
     // 3️⃣ Verify current password
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.json({ success: false, message: 'Current password is incorrect.' });
+      return res.json({ success: false, message: "Current password is incorrect." });
     }
 
     // 4️⃣ Hash new password & update fields
     const hashedPassword = await bcrypt.hash(newPassword, 10);
 
     user.password = hashedPassword;
-    user.name = name;   // ⚠️ in your schema it’s probably "username", not "name"
+    user.name = name;
     user.phone = phone;
 
     await user.save();
     await OtpDb.deleteOne({ _id: otpRecord._id });
 
-    return res.json({ success: true });
+    return res.json({ success: true, message: "Profile updated successfully." });
   } catch (err) {
     console.error(err);
-    res.json({ success: false, message: 'Server error.' });
+    res.json({ success: false, message: "Server error." });
   }
 };
 
@@ -665,55 +571,6 @@ exports.addBranch = async (req, res) => {
     res.status(500).send('Server error while adding branch.');
   }
 };
-
-// exports.branchList = async (req, res) => {
-//   try {
-//     let page = parseInt(req.query.page) || 1;
-//     let limit = 1;
-//     let skip = (page - 1) * limit;
-
-//     // Count total branches for pagination
-//     const totalBranches = await Branch.countDocuments();
-
-//     const branches = await Branch.aggregate([
-//       {
-//         $lookup: {
-//           from: "trainers",            // collection name
-//           localField: "_id",
-//           foreignField: "branch",      // trainer schema field
-//           as: "trainersList"
-//         }
-//       },
-//       {
-//         $lookup: {
-//           from: "clients",
-//           localField: "_id",
-//           foreignField: "branchId",    // client schema field
-//           as: "clientsList"
-//         }
-//       },
-//       {
-//         $project: {
-//           _id: 0,                      // hide _id
-//           name: 1,
-//           trainersCount: { $size: "$trainersList" },
-//           clientsCount: { $size: "$clientsList" }
-//         }
-//       },
-//       { $skip: skip },
-//       { $limit: limit }
-//     ]);
-
-//     res.status(200).json({
-//       branches,
-//       totalPages: Math.ceil(totalBranches / limit),
-//       currentPage: page
-//     });
-//   } catch (error) {
-//     console.error("Error fetching branches: ", error);
-//     res.status(500).json({ message: "Server Error" });
-//   }
-// };
 
 exports.branchList = async (req, res) => {
   try {
@@ -788,184 +645,45 @@ exports.addTrainers = async (req, res) => {
   try {
     const { name, email, phone, branch } = req.body;
 
-    // Check if email already exists
-    const existingTrainer = await Trainer.findOne({ email });
+    // Check if trainer already exists
+    const existingTrainer = await User.findOne({ email, userType: "trainer" });
     if (existingTrainer) {
       req.session.errors = ['Trainer with this email already exists'];
       return res.redirect('/admin-add-trainer');
     }
 
-    const firstFour = name.substring(0, 4); // first 4 letters of name
-    const lastFour = phone.slice(-4);       // last 4 digits of phone
+    // Generate password from name + phone
+    const firstFour = name.substring(0, 4);
+    const lastFour = phone.slice(-4);
     const rawPassword = firstFour + lastFour;
-    // Hash password
     const hashedPassword = await bcrypt.hash(rawPassword, 10);
 
-    // Create trainer object
-    const newTrainer = new Trainer({
+    // Step 1: Create trainer in User collection
+    const newTrainer = new User({
       name,
       email,
       phone,
-      branch,
-      password: hashedPassword
+      password: hashedPassword,
+      userType: "trainer"
+    });
+    const savedTrainer = await newTrainer.save();
+
+    // Step 2: Create trainer details (branch mapping)
+    const trainerDetails = new TrainerDetails({
+      trainerId: savedTrainer._id,
+      branch
     });
 
-    await newTrainer.save();
+    await trainerDetails.save();
 
     req.session.success = 'Trainer added successfully!';
-    return res.redirect('/admin-trainers-list'); // change route if needed
+    return res.redirect('/admin-trainers-list');
+
   } catch (error) {
     console.error('Error creating trainer:', error);
     res.status(500).send('Server error while adding trainer.');
   }
-}
-
-// exports.trainersList = async (req, res) => {
-//   try {
-//     let page = parseInt(req.query.page) || 1;
-//     let limit = 1;
-//     let skip = (page - 1) * limit;
-
-//     // Get total trainers count
-//     const totalTrainers = await Trainer.countDocuments();
-
-//     const trainers = await Trainer.aggregate([
-//       {
-//         $lookup: {
-//           from: "branches",
-//           localField: "branch",
-//           foreignField: "_id",
-//           as: "branchInfo"
-//         }
-//       },
-//       {
-//         $unwind: {
-//           path: "$branchInfo",
-//           preserveNullAndEmptyArrays: true
-//         }
-//       },
-//       {
-//         $lookup: {
-//           from: "clients",
-//           let: { trainerId: "$_id" },
-//           pipeline: [
-//             {
-//               $match: {
-//                 $expr: { $eq: ["$trainerId", "$$trainerId"] },
-//                 status: "Active"
-//               }
-//             }
-//           ],
-//           as: "clientsHandled"
-//         }
-//       },
-//       {
-//         $addFields: {
-//           clientsCount: { $size: "$clientsHandled" }
-//         }
-//       },
-//       {
-//         $project: {
-//           name: 1,
-//           email: 1,
-//           phone: 1,
-//           password: 1,
-//           branchName: "$branchInfo.name",
-//           clientsCount: 1
-//         }
-//       },
-//       { $skip: skip },
-//       { $limit: limit }
-//     ]);
-
-//     res.status(200).json({
-//       trainers,
-//       totalPages: Math.ceil(totalTrainers / limit),
-//       currentPage: page
-//     });
-//   } catch (error) {
-//     console.error("Error fetching trainers: ", error);
-//     res.status(500).json({ message: "Server Error" });
-//   }
-// };
-
-// exports.trainersList = async (req, res) => {
-//   try {
-//     let page = parseInt(req.query.page) || 1;
-//     let limit = 5;  // adjust as needed
-//     let skip = (page - 1) * limit;
-
-//     let search = req.query.search || "";
-
-//     // search condition
-//     let match = {};
-//     if (search) {
-//       match = {
-//         $or: [
-//           { name: { $regex: search, $options: "i" } },
-//           { email: { $regex: search, $options: "i" } },
-//           { phone: { $regex: search, $options: "i" } }
-//         ]
-//       };
-//     }
-
-//     // Count trainers with filter
-//     const totalTrainers = await Trainer.countDocuments(match);
-
-//     const trainers = await Trainer.aggregate([
-//       { $match: match },
-//       {
-//         $lookup: {
-//           from: "branches",
-//           localField: "branch",
-//           foreignField: "_id",
-//           as: "branchInfo"
-//         }
-//       },
-//       { $unwind: { path: "$branchInfo", preserveNullAndEmptyArrays: true } },
-//       {
-//         $lookup: {
-//           from: "clients",
-//           let: { trainerId: "$_id" },
-//           pipeline: [
-//             {
-//               $match: {
-//                 $expr: { $eq: ["$trainerId", "$$trainerId"] },
-//                 status: "Active"
-//               }
-//             }
-//           ],
-//           as: "clientsHandled"
-//         }
-//       },
-//       {
-//         $addFields: {
-//           clientsCount: { $size: "$clientsHandled" }
-//         }
-//       },
-//       {
-//         $project: {
-//           name: 1,
-//           email: 1,
-//           phone: 1,
-//           branchName: "$branchInfo.name",
-//           clientsCount: 1
-//         }
-//       },
-//       { $skip: skip },
-//       { $limit: limit }
-//     ]);
-
-//     res.status(200).json({
-//       trainers,
-//       totalPages: Math.ceil(totalTrainers / limit),
-//       currentPage: page
-//     });
-//   } catch (error) {
-//     console.error("Error fetching trainers: ", error);
-//     res.status(500).json({ message: "Server Error" });
-//   }
-// };
+};
 
 exports.trainersList = async (req, res) => {
   try {
@@ -976,26 +694,46 @@ exports.trainersList = async (req, res) => {
     let search = req.query.search || "";
     let branch = req.query.branch || "";
 
-    // Base filter
+    // Base filter for aggregation
     let match = {};
-    if (search) {
-      match.$or = [
-        { name: { $regex: search, $options: "i" } },
-        { email: { $regex: search, $options: "i" } },
-        { phone: { $regex: search, $options: "i" } }
-      ];
-    }
 
     // Branch filter
     if (branch) {
       match.branch = new mongoose.Types.ObjectId(branch);
     }
 
-    // Count trainers
-    const totalTrainers = await Trainer.countDocuments(match);
+    const totalTrainers = await TrainerDetails.countDocuments(match);
 
-    const trainers = await Trainer.aggregate([
+    const trainers = await TrainerDetails.aggregate([
       { $match: match },
+
+      // Join with User collection
+      {
+        $lookup: {
+          from: "users", // Mongo collection name (User -> users)
+          localField: "trainerId",
+          foreignField: "_id",
+          as: "trainerInfo"
+        }
+      },
+      { $unwind: "$trainerInfo" },
+
+      // Search filter (applied on joined user data)
+      ...(search
+        ? [
+            {
+              $match: {
+                $or: [
+                  { "trainerInfo.name": { $regex: search, $options: "i" } },
+                  { "trainerInfo.email": { $regex: search, $options: "i" } },
+                  { "trainerInfo.phone": { $regex: search, $options: "i" } }
+                ]
+              }
+            }
+          ]
+        : []),
+
+      // Join with Branch collection
       {
         $lookup: {
           from: "branches",
@@ -1005,10 +743,12 @@ exports.trainersList = async (req, res) => {
         }
       },
       { $unwind: { path: "$branchInfo", preserveNullAndEmptyArrays: true } },
+
+      // Join with Client collection
       {
         $lookup: {
           from: "clients",
-          let: { trainerId: "$_id" },
+          let: { trainerId: "$trainerId" },
           pipeline: [
             {
               $match: {
@@ -1020,20 +760,25 @@ exports.trainersList = async (req, res) => {
           as: "clientsHandled"
         }
       },
+
+      // Add count of clients
       {
         $addFields: {
           clientsCount: { $size: "$clientsHandled" }
         }
       },
+
+      // Select final fields
       {
         $project: {
-          name: 1,
-          email: 1,
-          phone: 1,
+          name: "$trainerInfo.name",
+          email: "$trainerInfo.email",
+          phone: "$trainerInfo.phone",
           branchName: "$branchInfo.name",
           clientsCount: 1
         }
       },
+
       { $skip: skip },
       { $limit: limit }
     ]);
@@ -1049,8 +794,6 @@ exports.trainersList = async (req, res) => {
   }
 };
 
-
-
 exports.getTrainersByBranch = async (req, res) => {
   try {
     const { branchId } = req.params;
@@ -1059,253 +802,34 @@ exports.getTrainersByBranch = async (req, res) => {
       return res.status(400).json({ message: 'Branch ID is required' });
     }
 
-    const trainers = await Trainer.find({ branch: branchId }).select('name _id');
-    res.status(200).json({ trainers });
+    // Find trainers by branch and active status
+    const trainers = await TrainerDetails.find({
+      branch: branchId,
+      isActive: true
+    })
+      .populate('trainerId', 'name _id') // only get name and _id from User
+      .select('trainerId'); // we only need trainer info
+
+    // Format response to return trainer objects cleanly
+    const formattedTrainers = trainers.map(t => ({
+      _id: t.trainerId._id,
+      name: t.trainerId.name
+    }));
+
+    res.status(200).json({ trainers: formattedTrainers });
   } catch (error) {
     console.error('Error fetching trainers:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
-}
-
-// exports.addClients = async (req, res) => {
-//   try {
-//     console.log(req.body);
-
-//     const { name, email, phone, altphone, gender, age, branch, trainer, height, weight } = req.body;
-//     const errors = {};
-
-//     // ✅ Required field checks
-//     if (!name) errors.name = "Name is required.";
-//     if (!email) errors.email = "Email is required.";
-//     if (!phone) errors.phone = "Phone number is required.";
-//     if (!age) errors.age = "Age is required.";
-//     if (!gender) errors.gender = "Gender is required.";
-//     if (!branch) errors.branch = "Branch is required.";
-//     if (!trainer) errors.trainer = "Trainer is required.";
-
-//     // ✅ Email format check
-//     const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-//     if (email && !emailPattern.test(email)) {
-//       errors.email = "Invalid email format.";
-//     }
-
-//     // ✅ If errors → back to form
-//     if (Object.keys(errors).length > 0) {
-//       req.session.errors = errors;
-//       return res.redirect("/admin-add-clients");
-//     }
-
-//     // ✅ Check if client already exists
-//     const existingClient = await Client.findOne({ email });
-//     if (existingClient) {
-//       req.session.errors = { email: "Email is already registered." };
-//       return res.redirect("/admin-add-clients");
-//     }
-
-//     // ✅ Check Branch exists
-//     const branchExists = await Branch.findById(branch);
-//     if (!branchExists) {
-//       req.session.errors = { branch: "Selected branch does not exist." };
-//       return res.redirect("/admin-add-clients");
-//     }
-
-//     // ✅ Check Trainer exists
-//     const trainerExists = await Trainer.findById(trainer);
-//     if (!trainerExists) {
-//       req.session.errors = { trainer: "Selected trainer does not exist." };
-//       return res.redirect("/admin-add-clients");
-//     }
-
-//     const firstFour = name.substring(0, 4); // first 4 letters of name
-//     const lastFour = phone.slice(-4);       // last 4 digits of phone
-//     const rawPassword = firstFour + lastFour;
-
-//     // ✅ Hash password
-//     const hashedPassword = await bcrypt.hash(rawPassword, 10);
-
-//     // ✅ Save new client
-//     const newClient = new Client({
-//       name,
-//       email,
-//       phone,
-//       altphone: altphone || null, // optional
-//       gender,
-//       age,
-//       branchId: branchExists._id,
-//       trainerId: trainerExists._id,
-//       height: height || null,
-//       weight: weight || null,
-//       password: hashedPassword
-//     });
-
-//     await newClient.save();
-
-//     // ✅ Redirect with success
-//     req.session.success = "Client added successfully.";
-//     return res.redirect("/admin-clients-list");
-
-//   } catch (err) {
-//     console.error("Error adding client:", err);
-//     req.session.errors = { server: "Something went wrong while adding the client." };
-//     return res.redirect("/admin-add-clients");
-//   }
-// };
-
-// exports.addClients = async (req, res) => {
-//   try {
-//     console.log(req.body);
-
-//     const {
-//       name, email, phone, altphone, gender, age,
-//       branch, trainer, height, weight,
-//       package: packageId, paymentMethod
-//     } = req.body;
-
-//     const errors = {};
-
-//     // 🟢 Validation same as before ...
-//     if (!name) errors.name = "Name is required.";
-//     if (!email) errors.email = "Email is required.";
-//     if (!phone) errors.phone = "Phone number is required.";
-//     if (!age) errors.age = "Age is required.";
-//     if (!gender) errors.gender = "Gender is required.";
-//     if (!branch) errors.branch = "Branch is required.";
-//     if (!trainer) errors.trainer = "Trainer is required.";
-//     if (!packageId) errors.package = "Package is required.";
-//     if (!paymentMethod) errors.paymentMethod = "Payment Method is required.";
-
-//     if (Object.keys(errors).length > 0) {
-//       req.session.errors = errors;
-//       return res.redirect("/admin-add-clients");
-//     }
-
-//     // Check email
-//     const existingClient = await Client.findOne({ email });
-//     if (existingClient) {
-//       req.session.errors = { email: "Email is already registered." };
-//       return res.redirect("/admin-add-clients");
-//     }
-
-//     const branchExists = await Branch.findById(branch);
-//     if (!branchExists) {
-//       req.session.errors = { branch: "Selected branch does not exist." };
-//       return res.redirect("/admin-add-clients");
-//     }
-
-//     const trainerExists = await Trainer.findById(trainer);
-//     if (!trainerExists) {
-//       req.session.errors = { trainer: "Selected trainer does not exist." };
-//       return res.redirect("/admin-add-clients");
-//     }
-
-//     const packageExists = await Package.findById(packageId);
-//     if (!packageExists) {
-//       req.session.errors = { package: "Selected package does not exist." };
-//       return res.redirect("/admin-add-clients");
-//     }
-
-//     // Generate password
-//     const firstFour = name.substring(0, 4);
-//     const lastFour = phone.slice(-4);
-//     const rawPassword = firstFour + lastFour;
-//     const hashedPassword = await bcrypt.hash(rawPassword, 10);
-
-//     // Save Client
-//     const newClient = new Client({
-//       name,
-//       email,
-//       phone,
-//       altphone: altphone || null,
-//       gender,
-//       age,
-//       branchId: branchExists._id,
-//       trainerId: trainerExists._id,
-//       height: height || null,
-//       weight: weight || null,
-//       password: hashedPassword
-//     });
-
-//     const savedClient = await newClient.save();
-
-//     // Save Membership
-//     const paidDate = new Date();
-//     const expiredDate = new Date(paidDate);
-//     expiredDate.setDate(paidDate.getDate() + packageExists.durationInDays);
-
-//     let paymentStatus = "Pending";
-
-//     // check confirmedPayment
-//     if (confirmedPayment === true || confirmedPayment === "true") {
-//       paymentStatus = "Completed";
-//     }
-
-//     const newMembership = new Membership({
-//       clientId: savedClient._id,
-//       package: packageExists._id,
-//       price: packageExists.price,
-//       paymentMethod,
-//       paymentStatus,
-//       confirmedPayment,
-//       paidDate,
-//       expiredDate,
-//       status: "Active"
-//     });
-
-//     await newMembership.save();
-
-//     // 🔹 If payment method is UPI → generate Razorpay Payment Link
-//     if (paymentMethod === "UPI") {
-//       const razorpay = new Razorpay({
-//         key_id: process.env.RAZORPAY_KEY_ID,
-//         key_secret: process.env.RAZORPAY_SECRET
-//       });
-
-//       const order = await razorpay.orders.create({
-//         amount: packageExists.price * 100, // in paise
-//         currency: "INR",
-//         receipt: `receipt_${savedClient._id}`,
-//         payment_capture: 1
-//       });
-
-//       const paymentLink = `https://rzp.io/i/${order.id}`; // Or use short_url if you create Payment Links API
-
-//       // 🔹 Send WhatsApp via Twilio
-//       await clientTwilio.messages.create({
-//         from: "whatsapp:+14155238886", // Twilio sandbox number
-//         to: `whatsapp:+91${phone}`,    // Client's phone
-//         body: `Hi ${name}, please complete your gym membership payment using this link: ${paymentLink}`
-//       });
-//     }
-
-//     req.session.success = "Client & Membership added successfully.";
-//     return res.redirect("/admin-clients-list");
-
-//   } catch (err) {
-//     console.error("Error adding client:", err);
-//     req.session.errors = { server: "Something went wrong while adding the client." };
-//     return res.redirect("/admin-add-clients");
-//   }
-
-//   //   // ✅ Done
-//   //   req.session.success = "Client & Membership added successfully.";
-//   //   return res.redirect("/admin-clients-list");
-
-//   // } catch (err) {
-//   //   console.error("Error adding client:", err);
-//   //   req.session.errors = { server: "Something went wrong while adding the client." };
-//   //   return res.redirect("/admin-add-clients");
-//   // }
-// };
-
+};
 
 exports.addClients = async (req, res) => {
   try {
-
     const {
       name, email, phone, altphone, gender, age,
       branch, trainer, height, weight,
       package: packageId, paymentMethod,
-      confirmedPayment // ⚠️ comes from form as "true" or "false"
+      confirmedPayment
     } = req.body;
 
     const errors = {};
@@ -1327,22 +851,16 @@ exports.addClients = async (req, res) => {
     }
 
     // 🔹 Ensure no duplicate email
-    const existingClient = await Client.findOne({ email });
-    if (existingClient) {
+    const existingUser = await User.findOne({ email, userType: "client" });
+    if (existingUser) {
       req.session.errors = { email: "Email is already registered." };
       return res.redirect("/admin-add-clients");
     }
 
-    // 🔹 Ensure branch/trainer/package exist
+    // 🔹 Ensure branch/package exist
     const branchExists = await Branch.findById(branch);
     if (!branchExists) {
       req.session.errors = { branch: "Selected branch does not exist." };
-      return res.redirect("/admin-add-clients");
-    }
-
-    const trainerExists = await Trainer.findById(trainer);
-    if (!trainerExists) {
-      req.session.errors = { trainer: "Selected trainer does not exist." };
       return res.redirect("/admin-add-clients");
     }
 
@@ -1358,30 +876,40 @@ exports.addClients = async (req, res) => {
     const rawPassword = firstFour + lastFour;
     const hashedPassword = await bcrypt.hash(rawPassword, 10);
 
-    // 🔹 Save client
-    const newClient = new Client({
+    // Step 1️⃣ Create User entry
+    const newUser = new User({
       name,
       email,
       phone,
-      altphone: altphone || null,
+      password: hashedPassword,
+      userType: "client"
+    });
+    const savedUser = await newUser.save();
+
+    // Step 2️⃣ Upload image to S3 (only if file exists)
+    let imgUrl = null;
+    if (req.file) {
+      imgUrl = await uploadFileToS3(req.file, "clients");
+    }
+
+    // Step 3️⃣ Create ClientDetails
+    const clientDetails = new ClientDetails({
+      clientId: savedUser._id,
+      trainerId: trainer,
+      branch,
       gender,
       age,
-      branchId: branchExists._id,
-      trainerId: trainerExists._id,
+      altphone: altphone || null,
       height: height || null,
       weight: weight || null,
-      password: hashedPassword
+      img: imgUrl
     });
+    await clientDetails.save();
 
-    const savedClient = await newClient.save();
-
-    // 🔹 Normalize inputs
-    const normalizedPaymentMethod = String(paymentMethod).toLowerCase();
-    
+    // Step 4️⃣ Normalize inputs
     const isConfirmed = confirmedPayment === true || confirmedPayment === "true";
 
-    
-    // 🔹 Payment fields
+    // Payment fields
     let paymentStatus = "Pending";
     let paidDate = null;
     let expiredDate = null;
@@ -1393,9 +921,9 @@ exports.addClients = async (req, res) => {
       expiredDate.setDate(paidDate.getDate() + packageExists.durationInDays);
     }
 
-    // 🔹 Save Membership
+    // Step 5️⃣ Save Membership
     const newMembership = new Membership({
-      clientId: savedClient._id,
+      clientId: savedUser._id,
       package: packageExists._id,
       price: packageExists.price,
       paymentMethod,
@@ -1408,43 +936,12 @@ exports.addClients = async (req, res) => {
 
     await newMembership.save();
 
-    // ✅ If UPI → call paymentController (don’t create Razorpay here!)
+    // ✅ If UPI → call paymentController
     if (paymentMethod.toLowerCase() === "upi") {
-      return res.redirect(`/payment/create-order?clientId=${savedClient._id}&packageId=${packageExists._id}`);
+      return res.redirect(
+        `/payment/create-order?clientId=${savedUser._id}&packageId=${packageExists._id}`
+      );
     }
-
-    // 🔹 If UPI and not confirmed → Send payment link via WhatsApp
-    // if (normalizedPaymentMethod === "upi") {
-    //   console.log("✅ Entering UPI Payment Block");
-
-    //   const razorpay = new Razorpay({
-    //     key_id: process.env.RAZORPAY_KEY_ID,
-    //     key_secret: process.env.RAZORPAY_SECRET
-    //   });
-
-    //   const paymentLink = await razorpay.paymentLink.create({
-    //     amount: packageExists.price * 100, // paise
-    //     currency: "INR",
-    //     accept_partial: false,
-    //     description: `Membership Payment for ${name}`,
-    //     customer: {
-    //       name: name,
-    //       email: email,
-    //       contact: `+91${phone}`
-    //     },
-    //     notify: { sms: false, email: false },
-    //     reminder_enable: true
-    //   });
-
-    //   console.log("🔗 Razorpay Link:", paymentLink.short_url);
-
-    //   // WhatsApp message via Twilio
-    //   await clientTwilio.messages.create({
-    //     from: "whatsapp:+14155238886", // Twilio sandbox
-    //     to: `whatsapp:+91${phone}`,
-    //     body: `Hi ${name}, please complete your gym membership payment using this link: ${paymentLink.short_url}`
-    //   });
-    // }
 
     // ✅ Success response
     req.session.success = "Client & Membership added successfully.";
@@ -1457,74 +954,6 @@ exports.addClients = async (req, res) => {
   }
 };
 
-
-// exports.clientsList = async (req, res) => {
-//   try {
-//     let page = parseInt(req.query.page) || 1;
-//     let limit = 2;  // adjust page size
-//     let skip = (page - 1) * limit;
-
-//     let search = req.query.search || "";
-
-//     // Search filter
-//     let match = {};
-//     if (search) {
-//       match = {
-//         $or: [
-//           { name: { $regex: search, $options: "i" } },
-//           { email: { $regex: search, $options: "i" } },
-//           { phone: { $regex: search, $options: "i" } }
-//         ]
-//       };
-//     }
-
-//     // Count clients
-//     const totalClients = await Client.countDocuments(match);
-
-//     const clients = await Client.aggregate([
-//       { $match: match },
-//       {
-//         $lookup: {
-//           from: "branches",
-//           localField: "branchId",
-//           foreignField: "_id",
-//           as: "branchInfo"
-//         }
-//       },
-//       { $unwind: { path: "$branchInfo", preserveNullAndEmptyArrays: true } },
-//       {
-//         $lookup: {
-//           from: "trainers",
-//           localField: "trainerId",
-//           foreignField: "_id",
-//           as: "trainerInfo"
-//         }
-//       },
-//       { $unwind: { path: "$trainerInfo", preserveNullAndEmptyArrays: true } },
-//       {
-//         $project: {
-//           name: 1,
-//           email: 1,
-//           phone: 1,
-//           branch: "$branchInfo.name",
-//           trainer: "$trainerInfo.name"
-//         }
-//       },
-//       { $skip: skip },
-//       { $limit: limit }
-//     ]);
-
-//     res.status(200).json({
-//       clients,
-//       totalPages: Math.ceil(totalClients / limit),
-//       currentPage: page
-//     });
-//   } catch (error) {
-//     console.error("Error fetching clients: ", error);
-//     res.status(500).json({ message: "Server Error" });
-//   }
-// };
-
 exports.clientsList = async (req, res) => {
   try {
     let page = parseInt(req.query.page) || 1;
@@ -1534,66 +963,124 @@ exports.clientsList = async (req, res) => {
     let search = req.query.search || "";
     let branchId = req.query.branchId || "";
 
-    // Search filter
-    let match = {};
-    if (search) {
-      match.$or = [
-        { name: { $regex: search, $options: "i" } },
-        { email: { $regex: search, $options: "i" } },
-        { phone: { $regex: search, $options: "i" } }
-      ];
-    }
+    // Match conditions
+    let match = { isActive: true };
 
     if (branchId) {
-      match.branchId = new mongoose.Types.ObjectId(branchId);
+      match.branch = new mongoose.Types.ObjectId(branchId);
     }
 
-    const totalClients = await Client.countDocuments(match);
-
-    const clients = await Client.aggregate([
+    // Build aggregation
+    const pipeline = [
       { $match: match },
+
+      // 🔹 Join User info (client)
+      {
+        $lookup: {
+          from: "users",
+          localField: "clientId",
+          foreignField: "_id",
+          as: "clientInfo",
+        },
+      },
+      { $unwind: "$clientInfo" },
+
+      // 🔹 Apply search on clientInfo (name/email/phone)
+      ...(search
+        ? [
+            {
+              $match: {
+                $or: [
+                  { "clientInfo.name": { $regex: search, $options: "i" } },
+                  { "clientInfo.email": { $regex: search, $options: "i" } },
+                  { "clientInfo.phone": { $regex: search, $options: "i" } },
+                ],
+              },
+            },
+          ]
+        : []),
+
+      // 🔹 Join branch info
       {
         $lookup: {
           from: "branches",
-          localField: "branchId",
+          localField: "branch",
           foreignField: "_id",
-          as: "branchInfo"
-        }
+          as: "branchInfo",
+        },
       },
       { $unwind: { path: "$branchInfo", preserveNullAndEmptyArrays: true } },
+
+      // 🔹 Join trainer info (User with userType = trainer)
       {
         $lookup: {
-          from: "trainers",
+          from: "users",
           localField: "trainerId",
           foreignField: "_id",
-          as: "trainerInfo"
-        }
+          as: "trainerInfo",
+        },
       },
       { $unwind: { path: "$trainerInfo", preserveNullAndEmptyArrays: true } },
+
+      // 🔹 Project only needed fields
       {
         $project: {
-          name: 1,
-          email: 1,
-          phone: 1,
+          _id: 1,
+          name: "$clientInfo.name",
+          email: "$clientInfo.email",
+          phone: "$clientInfo.phone",
           branch: "$branchInfo.name",
-          trainer: "$trainerInfo.name"
-        }
+          trainer: "$trainerInfo.name",
+        },
       },
+
       { $skip: skip },
-      { $limit: limit }
+      { $limit: limit },
+    ];
+
+    // Run aggregation
+    const clients = await ClientDetails.aggregate(pipeline);
+
+    // Count total (with same filters)
+    const totalClients = await ClientDetails.aggregate([
+      { $match: match },
+      {
+        $lookup: {
+          from: "users",
+          localField: "clientId",
+          foreignField: "_id",
+          as: "clientInfo",
+        },
+      },
+      { $unwind: "$clientInfo" },
+      ...(search
+        ? [
+            {
+              $match: {
+                $or: [
+                  { "clientInfo.name": { $regex: search, $options: "i" } },
+                  { "clientInfo.email": { $regex: search, $options: "i" } },
+                  { "clientInfo.phone": { $regex: search, $options: "i" } },
+                ],
+              },
+            },
+          ]
+        : []),
+      { $count: "count" },
     ]);
+
+    const count = totalClients.length > 0 ? totalClients[0].count : 0;
 
     res.status(200).json({
       clients,
-      totalPages: Math.ceil(totalClients / limit),
-      currentPage: page
+      totalPages: Math.ceil(count / limit),
+      currentPage: page,
     });
   } catch (error) {
-    console.error("Error fetching clients: ", error);
+    console.error("❌ Error fetching clients: ", error);
     res.status(500).json({ message: "Server Error" });
   }
 };
-
 
 exports.getPackageList = async (req, res) => {
   try {

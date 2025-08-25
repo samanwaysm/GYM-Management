@@ -170,8 +170,8 @@
             <!-- partial:../../partials/_navbar.html -->
             <nav class="navbar p-0 fixed-top d-flex flex-row">
                 <div class="navbar-brand-wrapper d-flex d-lg-none align-items-center justify-content-center">
-                    <a class="navbar-brand brand-logo-mini" href="../../index.html"><img src="/admin/images/logo-mini.svg"
-                            alt="logo" /></a>
+                    <a class="navbar-brand brand-logo-mini" href="../../index.html"><img
+                            src="/admin/images/logo-mini.svg" alt="logo" /></a>
                 </div>
                 <div class="navbar-menu-wrapper flex-grow d-flex align-items-stretch">
                     <button class="navbar-toggler navbar-toggler align-self-center" type="button"
@@ -405,27 +405,28 @@
                             <!-- <h4 class="card-title">Hoverable Table</h4>
                             <p class="card-description"> Add class <code>.table-hover</code>
                             </p> -->
-                                    <!-- Search box -->
-                                    <div class="mb-3">
-                                        <input type="text" id="searchBox" class="form-control" placeholder="Search by name, email, phone...">
-                                    </div>
-                                    <div class="table-responsive">
-                                        <table class="table table-hover">
-                                            <thead>
-                                                <tr>
-                                                    <th>User</th>
-                                                    <th>Email</th>
-                                                    <th>Phone</th>
-                                                    <th>Edit</th>
-                                                    <th>Delete</th>
-                                                </tr>
-                                            </thead>
+                            <!-- Search box -->
+                            <div class="mb-3">
+                                <input type="text" id="searchBox" class="form-control"
+                                    placeholder="Search by name, email, phone...">
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>User</th>
+                                            <th>Email</th>
+                                            <th>Phone</th>
+                                            <th>Edit</th>
+                                            <th>Delete</th>
+                                        </tr>
+                                    </thead>
 
-                                            <tbody id="adminsTableBody">
+                                    <tbody id="adminsTableBody">
 
-                                            </tbody>
-                                        </table>
-                                    </div>
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -474,7 +475,7 @@
                 data: { search: query },    // send search query
                 success: function (response) {
                     console.log(response);
-                    
+
                     let rows = "";
 
                     if (response.length === 0) {
@@ -482,14 +483,14 @@
                     } else {
                         response.forEach(admin => {
                             rows += `
-                            <tr>
+                            <tr class="text-white">
                                 <td>${admin.name}</td>
                                 <td>${admin.email}</td>
                                 <td>${admin.phone}</td>
                                 <td>
-                                    <button type="button" class="btn btn-outline-secondary btn-icon-text"> 
+                                    <a href="/superadmin-edit-admin/${admin._id}" class="btn btn-outline-secondary btn-icon-text"> 
                                         Edit <i class="mdi mdi-file-check btn-icon-append"></i>
-                                    </button>
+                                    </a>
                                 </td>
                                 <td>
                                     <button type="button" class="btn btn-outline-danger btn-icon-text" 
@@ -508,6 +509,23 @@
                 }
             });
         }
+
+        function confirmUnlist(adminId) {
+            if (confirm("Are you sure you want to unlist this admin?")) {
+                $.ajax({
+                    url: "/superadmin/unlist-admin/" + adminId,
+                    type: "POST",
+                    success: function (res) {
+                        alert(res.message || "Admin unlisted successfully!");
+                        loadAdmins(); // reload list
+                    },
+                    error: function () {
+                        alert("Error unlisting admin.");
+                    }
+                });
+            }
+        }
+
 
         // Load all admins on page load
         $(document).ready(function () {

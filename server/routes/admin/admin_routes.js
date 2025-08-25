@@ -5,6 +5,9 @@ const services = require('../../services/admin/admin_services');
 
 const controller = require('../../controller/admin_controller/admin_controller');
 
+const multer = require("multer");
+const upload = multer({ storage: multer.memoryStorage() });
+
 const {isSuperAdminAuthenticated,
     isSuperAdminNotAuthenticated,
     isAdminAuthenticated,
@@ -36,12 +39,20 @@ route.post("/admin/adminlogin",controller.adminLogin);
 route.post("/admin/forgot-send-otp",controller.send_otp);
 route.post("/admin/forgot-verify-otp/:email",controller.verify_OTP);
 route.post("/admin/forgot-change-password",controller.change_password);
+
 route.post("/superadmin/add-admin",controller.addAdmin);
+route.post("/superadmin/edit-admin",controller.editAdmin);
+route.post("/superadmin/delete-admin",controller.deleteAdmin);
+
 route.post("/admin/send-otp",controller.sendAdminOTP);
 route.post("/admin/verify-otp",controller.verifyAdminOTP);
+
 route.post("/admin/add-branch",controller.addBranch);
+
 route.post("/admin/add-trainers",controller.addTrainers);
-route.post("/admin/add-clients",controller.addClients);
+
+route.post("/admin/add-clients",upload.single("img"),controller.addClients);
+
 route.post("/admin/add-packages",controller.addPackages);
 
 route.get("/admin/admin-logout",controller.adminlogout);

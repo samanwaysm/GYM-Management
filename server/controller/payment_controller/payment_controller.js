@@ -1,7 +1,6 @@
 const Razorpay = require("razorpay");
 const crypto = require("crypto");
 const twilio = require("twilio");
-const cron = require("node-cron");
 
 const Payment = require("../../../model/payment/payment_schema");
 const Membership = require("../../../model/clients/membership_schema");
@@ -117,5 +116,84 @@ exports.handleWebhook = async (req, res) => {
   }
 
   res.json({ status: "ok" });
+};
+
+
+// Client Side
+
+// 🔹 Step 1: Create Razorpay Order
+exports.updateMembership = async (req, res) => {
+  try {
+    const { clientId, packageId } = req.body;
+
+    // find membership for client
+    const membership = await Membership.findOne({ clientId, package: packageId });
+    if (!membership) return res.status(404).json({ success: false, message: "Membership not found" });
+
+    const options = {
+      amount: membership.price * 100, // convert to paise
+      currency: "INR",
+      receipt: `receipt_${Date.now()}`,
+      notes: {
+        clientId: clientId,
+        membershipId: membership._id.toString()
+      }
+    };
+
+    const order = await razorpay.orders.create(options);
+
+    res.json({
+      success: true,
+      key: process.env.RAZORPAY_KEY_ID,
+      amount: options.amount,
+      currency: options.currency,
+      orderId: order.id,
+      membershipId: membership._id,
+      packageId: packageId 
+    });
+
+  } catch (err) {
+    console.error("❌ Order Creation Failed:", err);
+    res.status(500).json({ success: false, message: "Server Error" });
+  }
+};
+
+// 🔹 Step 2: Verify Payment
+exports.verifyPayment = async (req, res) => {
+  try {
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, membershipId, packageId} = req.body;
+    console.log(req.body);
+
+    const package = await Package.findById(packageId);
+    
+    const generatedSignature = crypto
+      .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
+      .update(razorpay_order_id + "|" + razorpay_payment_id)
+      .digest("hex");
+
+    if (generatedSignature !== razorpay_signature) {
+      return res.status(400).json({ success: false, message: "Invalid payment signature" });
+    }
+
+    paidDate = new Date();
+    expiredDate = new Date(paidDate);
+    expiredDate.setDate(paidDate.getDate() + package.durationInDays);
+
+    // ✅ Update Membership
+    await Membership.findByIdAndUpdate({_id: membershipId}, {
+      paymentMethod : "UPI",
+      paymentStatus: "Completed",
+      confirmedPayment: true,
+      paidDate,
+      expiredDate,
+      status: "Active"
+    });
+
+    res.json({ success: true, message: "Payment verified & membership updated" });
+
+  } catch (err) {
+    console.error("❌ Verify Payment Error:", err);
+    res.status(500).json({ success: false, message: "Server Error" });
+  }
 };
 
