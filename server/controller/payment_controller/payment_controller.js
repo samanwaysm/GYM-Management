@@ -109,7 +109,6 @@ exports.handleWebhook = async (req, res) => {
         }
       );
 
-      console.log("✅ Payment updated successfully");
     }
   } else {
     console.log("❌ Invalid webhook signature");
@@ -162,7 +161,6 @@ exports.updateMembership = async (req, res) => {
 exports.verifyPayment = async (req, res) => {
   try {
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature, membershipId, packageId} = req.body;
-    console.log(req.body);
 
     const package = await Package.findById(packageId);
     

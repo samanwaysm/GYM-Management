@@ -182,7 +182,6 @@ exports.send_otp = async (req, res) => {
     // ✅ Show OTP input in the next render
     req.session.showOtp = true;
     req.session.emailOtp = req.session.email;
-    console.log(req.session.emailOtp);
 
     return res.redirect("/admin-forgot-password");
 
@@ -196,9 +195,6 @@ exports.send_otp = async (req, res) => {
 exports.verify_OTP = async (req, res) => {
   const { otp } = req.body;
   const { email } = req.params;
-  console.log(req.body);
-  console.log(req.params);
-
 
   try {
     const otpRecord = await OtpDb.findOne({ email }).sort({ createdAt: -1 });
@@ -310,8 +306,8 @@ exports.addAdmin = async (req, res) => {
 
   try {
     // Check for duplicates (email or phone)
-    const existingUser = await User.findOne({ 
-      $or: [{ email }, { phone }] 
+    const existingUser = await User.findOne({
+      $or: [{ email }, { phone }]
     });
 
     if (existingUser) {
@@ -370,12 +366,63 @@ exports.adminList = async (req, res) => {
   }
 };
 
-exports.editAdmin = async (req, res) => {
+exports.getAdminDetails = async (req, res) => {
+  try {
+    const { id: adminId } = req.params;
 
-}
+    // ✅ Select only required fields
+    const admin = await User.findById(adminId)
+      .select("_id name email phone userType")
+      .lean(); // return plain JS object for faster response
+
+    if (!admin) {
+      return res.status(404).json({ success: false, error: "Admin not found" });
+    }
+
+    res.json({ success: true, admin });
+  } catch (err) {
+    console.error("❌ Error fetching admin:", err.message);
+    res.status(500).json({ success: false, error: "Server error" });
+  }
+};
+
+exports.updateAdmin = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, email, phone } = req.body;
+
+    const updatedAdmin = await User.findByIdAndUpdate(
+      id,
+      { name, email, phone },
+      { new: true, runValidators: true, fields: "_id name email phone userType" }
+    ).lean();
+
+    if (!updatedAdmin) {
+      return res.status(404).json({ success: false, error: "Admin not found" });
+    }
+
+    res.json({ success: true, admin: updatedAdmin });
+  } catch (err) {
+    console.error("❌ Error updating admin:", err.message);
+    res.status(500).json({ success: false, error: "Server error" });
+  }
+};
 
 exports.deleteAdmin = async (req, res) => {
+  try {
+    const { id } = req.params;
 
+    const deletedAdmin = await User.findByIdAndDelete(id);
+
+    if (!deletedAdmin) {
+      return res.status(404).json({ success: false, error: "Admin not found" });
+    }
+
+    res.json({ success: true, message: "Admin deleted successfully" });
+  } catch (err) {
+    console.error("❌ Error deleting admin:", err.message);
+    res.status(500).json({ success: false, error: "Server error" });
+  }
 }
 
 exports.getAdminProfile = async (req, res) => {
@@ -479,8 +526,7 @@ exports.sendAdminOTP = async (req, res) => {
 
 exports.verifyAdminOTP = async (req, res) => {
   const { userType, email, otp, name, phone, password, newPassword, confirmPassword } = req.body;
-  console.log(req.body);
-  
+
   try {
     // 1️⃣ Check OTP
     const otpRecord = await OtpDb.findOne({ email }).sort({ createdAt: -1 });
@@ -548,9 +594,6 @@ exports.addBranch = async (req, res) => {
     // Create branch object
     const newBranch = new Branch({
       name: name,
-      contact: {
-        phone
-      },
       location: {
         address,
         city,
@@ -560,7 +603,8 @@ exports.addBranch = async (req, res) => {
           lat: lat || null,
           lng: lng || null
         }
-      }
+      },
+      phone
     });
 
     await newBranch.save();
@@ -616,8 +660,6 @@ exports.branchList = async (req, res) => {
       { $skip: skip },
       { $limit: limit }
     ]);
-    console.log(branches);
-
     res.status(200).json({
       branches,
       totalPages: Math.ceil(totalBranches / limit),
@@ -638,6 +680,84 @@ exports.getBranchNames = async (req, res) => {
   } catch (error) {
     console.error("Error fetching branch names: ", error);
     res.status(500).json({ message: "Server Error" });
+  }
+}
+
+exports.getBranchDetails = async (req, res) => {
+  try {
+    const { id: branchId } = req.params;
+
+    // ✅ Select only required fields
+    const branch = await Branch.findById(branchId)
+      .select("_id name location phone")
+      .lean();
+
+    if (!branch) {
+      return res.status(404).json({ success: false, error: "Branch not found" });
+    }
+
+    res.json({ success: true, branch });
+  } catch (err) {
+    console.error("❌ Error fetching branch:", err.message);
+    res.status(500).json({ success: false, error: "Server error" });
+  }
+}
+
+// ✅ Update Branch Controller
+exports.updateBranch = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, phone, address, city, state, pincode, lat, lng } = req.body;
+
+    const updatedBranch = await Branch.findByIdAndUpdate(
+      id,
+      {
+        name,
+        phone,
+        location: {
+          address,
+          city,
+          state,
+          pincode,
+        },
+        geo: {
+          lat,
+          lng,
+        },
+      },
+      {
+        new: true,
+        runValidators: true,
+        fields: "_id name phone location geo"
+      }
+    ).lean();
+
+    if (!updatedBranch) {
+      return res.status(404).json({ success: false, error: "Branch not found" });
+    }
+
+    res.json({ success: true, branch: updatedBranch });
+  } catch (err) {
+    console.error("❌ Error updating branch:", err.message);
+    res.status(500).json({ success: false, error: "Server error" });
+  }
+};
+
+
+exports.deleteBranch = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const deletedBranch = await Branch.findByIdAndDelete(id);
+
+    if (!deletedBranch) {
+      return res.status(404).json({ success: false, error: "Branch not found" });
+    }
+
+    res.json({ success: true, message: "Branch deleted successfully!" });
+  } catch (err) {
+    console.error("❌ Error deleting branch:", err.message);
+    res.status(500).json({ success: false, error: "Server error" });
   }
 }
 
@@ -710,7 +830,7 @@ exports.trainersList = async (req, res) => {
       // Join with User collection
       {
         $lookup: {
-          from: "users", // Mongo collection name (User -> users)
+          from: "users", // User collection
           localField: "trainerId",
           foreignField: "_id",
           as: "trainerInfo"
@@ -718,19 +838,19 @@ exports.trainersList = async (req, res) => {
       },
       { $unwind: "$trainerInfo" },
 
-      // Search filter (applied on joined user data)
+      // Search filter
       ...(search
         ? [
-            {
-              $match: {
-                $or: [
-                  { "trainerInfo.name": { $regex: search, $options: "i" } },
-                  { "trainerInfo.email": { $regex: search, $options: "i" } },
-                  { "trainerInfo.phone": { $regex: search, $options: "i" } }
-                ]
-              }
+          {
+            $match: {
+              $or: [
+                { "trainerInfo.name": { $regex: search, $options: "i" } },
+                { "trainerInfo.email": { $regex: search, $options: "i" } },
+                { "trainerInfo.phone": { $regex: search, $options: "i" } }
+              ]
             }
-          ]
+          }
+        ]
         : []),
 
       // Join with Branch collection
@@ -768,9 +888,10 @@ exports.trainersList = async (req, res) => {
         }
       },
 
-      // Select final fields
+      // ✅ Select final fields (including trainerId)
       {
         $project: {
+          trainerId: "$trainerInfo._id", // <-- added
           name: "$trainerInfo.name",
           email: "$trainerInfo.email",
           phone: "$trainerInfo.phone",
@@ -793,6 +914,7 @@ exports.trainersList = async (req, res) => {
     res.status(500).json({ message: "Server Error" });
   }
 };
+
 
 exports.getTrainersByBranch = async (req, res) => {
   try {
@@ -820,6 +942,121 @@ exports.getTrainersByBranch = async (req, res) => {
   } catch (error) {
     console.error('Error fetching trainers:', error);
     res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+exports.getTrainersDetails = async (req, res) => {
+  try {
+    const { id } = req.params; // trainerId == User._id
+    if (!mongoose.isValidObjectId(id)) {
+      return res.status(400).json({ success: false, error: "Invalid trainer ID" });
+    }
+
+    // Run both queries in parallel
+    const [user, details] = await Promise.all([
+      User.findById(id)
+        .select("_id name email phone userType")
+        .lean(),
+      TrainerDetails.findOne({ trainerId: id })
+        .select("_id trainerId branch")
+        .populate({ path: "branch", select: "_id name", options: { lean: true } })
+        .lean()
+    ]);
+
+    if (!user || !details) {
+      return res.status(404).json({ success: false, error: "Trainer not found" });
+    }
+
+    // Shape response (only what you asked)
+    return res.json({
+      success: true,
+      trainer: {
+        trainerId: user._id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        branchId: details.branch ? details.branch._id : null,
+        branchName: details.branch ? details.branch.name : null
+      }
+    });
+  } catch (err) {
+    console.error("❌ Error fetching trainer details:", err);
+    return res.status(500).json({ success: false, error: "Server error" });
+  }
+};
+
+exports.updateTrainers = async (req, res) => {
+  try {
+    const trainerId = req.params.id; //
+    const { name, email, phone, branch } = req.body;
+
+    if (!mongoose.Types.ObjectId.isValid(trainerId)) {
+      return res.status(400).json({ success: false, error: "Invalid Trainer ID" });
+    }
+
+    // ✅ Step 1: Update User info
+    const updatedUser = await User.findByIdAndUpdate(
+      trainerId,
+      { name, email, phone },
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({ success: false, error: "Trainer (User) not found" });
+    }
+
+    // ✅ Step 2: Update branch in TrainerDetails if provided
+    let updatedTrainerDetails = null;
+    if (branch && mongoose.Types.ObjectId.isValid(branch)) {
+      updatedTrainerDetails = await TrainerDetails.findOneAndUpdate(
+        { trainerId: new mongoose.Types.ObjectId(trainerId) }, // ensure ObjectId
+        { branch },
+        { new: true, upsert: false }
+      ).populate("branch", "name");
+    }
+
+    res.json({
+      success: true,
+      message: "Trainer updated successfully",
+      trainer: {
+        _id: updatedUser._id,
+        name: updatedUser.name,
+        email: updatedUser.email,
+        phone: updatedUser.phone,
+        branch: updatedTrainerDetails ? updatedTrainerDetails.branch : null
+      }
+    });
+
+  } catch (err) {
+    console.error("❌ Error updating trainer:", err);
+    res.status(500).json({ success: false, error: "Server error while updating trainer" });
+  }
+};
+
+
+exports.deleteTrainers = async (req, res) => {
+  try {
+    const trainerId = req.params.id; // ✅ match your route: /admin/delete-trainers/:id
+
+    // 🔍 Validate ObjectId
+    if (!mongoose.Types.ObjectId.isValid(trainerId)) {
+      return res.status(400).json({ success: false, error: "Invalid Trainer ID" });
+    }
+
+    // ✅ Step 1: Delete from TrainerDetails
+    await TrainerDetails.findOneAndDelete({ trainerId: trainerId });
+
+    // ✅ Step 2: Delete from User
+    const deletedUser = await User.findByIdAndDelete(trainerId);
+
+    if (!deletedUser) {
+      return res.status(404).json({ success: false, error: "Trainer not found" });
+    }
+
+    res.json({ success: true, message: "Trainer deleted successfully" });
+  } catch (err) {
+    console.error("❌ Error deleting trainer:", err);
+    res.status(500).json({ success: false, error: "Server error while deleting trainer" });
   }
 };
 
@@ -988,16 +1225,16 @@ exports.clientsList = async (req, res) => {
       // 🔹 Apply search on clientInfo (name/email/phone)
       ...(search
         ? [
-            {
-              $match: {
-                $or: [
-                  { "clientInfo.name": { $regex: search, $options: "i" } },
-                  { "clientInfo.email": { $regex: search, $options: "i" } },
-                  { "clientInfo.phone": { $regex: search, $options: "i" } },
-                ],
-              },
+          {
+            $match: {
+              $or: [
+                { "clientInfo.name": { $regex: search, $options: "i" } },
+                { "clientInfo.email": { $regex: search, $options: "i" } },
+                { "clientInfo.phone": { $regex: search, $options: "i" } },
+              ],
             },
-          ]
+          },
+        ]
         : []),
 
       // 🔹 Join branch info
@@ -1026,6 +1263,7 @@ exports.clientsList = async (req, res) => {
       {
         $project: {
           _id: 1,
+          clientId: "$clientInfo._id",
           name: "$clientInfo.name",
           email: "$clientInfo.email",
           phone: "$clientInfo.phone",
@@ -1055,16 +1293,16 @@ exports.clientsList = async (req, res) => {
       { $unwind: "$clientInfo" },
       ...(search
         ? [
-            {
-              $match: {
-                $or: [
-                  { "clientInfo.name": { $regex: search, $options: "i" } },
-                  { "clientInfo.email": { $regex: search, $options: "i" } },
-                  { "clientInfo.phone": { $regex: search, $options: "i" } },
-                ],
-              },
+          {
+            $match: {
+              $or: [
+                { "clientInfo.name": { $regex: search, $options: "i" } },
+                { "clientInfo.email": { $regex: search, $options: "i" } },
+                { "clientInfo.phone": { $regex: search, $options: "i" } },
+              ],
             },
-          ]
+          },
+        ]
         : []),
       { $count: "count" },
     ]);
@@ -1082,10 +1320,241 @@ exports.clientsList = async (req, res) => {
   }
 };
 
+exports.getClientsDetails = async (req, res) => {
+  try {
+    const clientId = req.params.id;
+
+    const client = await ClientDetails.aggregate([
+      { $match: { clientId: new mongoose.Types.ObjectId(clientId) } },
+
+      // ✅ Join with User (client basic info)
+      {
+        $lookup: {
+          from: "users",
+          localField: "clientId",
+          foreignField: "_id",
+          as: "userInfo",
+        },
+      },
+      { $unwind: "$userInfo" },
+
+      // ✅ Join with Trainer (name, email, phone)
+      {
+        $lookup: {
+          from: "users",
+          localField: "trainerId",
+          foreignField: "_id",
+          as: "trainerInfo",
+        },
+      },
+      { $unwind: { path: "$trainerInfo", preserveNullAndEmptyArrays: true } },
+
+      // ✅ Join with Branch (name, id)
+      {
+        $lookup: {
+          from: "branches",
+          localField: "branch",
+          foreignField: "_id",
+          as: "branchInfo",
+        },
+      },
+      { $unwind: { path: "$branchInfo", preserveNullAndEmptyArrays: true } },
+
+      // ✅ Join with Membership
+      {
+        $lookup: {
+          from: "memberships",
+          localField: "clientId",
+          foreignField: "clientId",
+          as: "membership",
+        },
+      },
+      { $unwind: { path: "$membership", preserveNullAndEmptyArrays: true } },
+
+      // ✅ Join with Package (inside Membership)
+      {
+        $lookup: {
+          from: "packages",
+          localField: "membership.package",
+          foreignField: "_id",
+          as: "packageInfo",
+        },
+      },
+      { $unwind: { path: "$packageInfo", preserveNullAndEmptyArrays: true } },
+
+      // ✅ Shape the response
+      {
+        $project: {
+          _id: 1,
+          altphone: 1,
+          gender: 1,
+          age: 1,
+          height: 1,
+          weight: 1,
+          img: 1,
+          joinedDate: 1,
+
+          "userInfo._id": 1,
+          "userInfo.name": 1,
+          "userInfo.email": 1,
+          "userInfo.phone": 1,
+
+          "trainerInfo._id": 1,
+          "trainerInfo.name": 1,
+
+          "branchInfo._id": 1,
+          "branchInfo.name": 1,
+
+          "membership._id": 1,
+          "membership.paymentMethod": 1,
+          "membership.paymentStatus": 1,
+          "membership.confirmedPayment": 1,
+          "membership.paidDate": 1,
+          "membership.expiredDate": 1,
+          "membership.status": 1,
+
+          "packageInfo._id": 1,
+          "packageInfo.name": 1,
+          "packageInfo.price": 1,
+          "packageInfo.days": 1,
+        },
+      },
+    ]);
+
+    if (!client.length) {
+      return res.status(404).json({ success: false, message: "Client not found" });
+    }
+
+    res.json({ success: true, data: client[0] });
+  } catch (error) {
+    console.error("❌ Error fetching client:", error);
+    res.status(500).json({ success: false, message: "Server Error" });
+  }
+};
+
+exports.updateClientDetails = async (req, res) => {
+  try {
+    const clientId = req.params.id;
+
+    const {
+      name, email, phone, altphone, gender, age, branch, trainer, height, weight
+    } = req.body;
+
+
+    // Update User
+    await User.findByIdAndUpdate(clientId, { name, email, phone });
+
+    // Update ClientDetails
+    const updateData = { altphone, gender, age, branch, trainerId: trainer, height, weight };
+    if (req.file) updateData.img = req.file.path;
+
+    await ClientDetails.findOneAndUpdate({ clientId }, updateData);
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+exports.updateMembership = async (req, res) => {
+  try {
+    const clientId = req.params.id;
+    const { package: packageId, paymentMethod, confirmedPayment } = req.body;
+
+    // Fetch package details if packageId provided
+    let packageData = null;
+    let paidDate = new Date();
+    let expiredDate = null;
+
+    if (packageId) {
+      packageData = await Package.findById(packageId);
+      if (packageData) {
+        expiredDate = new Date(paidDate);
+        expiredDate.setDate(paidDate.getDate() + packageData.durationInDays);
+      }
+    }
+
+    // Find existing membership
+    let membership = await Membership.findOne({ clientId });
+
+    if (membership) {
+      // Update membership fields if package changed
+      if (packageId) {
+        membership.package = packageId;
+        membership.paidDate = paidDate;
+        membership.expiredDate = expiredDate;
+        membership.paymentStatus = "Completed";
+        membership.status = "Active";
+      }
+
+      // Update payment method
+      if (paymentMethod && paymentMethod !== membership.paymentMethod) {
+        membership.paymentMethod = paymentMethod;
+      }
+
+      // Update confirmedPayment
+      if (confirmedPayment) membership.confirmedPayment = true;
+
+      await membership.save();
+    } else if (packageId) {
+      // Create new membership if none exists
+      membership = await Membership.create({
+        clientId,
+        package: packageId,
+        paymentMethod,
+        paymentStatus: "Completed",
+        confirmedPayment: confirmedPayment || false,
+        paidDate,
+        expiredDate,
+        status: "Active",
+      });
+    }
+
+    // ✅ If payment method is UPI → redirect to payment route
+    if (paymentMethod && paymentMethod.toLowerCase() === "upi") {
+      return res.json({
+        success: true,
+        redirect: `/payment/create-order?clientId=${clientId}&packageId=${packageId}`
+      });
+    }
+
+    // ✅ Otherwise → redirect to client list
+    res.json({ success: true, redirect: "/admin-clients-list" });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+exports.deleteClients = async (req, res) => {
+  try {
+    const clientId = req.params.id;
+
+    if (!mongoose.Types.ObjectId.isValid(clientId)) {
+      return res.status(400).json({ success: false, message: "Invalid client ID" });
+    }
+
+    // Delete from ClientDetails
+    await ClientDetails.deleteOne({ clientId });
+
+    // Delete from Membership
+    await Membership.deleteOne({ clientId });
+
+    // Delete from User
+    await User.deleteOne({ _id: clientId });
+
+    res.json({ success: true, message: "Client deleted successfully" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+}
+
 exports.getPackageList = async (req, res) => {
   try {
     const packages = await Package.find().sort({ createdAt: -1 }); // Latest first
-    console.log(packages);
     res.status(200).json({
       success: true,
       count: packages.length,
@@ -1105,8 +1574,6 @@ exports.getPackageList = async (req, res) => {
 exports.addPackages = async (req, res) => {
   try {
     const { packageType, durationInDays, price } = req.body;
-    console.log(req.body);
-
     // Validate required fields
     if (!packageType || !price) {
       return res.status(400).json({ success: false, message: "Duration and price are required." });

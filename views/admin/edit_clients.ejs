@@ -1,0 +1,1024 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Corona Admin</title>
+    <!-- plugins:css -->
+    <link rel="stylesheet" href="/admin/vendors/mdi/css/materialdesignicons.min.css">
+    <link rel="stylesheet" href="/admin/vendors/css/vendor.bundle.base.css">
+    <!-- endinject -->
+    <!-- Plugin css for this page -->
+    <link rel="stylesheet" href="/admin/vendors/select2/select2.min.css">
+    <link rel="stylesheet" href="/admin/vendors/select2-bootstrap-theme/select2-bootstrap.min.css">
+    <!-- End plugin css for this page -->
+    <!-- inject:css -->
+    <!-- endinject -->
+    <!-- Layout styles -->
+    <link rel="stylesheet" href="/admin/css/style.css">
+    <!-- End layout styles -->
+    <link rel="shortcut icon" href="/admin/images/fevicon/fevicon.png" />
+</head>
+
+<body>
+    <div class="container-scroller">
+        <!-- partial:../../partials/_sidebar.html -->
+        <nav class="sidebar sidebar-offcanvas" id="sidebar">
+            <div class="sidebar-brand-wrapper d-none d-lg-flex align-items-center justify-content-center fixed-top">
+                <a class="sidebar-brand brand-logo" href="../../index.html"><img src="/admin/images/logo.svg"
+                        alt="logo" /></a>
+                <a class="sidebar-brand brand-logo-mini" href="../../index.html"><img src="/admin/images/logo-mini.svg"
+                        alt="logo" /></a>
+            </div>
+            <ul class="nav">
+                <li class="nav-item profile">
+                    <div class="profile-desc">
+                        <div class="profile-pic">
+                            <div class="count-indicator">
+                                <img class="img-xs rounded-circle " src="/admin/images/faces/face15.jpg" alt="">
+                                <span class="count bg-success"></span>
+                            </div>
+                            <div class="profile-name">
+                                <h5 class="mb-0 font-weight-normal">
+                                    <%= user || 'Admin' %>
+                                </h5>
+                                <span>Gold Member</span>
+                            </div>
+                        </div>
+                        <a href="#" id="profile-dropdown" data-toggle="dropdown"><i
+                                class="mdi mdi-dots-vertical"></i></a>
+                        <div class="dropdown-menu dropdown-menu-right sidebar-dropdown preview-list"
+                            aria-labelledby="profile-dropdown">
+                            <a href="#" class="dropdown-item preview-item">
+                                <div class="preview-thumbnail">
+                                    <div class="preview-icon bg-dark rounded-circle">
+                                        <i class="mdi mdi-settings text-primary"></i>
+                                    </div>
+                                </div>
+                                <div class="preview-item-content">
+                                    <p class="preview-subject ellipsis mb-1 text-small">Account settings</p>
+                                </div>
+                            </a>
+                            <div class="dropdown-divider"></div>
+                            <a href="#" class="dropdown-item preview-item">
+                                <div class="preview-thumbnail">
+                                    <div class="preview-icon bg-dark rounded-circle">
+                                        <i class="mdi mdi-onepassword  text-info"></i>
+                                    </div>
+                                </div>
+                                <div class="preview-item-content">
+                                    <p class="preview-subject ellipsis mb-1 text-small">Change Password</p>
+                                </div>
+                            </a>
+                            <div class="dropdown-divider"></div>
+                            <a href="#" class="dropdown-item preview-item">
+                                <div class="preview-thumbnail">
+                                    <div class="preview-icon bg-dark rounded-circle">
+                                        <i class="mdi mdi-calendar-today text-success"></i>
+                                    </div>
+                                </div>
+                                <div class="preview-item-content">
+                                    <p class="preview-subject ellipsis mb-1 text-small">To-do list</p>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </li>
+                <li class="nav-item nav-category">
+                    <span class="nav-link">Navigation</span>
+                </li>
+                <li class="nav-item menu-items">
+                    <a class="nav-link" href="/admin-dashboard">
+                        <span class="menu-icon">
+                            <i class="mdi mdi-speedometer"></i>
+                        </span>
+                        <span class="menu-title">Dashboard</span>
+                    </a>
+                </li>
+                <% if (isSuperAdminAuthenticated) { %>
+                    <li class="nav-item menu-items">
+                        <a class="nav-link" href="/superadmin-admin-list">
+                            <span class="menu-icon">
+                                <i class="mdi mdi-account-key"></i>
+                            </span>
+                            <span class="menu-title">Admins</span>
+                        </a>
+                    </li>
+                    <% } %>
+                        <li class="nav-item menu-items">
+                            <a class="nav-link" href="/admin-branches-list">
+                                <span class="menu-icon">
+                                    <i class="mdi mdi-domain"></i>
+                                </span>
+                                <span class="menu-title">Branches</span>
+                            </a>
+                        </li>
+                        <li class="nav-item menu-items">
+                            <a class="nav-link" href="/admin-package-list">
+                                <span class="menu-icon">
+                                    <i class="mdi mdi-package-variant-closed"></i>
+                                </span>
+                                <span class="menu-title">Package</span>
+                            </a>
+                        </li>
+                        <li class="nav-item menu-items">
+                            <a class="nav-link" href="/admin-trainers-list">
+                                <span class="menu-icon">
+                                    <i class="mdi mdi-run-fast"></i>
+                                </span>
+                                <span class="menu-title">Trainers</span>
+                            </a>
+                        </li>
+                        <li class="nav-item menu-items">
+                            <a class="nav-link" href="/admin-clients-list">
+                                <span class="menu-icon">
+                                    <i class="mdi mdi-account-group"></i>
+                                </span>
+                                <span class="menu-title">Clients</span>
+                            </a>
+                        </li>
+                        <li class="nav-item menu-items">
+                            <a class="nav-link" href="#">
+                                <span class="menu-icon">
+                                    <i class="mdi mdi-credit-card"></i>
+                                </span>
+                                <span class="menu-title">Payments</span>
+                            </a>
+                        </li>
+                        <li class="nav-item menu-items">
+                            <a class="nav-link" href="#">
+                                <span class="menu-icon">
+                                    <i class="mdi mdi-cash-multiple"></i>
+                                </span>
+                                <span class="menu-title">Salary</span>
+                            </a>
+                        </li>
+                        <li class="nav-item menu-items">
+                            <a class="nav-link" href="#">
+                                <span class="menu-icon">
+                                    <i class="mdi mdi-calendar-check"></i>
+                                </span>
+                                <span class="menu-title">Attendance</span>
+                            </a>
+                        </li>
+            </ul>
+        </nav>
+        <!-- partial -->
+        <div class="container-fluid page-body-wrapper">
+            <!-- partial:../../partials/_navbar.html -->
+            <nav class="navbar p-0 fixed-top d-flex flex-row">
+                <div class="navbar-brand-wrapper d-flex d-lg-none align-items-center justify-content-center">
+                    <a class="navbar-brand brand-logo-mini" href="../../index.html"><img
+                            src="/admin/images/logo-mini.svg" alt="logo" /></a>
+                </div>
+                <div class="navbar-menu-wrapper flex-grow d-flex align-items-stretch">
+                    <button class="navbar-toggler navbar-toggler align-self-center" type="button"
+                        data-toggle="minimize">
+                        <span class="mdi mdi-menu"></span>
+                    </button>
+                    <ul class="navbar-nav w-100">
+                        <li class="nav-item w-100">
+                            <form class="nav-link mt-2 mt-md-0 d-none d-lg-flex search">
+                                <input type="text" class="form-control" placeholder="Search products">
+                            </form>
+                        </li>
+                    </ul>
+                    <ul class="navbar-nav navbar-nav-right">
+                        <li class="nav-item dropdown d-none d-lg-block">
+                            <!-- <a class="nav-link btn btn-success create-new-button" id="createbuttonDropdown" data-toggle="dropdown" aria-expanded="false" href="#">+ Create New Project</a> -->
+                            <div class="dropdown-menu dropdown-menu-right navbar-dropdown preview-list"
+                                aria-labelledby="createbuttonDropdown">
+                                <h6 class="p-3 mb-0">Projects</h6>
+                                <div class="dropdown-divider"></div>
+                                <a class="dropdown-item preview-item">
+                                    <div class="preview-thumbnail">
+                                        <div class="preview-icon bg-dark rounded-circle">
+                                            <i class="mdi mdi-file-outline text-primary"></i>
+                                        </div>
+                                    </div>
+                                    <div class="preview-item-content">
+                                        <p class="preview-subject ellipsis mb-1">Software Development</p>
+                                    </div>
+                                </a>
+                                <div class="dropdown-divider"></div>
+                                <a class="dropdown-item preview-item">
+                                    <div class="preview-thumbnail">
+                                        <div class="preview-icon bg-dark rounded-circle">
+                                            <i class="mdi mdi-web text-info"></i>
+                                        </div>
+                                    </div>
+                                    <div class="preview-item-content">
+                                        <p class="preview-subject ellipsis mb-1">UI Development</p>
+                                    </div>
+                                </a>
+                                <div class="dropdown-divider"></div>
+                                <a class="dropdown-item preview-item">
+                                    <div class="preview-thumbnail">
+                                        <div class="preview-icon bg-dark rounded-circle">
+                                            <i class="mdi mdi-layers text-danger"></i>
+                                        </div>
+                                    </div>
+                                    <div class="preview-item-content">
+                                        <p class="preview-subject ellipsis mb-1">Software Testing</p>
+                                    </div>
+                                </a>
+                                <div class="dropdown-divider"></div>
+                                <p class="p-3 mb-0 text-center">See all projects</p>
+                            </div>
+                        </li>
+                        <li class="nav-item nav-settings d-none d-lg-block">
+                            <a class="nav-link" href="#">
+                                <i class="mdi mdi-view-grid"></i>
+                            </a>
+                        </li>
+                        <li class="nav-item dropdown border-left">
+                            <a class="nav-link count-indicator dropdown-toggle" id="messageDropdown" href="#"
+                                data-toggle="dropdown" aria-expanded="false">
+                                <i class="mdi mdi-email"></i>
+                                <span class="count bg-success"></span>
+                            </a>
+                            <div class="dropdown-menu dropdown-menu-right navbar-dropdown preview-list"
+                                aria-labelledby="messageDropdown">
+                                <h6 class="p-3 mb-0">Messages</h6>
+                                <div class="dropdown-divider"></div>
+                                <a class="dropdown-item preview-item">
+                                    <div class="preview-thumbnail">
+                                        <img src="/admin/images/faces/face4.jpg" alt="image"
+                                            class="rounded-circle profile-pic">
+                                    </div>
+                                    <div class="preview-item-content">
+                                        <p class="preview-subject ellipsis mb-1">Mark send you a message</p>
+                                        <p class="text-muted mb-0"> 1 Minutes ago </p>
+                                    </div>
+                                </a>
+                                <div class="dropdown-divider"></div>
+                                <a class="dropdown-item preview-item">
+                                    <div class="preview-thumbnail">
+                                        <img src="/admin/images/faces/face2.jpg" alt="image"
+                                            class="rounded-circle profile-pic">
+                                    </div>
+                                    <div class="preview-item-content">
+                                        <p class="preview-subject ellipsis mb-1">Cregh send you a message</p>
+                                        <p class="text-muted mb-0"> 15 Minutes ago </p>
+                                    </div>
+                                </a>
+                                <div class="dropdown-divider"></div>
+                                <a class="dropdown-item preview-item">
+                                    <div class="preview-thumbnail">
+                                        <img src="/admin/images/faces/face3.jpg" alt="image"
+                                            class="rounded-circle profile-pic">
+                                    </div>
+                                    <div class="preview-item-content">
+                                        <p class="preview-subject ellipsis mb-1">Profile picture updated</p>
+                                        <p class="text-muted mb-0"> 18 Minutes ago </p>
+                                    </div>
+                                </a>
+                                <div class="dropdown-divider"></div>
+                                <p class="p-3 mb-0 text-center">4 new messages</p>
+                            </div>
+                        </li>
+                        <li class="nav-item dropdown border-left">
+                            <a class="nav-link count-indicator dropdown-toggle" id="notificationDropdown" href="#"
+                                data-toggle="dropdown">
+                                <i class="mdi mdi-bell"></i>
+                                <span class="count bg-danger"></span>
+                            </a>
+                            <div class="dropdown-menu dropdown-menu-right navbar-dropdown preview-list"
+                                aria-labelledby="notificationDropdown">
+                                <h6 class="p-3 mb-0">Notifications</h6>
+                                <div class="dropdown-divider"></div>
+                                <a class="dropdown-item preview-item">
+                                    <div class="preview-thumbnail">
+                                        <div class="preview-icon bg-dark rounded-circle">
+                                            <i class="mdi mdi-calendar text-success"></i>
+                                        </div>
+                                    </div>
+                                    <div class="preview-item-content">
+                                        <p class="preview-subject mb-1">Event today</p>
+                                        <p class="text-muted ellipsis mb-0"> Just a reminder that you have an event
+                                            today </p>
+                                    </div>
+                                </a>
+                                <div class="dropdown-divider"></div>
+                                <a class="dropdown-item preview-item">
+                                    <div class="preview-thumbnail">
+                                        <div class="preview-icon bg-dark rounded-circle">
+                                            <i class="mdi mdi-settings text-danger"></i>
+                                        </div>
+                                    </div>
+                                    <div class="preview-item-content">
+                                        <p class="preview-subject mb-1">Settings</p>
+                                        <p class="text-muted ellipsis mb-0"> Update dashboard </p>
+                                    </div>
+                                </a>
+                                <div class="dropdown-divider"></div>
+                                <a class="dropdown-item preview-item">
+                                    <div class="preview-thumbnail">
+                                        <div class="preview-icon bg-dark rounded-circle">
+                                            <i class="mdi mdi-link-variant text-warning"></i>
+                                        </div>
+                                    </div>
+                                    <div class="preview-item-content">
+                                        <p class="preview-subject mb-1">Launch Admin</p>
+                                        <p class="text-muted ellipsis mb-0"> New admin wow! </p>
+                                    </div>
+                                </a>
+                                <div class="dropdown-divider"></div>
+                                <p class="p-3 mb-0 text-center">See all notifications</p>
+                            </div>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link" id="profileDropdown" href="#" data-toggle="dropdown">
+                                <div class="navbar-profile">
+                                    <img class="img-xs rounded-circle" src="/admin/images/faces/face15.jpg" alt="">
+                                    <p class="mb-0 d-none d-sm-block navbar-profile-name">
+                                        <%= user || 'Admin' %>
+                                    </p>
+                                    <i class="mdi mdi-menu-down d-none d-sm-block"></i>
+                                </div>
+                            </a>
+                            <div class="dropdown-menu dropdown-menu-right navbar-dropdown preview-list"
+                                aria-labelledby="profileDropdown">
+                                <h6 class="p-3 mb-0">Profile</h6>
+                                <div class="dropdown-divider"></div>
+                                <a class="dropdown-item preview-item">
+                                    <div class="preview-thumbnail">
+                                        <div class="preview-icon bg-dark rounded-circle">
+                                            <i class="mdi mdi-settings text-success"></i>
+                                        </div>
+                                    </div>
+                                    <div class="preview-item-content">
+                                        <p class="preview-subject mb-1">Settings</p>
+                                    </div>
+                                </a>
+                                <div class="dropdown-divider"></div>
+                                <a class="dropdown-item preview-item" href="/admin/admin-logout">
+                                    <div class="preview-thumbnail">
+                                        <div class="preview-icon bg-dark rounded-circle">
+                                            <i class="mdi mdi-logout text-danger"></i>
+                                        </div>
+                                    </div>
+                                    <div class="preview-item-content">
+                                        <p class="preview-subject mb-1">Log out</p>
+                                    </div>
+                                </a>
+                                <div class="dropdown-divider"></div>
+                                <p class="p-3 mb-0 text-center">Advanced settings</p>
+                            </div>
+                        </li>
+                    </ul>
+                    <button class="navbar-toggler navbar-toggler-right d-lg-none align-self-center" type="button"
+                        data-toggle="offcanvas">
+                        <span class="mdi mdi-format-line-spacing"></span>
+                    </button>
+                </div>
+            </nav>
+            <!-- partial -->
+            <div class="main-panel">
+                <div class="content-wrapper">
+                    <div class="page-header">
+                        <h3 class="page-title"> Edit Client </h3>
+                        <nav aria-label="breadcrumb">
+                            <ol class="breadcrumb">
+                                <li class="breadcrumb-item"><a href="#"> Admin </a></li>
+                                <li class="breadcrumb-item active" aria-current="page">Edit Client</li>
+                            </ol>
+                        </nav>
+                    </div>
+                    <div class="row">
+                        <div class="col-12 grid-margin mt-5">
+                            <div class="card">
+                                <div class="card-body mt-3">
+                                    <!-- ================= MEMBERSHIP FORM ================= -->
+                                    <form id="membershipForm" class="form-sample">
+                                        <h4 class="card-title">Membership</h4>
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="form-group row">
+                                                    <label class="col-sm-3 col-form-label">Package :</label>
+                                                    <div class="col-sm-9">
+                                                        <select class="form-control" name="package" id="package"
+                                                            required>
+                                                            <option value="">-- Select Package --</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-group row">
+                                                    <label class="col-sm-3 col-form-label">Payment Method :</label>
+                                                    <div class="col-sm-9">
+                                                        <select class="form-control" name="paymentMethod"
+                                                            id="paymentMethod" required>
+                                                            <option value="">-- Select Method --</option>
+                                                            <option value="Cash">Cash</option>
+                                                            <option value="UPI">UPI</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="text-center mt-3">
+                                            <button type="submit" class="btn btn-primary">Update Membership</button>
+                                        </div>
+                                    </form>
+
+                                    <hr>
+
+                                    <!-- ================= DETAILS FORM ================= -->
+                                    <form id="detailsForm" class="form-sample">
+                                        <h4 class="card-title">Client Details</h4>
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="form-group row">
+                                                    <label class="col-sm-3 col-form-label">Name :</label>
+                                                    <div class="col-sm-9">
+                                                        <input type="text" id="name" name="name" class="form-control" />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-group row">
+                                                    <label class="col-sm-3 col-form-label">Email :</label>
+                                                    <div class="col-sm-9">
+                                                        <input type="email" id="email" name="email"
+                                                            class="form-control" />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <!-- Phone, Alt Phone -->
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="form-group row">
+                                                    <label class="col-sm-3 col-form-label">Phone :</label>
+                                                    <div class="col-sm-9">
+                                                        <input type="tel" id="phone" name="phone" class="form-control"
+                                                            maxlength="10" />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-group row">
+                                                    <label class="col-sm-3 col-form-label">Alt. Phone :</label>
+                                                    <div class="col-sm-9">
+                                                        <input type="tel" id="altphone" name="altphone"
+                                                            class="form-control" placeholder="(optional)" />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <!-- Gender, Age -->
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="form-group row">
+                                                    <label class="col-sm-3 col-form-label">Gender :</label>
+                                                    <div class="col-sm-9">
+                                                        <select class="form-control" name="gender" id="gender">
+                                                            <option value="">-- Select Gender --</option>
+                                                            <option value="Male">Male</option>
+                                                            <option value="Female">Female</option>
+                                                            <option value="Other">Other</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-group row">
+                                                    <label class="col-sm-3 col-form-label">Age :</label>
+                                                    <div class="col-sm-9">
+                                                        <input type="number" id="age" name="age" class="form-control" />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <!-- Branch, Trainer -->
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="form-group row">
+                                                    <label class="col-sm-3 col-form-label">Branch :</label>
+                                                    <div class="col-sm-9">
+                                                        <select class="form-control" name="branch" id="branch">
+                                                            <option value="">-- Select Branch --</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-group row">
+                                                    <label class="col-sm-3 col-form-label">Trainer :</label>
+                                                    <div class="col-sm-9">
+                                                        <select class="form-control" name="trainer" id="trainer">
+                                                            <option value="">-- Select Trainer --</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <!-- Height, Weight -->
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="form-group row">
+                                                    <label class="col-sm-3 col-form-label">Height :</label>
+                                                    <div class="col-sm-9">
+                                                        <input type="number" id="height" name="height"
+                                                            class="form-control" />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-group row">
+                                                    <label class="col-sm-3 col-form-label">Weight :</label>
+                                                    <div class="col-sm-9">
+                                                        <input type="text" id="weight" name="weight"
+                                                            class="form-control" />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <!-- Profile Image -->
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="form-group row">
+                                                    <label class="col-sm-3 col-form-label">Profile Image :</label>
+                                                    <div class="col-sm-9">
+                                                        <input type="file" id="img" name="img" class="form-control"
+                                                            accept="image/*" />
+                                                        <div class="mt-2">
+                                                            <img id="imgPreview" src="" alt="Image Preview"
+                                                                style="max-width:150px;border:1px solid #ccc;border-radius:5px;padding:3px;display:none;" />
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="text-center mt-3">
+                                            <button type="submit" class="btn btn-primary">Update Details</button>
+                                            <button type="button" id="cancelBtn"
+                                                class="btn btn-secondary">Cancel</button>
+                                        </div>
+                                    </form>
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- content-wrapper ends -->
+                    <!-- partial:../../partials/_footer.html -->
+                    <footer class="footer">
+                        <!-- <div class="d-sm-flex justify-content-center justify-content-sm-between">
+              <span class="text-muted d-block text-center text-sm-left d-sm-inline-block">Copyright © bootstrapdash.com 2020</span>
+              <span class="float-none float-sm-right d-block mt-1 mt-sm-0 text-center"> Free <a href="https://www.bootstrapdash.com/bootstrap-admin-template/" target="_blank">Bootstrap admin templates</a> from Bootstrapdash.com</span>
+            </div> -->
+                    </footer>
+                    <!-- partial -->
+                </div>
+                <!-- main-panel ends -->
+            </div>
+            <!-- page-body-wrapper ends -->
+        </div>
+
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script>
+            $(document).ready(function () {
+                const pathParts = window.location.pathname.split("/");
+                const clientId = pathParts[pathParts.length - 1];
+
+                const $imgInput = $("#img");
+                const $imgPreview = $("#imgPreview");
+                let originalPackage = null; // to check membership change
+
+                // ✅ Preview profile image
+                $imgInput.on("change", function (event) {
+                    const file = event.target.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = function (e) {
+                            $imgPreview.attr("src", e.target.result).show();
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                });
+
+                // ✅ Fetch Packages for <select>
+                function fetchPackagesForSelect() {
+                    $.ajax({
+                        url: "/admin/package-list",
+                        type: "GET",
+                        success: function (data) {
+                            if (data.success) {
+                                const $packageSelect = $("#package");
+                                $packageSelect.empty().append('<option value="">-- Select Package --</option>');
+                                data.data.forEach(pkg => {
+                                    $packageSelect.append(
+                                        `<option value="${pkg._id}">${pkg.packageType} - ₹${pkg.price} - ${pkg.durationInDays} Days</option>`
+                                    );
+                                });
+                            }
+                        },
+                        error: function () {
+                            alert("Error fetching packages.");
+                        }
+                    });
+                }
+
+                // ✅ Fetch Branches for <select>
+                function fetchBranches() {
+                    $.ajax({
+                        url: "/admin/get-branches-name",
+                        type: "GET",
+                        success: function (response) {
+                            if (response.success) {
+                                const $branch = $("#branch");
+                                $branch.empty().append('<option value="">-- Select Branch --</option>');
+                                response.branches.forEach(branch => {
+                                    $branch.append(`<option value="${branch._id}">${branch.name}</option>`);
+                                });
+                            } else {
+                                alert("Error loading branches.");
+                            }
+                        },
+                        error: function () {
+                            alert("Error fetching branches.");
+                        }
+                    });
+                }
+
+                // ✅ Fetch Trainers when branch changes
+                $("#branch").change(function () {
+                    const branchId = $(this).val();
+                    if (branchId) {
+                        $.ajax({
+                            url: `/admin/get-trainers-by-branch/${branchId}`,
+                            type: "GET",
+                            success: function (response) {
+                                const $trainer = $("#trainer");
+                                $trainer.empty().append('<option value="">-- Select Trainer --</option>');
+                                if (response.trainers) {
+                                    response.trainers.forEach(trainer => {
+                                        $trainer.append(`<option value="${trainer._id}">${trainer.name}</option>`);
+                                    });
+                                }
+                            },
+                            error: function () {
+                                alert("Error fetching trainers.");
+                            }
+                        });
+                    } else {
+                        $("#trainer").html('<option value="">-- Select Trainer --</option>');
+                    }
+                });
+
+                // Load client details
+                function loadClientDetails() {
+                    $.ajax({
+                        url: `/admin/get-clients/${clientId}`,
+                        type: "GET",
+                        success: function (data) {
+                            if (data.success) {
+                                const client = data.data;
+                                $("#name").val(client.userInfo.name);
+                                $("#email").val(client.userInfo.email);
+                                $("#phone").val(client.userInfo.phone);
+                                $("#altphone").val(client.altphone || "");
+                                $("#gender").val(client.gender || "");
+                                $("#age").val(client.age || "");
+                                $("#branch").val(client.branchInfo?._id || "");
+                                $("#trainer").val(client.trainerInfo?._id || "");
+                                $("#height").val(client.height || "");
+                                $("#weight").val(client.weight || "");
+
+                                if (client.img) $imgPreview.attr("src", client.img).show();
+
+                                // Preselect Branch
+                                if (client.branchInfo?._id) {
+                                    $("#branch").val(client.branchInfo._id).trigger("change");
+                                }
+
+                                // Preselect Trainer
+                                if (client.trainerInfo?._id) {
+                                    setTimeout(() => {
+                                        $("#trainer").val(client.trainerInfo._id);
+                                    }, 500); // wait trainers to load
+                                }
+
+                                // Preselect Package & Payment
+                                if (client.membership) {
+                                    $("#package").val(client.packageInfo?._id || "");
+                                    $("#paymentMethod").val(client.membership.paymentMethod || "");
+                                    originalPackage = client.membership.package; // store original
+                                }
+
+                                // Show membership form ONLY if status is 'Expired'
+                            if (client.membership && client.membership.status === "Expired") {
+                                $("#membershipForm").show();
+                            } else {
+                                $("#membershipForm").hide();
+                            }
+                                
+                                // if (client.membership) {
+                                //     $("#package").val(client.membership.package || "");
+                                //     $("#paymentMethod").val(client.membership.paymentMethod || "");
+                                //     originalPackage = client.membership.package; // store original
+                                // }
+                            } else {
+                                alert("Failed to load client");
+                            }
+                        }
+                    });
+                }
+
+                // --- Membership form submit ---
+                $("#membershipForm").on("submit", function (e) {
+                    e.preventDefault();
+
+                    const data = {
+                        package: $("#package").val(),
+                        paymentMethod: $("#paymentMethod").val(),
+                        confirmedPayment: false // default
+                    };
+
+                    // Only if package changed and payment is Cash
+                    if (originalPackage !== data.package && data.paymentMethod === "Cash") {
+                        if (!confirm("Payment is Cash. Confirm to auto-complete payment?")) return;
+                        data.confirmedPayment = true; // send confirmedPayment = true
+                    }
+
+                    $.ajax({
+                        url: `/admin/update-membership/${clientId}`,
+                        type: "PATCH",
+                        contentType: "application/json",
+                        data: JSON.stringify(data),
+                        success: function (res) {
+                            if (res.success) {
+                                alert("Membership updated!");
+                                originalPackage = data.package;
+                            } else alert(res.message || "Failed");
+                        }
+                    });
+                });
+
+                // --- Details form submit ---
+                $("#detailsForm").on("submit", function (e) {
+                    e.preventDefault();
+
+                    const data = {
+                        name: $("#name").val(),
+                        email: $("#email").val(),
+                        phone: $("#phone").val(),
+                        altphone: $("#altphone").val(),
+                        gender: $("#gender").val(),
+                        age: $("#age").val(),
+                        branch: $("#branch").val(),
+                        trainer: $("#trainer").val(),
+                        height: $("#height").val(),
+                        weight: $("#weight").val()
+                    };
+
+                    $.ajax({
+                        url: `/admin/update-client-details/${clientId}`,
+                        type: "PATCH",
+                        contentType: "application/json",
+                        data: JSON.stringify(data),
+                        success: function (res) {
+                            if (res.success) alert("Client details updated!");
+                            else alert(res.message || "Failed");
+                        }
+                    });
+                });
+
+                // ✅ Initial Loads
+                fetchPackagesForSelect();
+                fetchBranches();
+                loadClientDetails();
+            });
+            $("#cancelBtn").on("click", function () {
+                window.location.href = "/admin-clients-list";
+            });
+        </script>
+
+        <!-- <script>
+            $(document).ready(function () {
+                const pathParts = window.location.pathname.split("/");
+                const clientId = pathParts[pathParts.length - 1];
+                console.log(clientId);
+                
+                const $form = $("#editClientForm");
+                const $imgInput = $("#img");
+                const $imgPreview = $("#imgPreview");
+
+                // ✅ Preview profile image
+                $imgInput.on("change", function (event) {
+                    const file = event.target.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = function (e) {
+                            $imgPreview.attr("src", e.target.result).show();
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                });
+
+                // ✅ Load client details (AJAX GET)
+                function loadClientDetails() {
+                    $.ajax({
+                        url: `/admin/get-clients/${clientId}`,
+                        method: "GET",
+                        dataType: "json",
+                        success: function (data) {
+                            if (data.success) {
+                                const client = data.data;
+
+                                // Fill inputs
+                                $("#name").val(client.userInfo.name);
+                                $("#email").val(client.userInfo.email);
+                                $("#phone").val(client.userInfo.phone);
+                                $("#altphone").val(client.altphone || "");
+                                $("#gender").val(client.gender || "");
+                                $("#age").val(client.age || "");
+                                $("#branch").val(client.branchInfo.name?._id || "");
+                                $("#trainer").val(client.trainerInfo.name?._id || "");
+                                $("#height").val(client.height || "");
+                                $("#weight").val(client.weight || "");
+
+                                if (client.img) {
+                                    $imgPreview.attr("src", client.img).show();
+                                }
+
+                                if (client.membership) {
+                                    $("#package").val(client.membership.package || "");
+                                    $("#paymentMethod").val(client.membership.paymentMethod || "");
+                                }
+                            } else {
+                                alert("❌ Failed to load client details!");
+                            }
+                        },
+                        error: function (xhr, status, error) {
+                            console.error("Error loading client:", error);
+                            alert("⚠️ Could not fetch client details.");
+                        }
+                    });
+                }
+
+                // ✅ Submit update form (AJAX POST/PUT)
+                $form.on("submit", function (e) {
+                    e.preventDefault();
+
+                    const formData = new FormData(this);
+
+                    // Extra check: if Cash selected → auto confirm payment
+                    if (formData.get("paymentMethod") === "Cash") {
+                        if (!confirm("⚠️ Payment method is Cash. Confirm to auto-complete payment?")) {
+                            return;
+                        }
+                    }
+
+                    $.ajax({
+                        url: `/admin/clients/${clientId}`,
+                        method: "POST", // or "PUT" depending on backend
+                        data: formData,
+                        contentType: false,
+                        processData: false,
+                        success: function (res) {
+                            if (res.success) {
+                                alert("✅ Client updated successfully!");
+                                window.location.reload();
+                            } else {
+                                alert("❌ " + (res.message || "Update failed"));
+                            }
+                        },
+                        error: function (xhr, status, error) {
+                            console.error("Error updating client:", error);
+                            alert("⚠️ Failed to update client.");
+                        }
+                    });
+                });
+
+                // ✅ Initial load
+                loadClientDetails();
+            });
+        </script> -->
+
+        <!-- <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                const pathParts = window.location.pathname.split("/");
+                const clientId = pathParts[pathParts.length - 1];
+                const form = document.getElementById("editClientForm");
+                const imgInput = document.getElementById("img");
+                const imgPreview = document.getElementById("imgPreview");
+
+                // ✅ Preview profile image
+                imgInput.addEventListener("change", function (event) {
+                    const file = event.target.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = e => {
+                            imgPreview.src = e.target.result;
+                            imgPreview.style.display = "block";
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                });
+
+                // ✅ Load client details
+                async function loadClientDetails() {
+                    try {
+                        const res = await fetch(`/admin/get-clients/${clientId}`);
+                        const data = await res.json();
+
+                        if (data.success) {
+                            const client = data.data;
+
+                            // Fill inputs
+                            document.getElementById("name").value = client.userInfo.name;
+                            document.getElementById("email").value = client.userInfo.email;
+                            document.getElementById("phone").value = client.userInfo.phone;
+                            document.getElementById("altphone").value = client.altphone || "";
+                            document.getElementById("gender").value = client.gender || "";
+                            document.getElementById("age").value = client.age || "";
+                            document.getElementById("branch").value = client.branch?._id || "";
+                            document.getElementById("trainer").value = client.trainerId?._id || "";
+                            document.getElementById("height").value = client.height || "";
+                            document.getElementById("weight").value = client.weight || "";
+
+                            if (client.img) {
+                                imgPreview.src = client.img;
+                                imgPreview.style.display = "block";
+                            }
+
+                            if (client.membership) {
+                                document.getElementById("package").value = client.membership.package || "";
+                                document.getElementById("paymentMethod").value = client.membership.paymentMethod || "";
+                            }
+                        }
+                    } catch (err) {
+                        console.error("Error loading client:", err);
+                    }
+                }
+
+                // ✅ Handle submit
+                form.addEventListener("submit", async function (e) {
+                    e.preventDefault();
+
+                    const formData = new FormData(form);
+
+                    // Extra check: if Cash selected → confirm
+                    if (formData.get("paymentMethod") === "Cash") {
+                        if (!confirm("⚠️ Payment method is Cash. Confirm to auto-complete payment?")) {
+                            return;
+                        }
+                    }
+
+                    try {
+                        const res = await fetch(`/admin/clients/${clientId}`, {
+                            method: "PUT",
+                            body: formData
+                        });
+
+                        const result = await res.json();
+
+                        if (result.success) {
+                            alert("✅ Client updated successfully!");
+                            window.location.reload();
+                        } else {
+                            alert("❌ " + result.message);
+                        }
+                    } catch (err) {
+                        console.error("Error updating client:", err);
+                        alert("❌ Failed to update client");
+                    }
+                });
+
+                // ✅ Initial load
+                loadClientDetails();
+            });
+        </script> -->
+
+        <!-- container-scroller -->
+        <!-- plugins:js -->
+        <script src="/admin/vendors/js/vendor.bundle.base.js"></script>
+        <!-- endinject -->
+        <!-- Plugin js for this page -->
+        <script src="/admin/vendors/select2/select2.min.js"></script>
+        <script src="/admin/vendors/typeahead.js/typeahead.bundle.min.js"></script>
+        <!-- End plugin js for this page -->
+        <!-- inject:js -->
+        <script src="/admin/js/off-canvas.js"></script>
+        <script src="/admin/js/hoverable-collapse.js"></script>
+        <script src="/admin/js/misc.js"></script>
+        <script src="/admin/js/settings.js"></script>
+        <script src="/admin/js/todolist.js"></script>
+        <!-- endinject -->
+        <!-- Custom js for this page -->
+        <script src="/admin/js/file-upload.js"></script>
+        <script src="/admin/js/typeahead.js"></script>
+        <script src="/admin/js/select2.js"></script>
+        <!-- End custom js for this page -->
+        <!-- Make sure jQuery is included -->
+
+</body>
+
+</html>

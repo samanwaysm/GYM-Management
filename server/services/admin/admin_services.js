@@ -58,6 +58,17 @@ exports.add_admin = (req, res) => {
     })
 }
 
+exports.edit_admin = (req, res) => {
+    const { errors, isSuperAdminAuthenticated, user, userId } = req.session
+    delete req.session.errors
+    res.render("admin/edit_admin",{errors, isSuperAdminAuthenticated, user, userId},(err, html) => {
+        if (err) {
+            console.log(err);
+        }
+        res.send(html)
+    })
+}
+
 exports.admin_list = (req, res) => {
     const { errors, isSuperAdminAuthenticated, user, userId } = req.session
     delete req.session.errors
@@ -169,6 +180,17 @@ exports.add_branch = (req, res) => {
     })
 }
 
+exports.edit_branch = (req, res) => {
+    const { errors, isSuperAdminAuthenticated, user, userId } = req.session
+    delete req.session.errors
+    res.render("admin/edit_branch",{errors, isSuperAdminAuthenticated, user, userId},(err, html) => {
+        if (err) {
+            console.log(err);
+        }
+        res.send(html)
+    })
+}
+
 // exports.trainers_list=(req,res)=>{
 //     const { errors, isSuperAdminAuthenticated, user,userId } = req.session
 //     delete req.session.errors
@@ -229,6 +251,17 @@ exports.add_trainers=(req,res)=>{
     .catch(err => {
         res.send(err);
     });
+}
+
+exports.edit_trainers = (req, res) => {
+    const { errors, isSuperAdminAuthenticated, user, userId } = req.session
+    delete req.session.errors
+    res.render("admin/edit_trainers",{errors, isSuperAdminAuthenticated, user, userId},(err, html) => {
+        if (err) {
+            console.log(err);
+        }
+        res.send(html)
+    })
 }
 
 exports.clients_list = (req, res) => {
@@ -322,6 +355,17 @@ exports.add_clients = (req, res) => {
     const { errors, isSuperAdminAuthenticated, isAnyAdminAuthenticated, user, userId } = req.session
     delete req.session.errors
     res.render("admin/add_clients",{errors, isSuperAdminAuthenticated, isAnyAdminAuthenticated, user, userId},(err, html) => {
+        if (err) {
+            console.log(err);
+        }
+        res.send(html)
+    })
+}
+
+exports.edit_clients = (req, res) => {
+    const { errors, isSuperAdminAuthenticated, user, userId } = req.session
+    delete req.session.errors
+    res.render("admin/edit_clients",{errors, isSuperAdminAuthenticated, user, userId},(err, html) => {
         if (err) {
             console.log(err);
         }

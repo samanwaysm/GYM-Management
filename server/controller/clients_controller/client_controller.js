@@ -52,7 +52,6 @@ exports.user_login = async (req, res) => {
 
     // ✅ Save session (no JWT)
     req.session.userId = user._id;
-    console.log(`✅ Client logged in: ${user.name}`);
 
     // ✅ Redirect to home/dashboard
     return res.redirect("/");
@@ -143,7 +142,6 @@ exports.userDataFetch = async (req, res) => {
       return res.status(404).json({ success: false, message: "Client not found" });
     }
 
-    console.log(clientData);
     
     res.json({
       success: true,
@@ -155,115 +153,6 @@ exports.userDataFetch = async (req, res) => {
     res.status(500).json({ success: false, message: err.message });
   }
 };
-
-// exports.userDataFetch = async (req, res) => {
-//   try {
-//     const clientId = new mongoose.Types.ObjectId(req.params.clientId);
-
-//     const clientData = await ClientDetails.aggregate([
-//       { $match: { clientId: clientId } },
-
-//       // Join with User (to get name, email, phone)
-//       {
-//         $lookup: {
-//           from: "users",
-//           localField: "clientId",
-//           foreignField: "_id",
-//           as: "userInfo"
-//         }
-//       },
-//       { $unwind: "$userInfo" },
-
-//       // Join with Branch
-//       {
-//         $lookup: {
-//           from: "branches",
-//           localField: "branch",
-//           foreignField: "_id",
-//           as: "branchInfo"
-//         }
-//       },
-//       { $unwind: { path: "$branchInfo", preserveNullAndEmptyArrays: true } },
-
-//       // Join with Trainer
-//       {
-//         $lookup: {
-//           from: "users",
-//           localField: "trainerId",
-//           foreignField: "_id",
-//           as: "trainerInfo"
-//         }
-//       },
-//       { $unwind: { path: "$trainerInfo", preserveNullAndEmptyArrays: true } },
-
-//       // Project only needed fields
-//       {
-//         $project: {
-//           _id: 0,
-//           name: "$userInfo.name",
-//           email: "$userInfo.email",
-//           phone: "$userInfo.phone",
-//           gender: 1,
-//           age: 1,
-//           height: 1,
-//           weight: 1,
-//           img: 1,
-//           branch: "$branchInfo.name",
-//           trainer: "$trainerInfo.name",
-//           joinedDate: 1
-//         }
-//       }
-//     ]);
-
-//     if (!clientData || clientData.length === 0) {
-//       return res.status(404).json({ success: false, message: "Client not found" });
-//     }
-
-//     // 🔹 Membership lookup separately
-//     const membership = await Membership.findOne({ clientId }).lean();
-
-//     console.log(clientData,membership);
-    
-
-//     res.json({
-//       success: true,
-//       client: clientData[0],
-//       membership
-//     });
-//   } catch (err) {
-//     console.error("❌ Error fetching client data:", err);
-//     res.status(500).json({ success: false, message: err.message });
-//   }
-// };
-
-
-// exports.userDataFetch = async (req, res) => {
-//   try {
-//     const clientId = req.params.clientId; // userId from route
-
-//     const client = await User.findById(clientId)
-//       .populate("trainerId")
-//       .populate("branchId");
-
-//     if (!client) {
-//       return res.status(404).json({ success: false, message: "Client not found" });
-//     }
-
-//     const membership = await Membership.findOne({ clientId });
-    
-//     res.json({
-//       success: true,
-//       client,
-//       membership,
-//     });
-//   } catch (err) {
-//     res.status(500).json({ success: false, message: err.message });
-//   }
-// }
-
-
-// 🔹 Step 1: Create Razorpay Order
-
 
 exports.updateMembership = async (req, res) => {
   try {
@@ -305,7 +194,6 @@ exports.updateMembership = async (req, res) => {
 exports.verifyPayment = async (req, res) => {
   try {
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature, membershipId, packageId} = req.body;
-    console.log(req.body);
 
     const package = await Package.findById(packageId);
     

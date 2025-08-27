@@ -10,7 +10,6 @@ const schema = new mongoose.Schema(
     package: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "package", // Reference to Package
-      required: true,
     },
     price: {
       type: Number,
@@ -19,7 +18,6 @@ const schema = new mongoose.Schema(
     paymentMethod: {
       type: String,
       enum: ["Cash","UPI",],
-      required: true,
     },
     paymentStatus: {
       type: String,
