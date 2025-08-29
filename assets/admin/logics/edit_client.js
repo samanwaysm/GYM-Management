@@ -26,10 +26,10 @@ $(document).ready(function () {
             success: function (data) {
                 if (data.success) {
                     const $packageSelect = $("#package");
-                    $packageSelect.empty().append('<option value="">-- Select Package --</option>');
+                    $packageSelect.empty().append('<option class="text-white" value="">-- Select Package --</option>');
                     data.data.forEach(pkg => {
                         $packageSelect.append(
-                            `<option value="${pkg._id}">${pkg.packageType} - ₹${pkg.price} - ${pkg.durationInDays} Days</option>`
+                            `<option class="text-white" value="${pkg._id}">${pkg.packageType} - ₹${pkg.price} - ${pkg.durationInDays} Days</option>`
                         );
                     });
                 }
@@ -48,9 +48,9 @@ $(document).ready(function () {
             success: function (response) {
                 if (response.success) {
                     const $branch = $("#branch");
-                    $branch.empty().append('<option value="">-- Select Branch --</option>');
+                    $branch.empty().append('<option class="text-white" value="">-- Select Branch --</option>');
                     response.branches.forEach(branch => {
-                        $branch.append(`<option value="${branch._id}">${branch.name}</option>`);
+                        $branch.append(`<option class="text-white" value="${branch._id}">${branch.name}</option>`);
                     });
                 } else {
                     alert("Error loading branches.");
@@ -71,10 +71,10 @@ $(document).ready(function () {
                 type: "GET",
                 success: function (response) {
                     const $trainer = $("#trainer");
-                    $trainer.empty().append('<option value="">-- Select Trainer --</option>');
+                    $trainer.empty().append('<option class="text-white" value="">-- Select Trainer --</option>');
                     if (response.trainers) {
                         response.trainers.forEach(trainer => {
-                            $trainer.append(`<option value="${trainer._id}">${trainer.name}</option>`);
+                            $trainer.append(`<option class="text-white" value="${trainer._id}">${trainer.name}</option>`);
                         });
                     }
                 },
@@ -83,7 +83,7 @@ $(document).ready(function () {
                 }
             });
         } else {
-            $("#trainer").html('<option value="">-- Select Trainer --</option>');
+            $("#trainer").html('<option class="text-white" value="">-- Select Trainer --</option>');
         }
     });
 

@@ -23,7 +23,7 @@
                         <div class="form-group row">
                           <label class="col-sm-3 col-form-label">Name : </label>
                           <div class="col-sm-9">
-                            <input type="text" id="name" name="name" class="form-control" />
+                            <input type="text" id="name" name="name" class="form-control text-white" />
                           </div>
                         </div>
                       </div>
@@ -31,7 +31,7 @@
                         <div class="form-group row">
                           <label class="col-sm-3 col-form-label">Email : </label>
                           <div class="col-sm-9">
-                            <input type="email" id="email" name="email" class="form-control" />
+                            <input type="email" id="email" name="email" class="form-control text-white" />
                           </div>
                         </div>
                       </div>
@@ -42,7 +42,7 @@
                           <label class="col-sm-3 col-form-label">Phone Number : </label>
                           <div class="col-sm-9 d-flex align-items-center">
                             <!-- <span class="input-group-text">+91</span> -->
-                            <input type="tel" id="phone" name="phone" class="form-control" maxlength="10"
+                            <input type="tel" id="phone" name="phone" class="form-control text-white" maxlength="10"
                               pattern="[0-9]{10}" oninput="this.value=this.value.replace(/[^0-9]/g,'')" required />
                           </div>
                           <% if (errors && errors.phoneError) { %>
@@ -56,8 +56,8 @@
                         <div class="form-group row">
                           <label class="col-sm-3 col-form-label">Branch : </label>
                           <div class="col-sm-9">
-                            <select class="form-control" name="branch" id="branch" required>
-                              <option class="form-control" value="">-- Select Branch --</option>
+                            <select class="form-control text-white" name="branch" id="branch" required>
+                              <option class="form-control text-white" value="">-- Select Branch --</option>
                             </select>
                           </div>
                         </div>
@@ -65,8 +65,8 @@
                     </div>
                     <div class="row">
                     </div>
-                    <div class="text-center mt-2">
-                      <button type="submit" class="btn btn-primary mr-2">Submit</button>
+                    <div class="mt-2 text-right">
+                      <button type="submit" class="btn btn-success mr-2 text-dark">Submit</button>
                     </div>
                   </form>
                 </div>

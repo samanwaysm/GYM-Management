@@ -67,7 +67,7 @@ $(document).ready(function () {
         type: "GET",
         success: function (branches) {
             branches.branches.forEach(branch => {
-                $("#branchFilter").append(`<option value="${branch._id}">${branch.name}</option>`);
+                $("#branchFilter").append(`<option class="text-white" value="${branch._id}">${branch.name}</option>`);
             });
         }
     });

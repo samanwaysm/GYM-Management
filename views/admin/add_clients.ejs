@@ -24,7 +24,7 @@
                         <div class="form-group row">
                           <label class="col-sm-3 col-form-label">Name : </label>
                           <div class="col-sm-9">
-                            <input type="text" id="name" name="name" class="form-control" />
+                            <input type="text" id="name" name="name" class="form-control text-white" />
                             <% if (errors && errors.name) { %>
                               <div class="text-danger small">
                                 <%= errors.name %>
@@ -37,7 +37,7 @@
                         <div class="form-group row">
                           <label class="col-sm-3 col-form-label">Email : </label>
                           <div class="col-sm-9">
-                            <input type="email" id="email" name="email" class="form-control" />
+                            <input type="email" id="email" name="email" class="form-control text-white" />
                             <% if (errors && errors.email) { %>
                               <div class="text-danger small">
                                 <%= errors.email %>
@@ -53,7 +53,7 @@
                           <label class="col-sm-3 col-form-label">Phone Number : </label>
                           <div class="col-sm-9 d-flex align-items-center">
                             <!-- <span class="input-group-text">+91</span> -->
-                            <input type="tel" id="phone" name="phone" class="form-control" maxlength="10"
+                            <input type="tel" id="phone" name="phone" class="form-control text-white" maxlength="10"
                               pattern="[0-9]{10}" oninput="this.value=this.value.replace(/[^0-9]/g,'')" required />
                           </div>
                           <% if (errors && errors.phoneError) { %>
@@ -67,7 +67,7 @@
                         <div class="form-group row">
                           <label class="col-sm-3 col-form-label">Alt.Phone : </label>
                           <div class="col-sm-9">
-                            <input type="tel" id="altphone" name="altphone" class="form-control"
+                            <input type="tel" id="altphone" name="altphone" class="form-control text-white"
                               placeholder="(optional)" />
                           </div>
                         </div>
@@ -78,11 +78,11 @@
                         <div class="form-group row">
                           <label class="col-sm-3 col-form-label">Gender : </label>
                           <div class="col-sm-9">
-                            <select class="form-control" name="gender" id="gender" required>
-                              <option class="form-control" value="">-- Select Gender --</option>
-                              <option class="form-control" value="Male">Male</option>
-                              <option class="form-control" value="Female">Female</option>
-                              <option class="form-control" value="Other">Other</option>
+                            <select class="form-control text-white" name="gender" id="gender" required>
+                              <option class="form-control text-white" value="">-- Select Gender --</option>
+                              <option class="form-control text-white" value="Male">Male</option>
+                              <option class="form-control text-white" value="Female">Female</option>
+                              <option class="form-control text-white" value="Other">Other</option>
                             </select>
                             <% if (errors && errors.gender) { %>
                               <div class="text-danger small">
@@ -96,7 +96,7 @@
                         <div class="form-group row">
                           <label class="col-sm-3 col-form-label">Age : </label>
                           <div class="col-sm-9">
-                            <input type="number" id="age" name="age" class="form-control" />
+                            <input type="number" id="age" name="age" class="form-control text-white" />
                             <% if (errors && errors.age) { %>
                               <div class="text-danger small">
                                 <%= errors.age %>
@@ -111,8 +111,8 @@
                         <div class="form-group row">
                           <label class="col-sm-3 col-form-label">Branch : </label>
                           <div class="col-sm-9">
-                            <select class="form-control" name="branch" id="branch" required>
-                              <option class="form-control" value="">-- Select Branch --</option>
+                            <select class="form-control text-white" name="branch" id="branch" required>
+                              <option class="form-control text-white" value="">-- Select Branch --</option>
                             </select>
                           </div>
                         </div>
@@ -121,8 +121,8 @@
                         <div class="form-group row">
                           <label class="col-sm-3 col-form-label"> Trainer : </label>
                           <div class="col-sm-9">
-                            <select class="form-control" name="trainer" id="trainer" required>
-                              <option class="form-control" value="">-- Select Trainer --</option>
+                            <select class="form-control text-white" name="trainer" id="trainer" required>
+                              <option class="form-control text-white" value="">-- Select Trainer --</option>
                             </select>
 
                           </div>
@@ -134,7 +134,7 @@
                         <div class="form-group row">
                           <label class="col-sm-3 col-form-label">Height : </label>
                           <div class="col-sm-9">
-                            <input type="number" id="height" name="height" class="form-control" />
+                            <input type="number" id="height" name="height" class="form-control text-white" />
                           </div>
                         </div>
                       </div>
@@ -142,7 +142,7 @@
                         <div class="form-group row">
                           <label class="col-sm-3 col-form-label">Weight : </label>
                           <div class="col-sm-9">
-                            <input type="text" id="weight" name="weight" class="form-control" />
+                            <input type="text" id="weight" name="weight" class="form-control text-white" />
                           </div>
                         </div>
                       </div>
@@ -152,7 +152,7 @@
                         <div class="form-group row">
                           <label class="col-sm-3 col-form-label">Profile Image : </label>
                           <div class="col-sm-9">
-                            <input type="file" id="img" name="img" class="form-control" accept="image/*"
+                            <input type="file" id="img" name="img" class="form-control text-white" accept="image/*"
                               onchange="previewImage(event)" />
                             <div class="mt-2">
                               <img id="imgPreview" src="" alt="Image Preview"
@@ -171,8 +171,8 @@
                     <input type="hidden" name="package" id="hiddenPackage">
                     <input type="hidden" name="paymentMethod" id="hiddenPaymentMethod">
                     <input type="hidden" id="hiddenConfirmedPayment" name="confirmedPayment">
-                    <div class="text-center mt-2">
-                      <button type="submit" class="btn btn-primary mr-2">Submit</button>
+                    <div class="mt-2 text-right">
+                      <button type="submit" class="btn btn-success mr-2 text-dark">Submit</button>
                     </div>
                   </form>
                 </div>
@@ -194,17 +194,17 @@
               <div class="modal-body">
                 <div class="mb-3">
                   <label for="package" class="form-label">Package</label>
-                  <select class="form-control" id="package" name="package" required>
-                    <option value="">-- Select Package --</option>
+                  <select class="form-control text-white" id="package" name="package" required>
+                    <option class="text-white" value="">-- Select Package --</option>
                   </select>
                 </div>
 
                 <div class="mb-3">
                   <label for="paymentMethod" class="form-label">Payment Method</label>
-                  <select class="form-control" id="paymentMethod" name="paymentMethod" required>
-                    <option value="">-- Select Payment Method --</option>
-                    <option value="Cash">Cash</option>
-                    <option value="UPI">UPI</option>
+                  <select class="form-control text-white" id="paymentMethod" name="paymentMethod" required>
+                    <option class="text-white" value="">-- Select Payment Method --</option>
+                    <option class="text-white" value="Cash">Cash</option>
+                    <option class="text-white" value="UPI">UPI</option>
                   </select>
                 </div>
               </div>

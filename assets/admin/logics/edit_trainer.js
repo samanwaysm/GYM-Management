@@ -24,7 +24,7 @@ $(document).ready(function () {
             }
         },
         error: function () {
-            $('#branch').append('<option value="">Error loading branches</option>');
+            $('#branch').append('<option class="text-white" value="">Error loading branches</option>');
         }
     });
 

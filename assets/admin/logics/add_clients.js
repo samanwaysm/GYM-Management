@@ -81,11 +81,11 @@ function fetchPackagesForSelect() {
     success: function (data) {
       if (data.success) {
         const packageSelect = $("#package");
-        packageSelect.html('<option value="">-- Select Package --</option>');
+        packageSelect.html('<option class="text-white" value="">-- Select Package --</option>');
         
         data.data.forEach(pkg => {
           packageSelect.append(
-            `<option value="${pkg._id}">
+            `<option class="text-white" value="${pkg._id}">
               ${pkg.packageType} - ₹${pkg.price} - ${pkg.durationInDays} Days
             </option>`
           );
@@ -107,9 +107,9 @@ $(document).ready(function () {
         success: function (response) {
             if (response.success) {
                 $('#branch').empty();
-                $('#branch').append('<option value="">-- Select Branch --</option>');
+                $('#branch').append('<option class="text-white" value="">-- Select Branch --</option>');
                 response.branches.forEach(branch => {
-                    $('#branch').append(`<option value="${branch._id}">${branch.name}</option>`);
+                    $('#branch').append(`<option class="text-white" value="${branch._id}">${branch.name}</option>`);
                 });
             } else {
                 alert('Error loading branches.');
@@ -130,9 +130,9 @@ $(document).ready(function () {
                 type: 'GET',
                 success: function (response) {
                     $('#trainer').empty();
-                    $('#trainer').append('<option value="">-- Select Trainer --</option>');
+                    $('#trainer').append('<option class="text-white" value="">-- Select Trainer --</option>');
                     response.trainers.forEach(trainer => {
-                        $('#trainer').append(`<option value="${trainer._id}">${trainer.name}</option>`);
+                        $('#trainer').append(`<option class="text-white" value="${trainer._id}">${trainer.name}</option>`);
                     });
                 },
                 error: function () {
@@ -140,7 +140,7 @@ $(document).ready(function () {
                 }
             });
         } else {
-            $('#trainer').html('<option value="">-- Select Trainer --</option>');
+            $('#trainer').html('<option class="text-white" value="">-- Select Trainer --</option>');
         }
     });
 });
