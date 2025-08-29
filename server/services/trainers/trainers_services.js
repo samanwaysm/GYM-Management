@@ -2,10 +2,10 @@ const session = require('express-session');
 const axios = require('axios')
 
 exports.dashboard = (req, res) => {
-    const { errors, isSuperAdminAuthenticated, isAnyAdminAuthenticated, isTrainerAuthenticated, user, userId } = req.session
+    const { errors, user, userId, userType } = req.session
     
     delete req.session.errors
-    res.render("trainers/dashboard",{errors, isSuperAdminAuthenticated, isAnyAdminAuthenticated, isTrainerAuthenticated, user, userId},(err, html) => {
+    res.render("trainers/dashboard",{errors, user, userId, userType},(err, html) => {
         if (err) {
             console.log(err);
         }

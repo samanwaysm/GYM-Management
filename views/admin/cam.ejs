@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Take Picture</title>
+</head>
+<body>
+  <h2>📸 Capture Photo</h2>
+
+  <video id="video" width="320" height="240" autoplay></video>
+  <button id="capture">Take Photo</button>
+  <canvas id="canvas" width="320" height="240" style="display:none;"></canvas>
+  <img id="photo" alt="Captured Image" />
+
+  <script>
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const photo = document.getElementById('photo');
+    const captureBtn = document.getElementById('capture');
+
+    // Start camera
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then(stream => {
+        video.srcObject = stream;
+      })
+      .catch(err => console.error("Camera error:", err));
+
+    // Capture image
+    captureBtn.addEventListener("click", () => {
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      // Convert to base64
+      const dataURL = canvas.toDataURL("image/png");
+      photo.src = dataURL;
+
+      // Send to server
+      fetch("/upload-photo", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ image: dataURL })
+      })
+      .then(res => res.json())
+      .then(data => {
+        alert("✅ Photo saved: " + data.filename);
+      })
+      .catch(err => console.error(err));
+    });
+  </script>
+</body>
+</html>

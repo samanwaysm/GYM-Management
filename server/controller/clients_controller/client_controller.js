@@ -227,3 +227,167 @@ exports.verifyPayment = async (req, res) => {
     res.status(500).json({ success: false, message: "Server Error" });
   }
 };
+
+exports.send_otp = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      req.session.errors = { email: "Email is required" };
+      return res.redirect("/admin-forgot-password");
+    }
+
+    // Generate 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000);
+
+    // Save email in session
+    req.session.email = email;
+
+    // Delete any existing OTPs for this email
+    await OtpDb.deleteMany({ email });
+
+    // Save new OTP to DB with 60s expiry
+    const newOtp = new OtpDb({
+      email,
+      otp,
+      createdAt: Date.now(),
+      expiresAt: Date.now() + 60 * 1000 // 60 seconds
+    });
+
+    await newOtp.save();
+
+    // Create Nodemailer transporter
+    const transporter = nodemailer.createTransport({
+      service: 'Gmail',
+      auth: {
+        user: process.env.AUTH_EMAIL,
+        pass: process.env.AUTH_PASS,
+      },
+    });
+
+    // Mailgen config
+    const mailGenerator = new Mailgen({
+      theme: 'default',
+      product: {
+        name: 'Gym Management App',
+        link: 'https://yourdomain.com/',
+      },
+    });
+
+    // Mail content
+    const emailTemplate = {
+      body: {
+        name: 'User',
+        intro: `Your OTP code is: **${otp}**`,
+        outro: 'This OTP is valid for 60 seconds. If you didn’t request this, ignore the email.',
+      },
+    };
+
+    const mailBody = mailGenerator.generate(emailTemplate);
+
+    const message = {
+      from: process.env.AUTH_EMAIL,
+      to: email,
+      subject: 'OTP Verification Code',
+      html: mailBody,
+    };
+
+    await transporter.sendMail(message);
+
+    // ✅ Show OTP input in the next render
+    req.session.showOtp = true;
+    req.session.emailOtp = req.session.email;
+
+    return res.redirect("/admin-forgot-password");
+
+  } catch (error) {
+    console.error("OTP send error:", error);
+    req.session.errors = { general: "Failed to send OTP" };
+    return res.redirect("/admin-forgot-password");
+  }
+}
+
+exports.verify_OTP = async (req, res) => {
+  const { otp } = req.body;
+  const { email } = req.params;
+
+  try {
+    const otpRecord = await OtpDb.findOne({ email }).sort({ createdAt: -1 });
+
+    if (!otpRecord) {
+      req.session.errors = { otp: "OTP not found." };
+      req.session.showOtp = true;
+      return res.redirect("/admin-forgot-password");
+    }
+
+    if (Date.now() > otpRecord.expiresAt) {
+      await OtpDb.deleteOne({ _id: otpRecord._id });
+      req.session.errors = { otp: "OTP expired." };
+      req.session.showOtp = true;
+      return res.redirect("/admin-forgot-password");
+    }
+
+    if (otpRecord.otp.toString() !== otp.join("")) {
+      req.session.errors = { otp: "Invalid OTP." };
+      req.session.showOtp = true;
+      return res.redirect("/admin-forgot-password");
+    }
+
+    // OTP is valid → clear OTP and go to change password page
+    await OtpDb.deleteOne({ _id: otpRecord._id });
+
+    req.session.resetEmail = email; // store email for next step
+    return res.redirect("/admin-change-password");
+
+  } catch (err) {
+    console.error(err);
+    req.session.errors = { otp: "Server error." };
+    req.session.showOtp = true;
+    return res.redirect("/admin-forgot-password");
+  }
+};
+
+exports.change_password = async (req, res) => {
+  const { new_password, confirm_password } = req.body;
+  const email = req.session?.resetEmail; // ✅ Get email from session
+  const errors = {};
+
+  try {
+    // ✅ Session email check
+    if (!email) {
+      return res.json({ success: false, message: "Session expired. Please log in again." });
+    }
+
+    // ✅ Password match check
+    if (!new_password || !confirm_password) {
+      errors.password = "Both password fields are required.";
+    } else if (new_password !== confirm_password) {
+      errors.password = "Passwords do not match.";
+    }
+
+    if (Object.keys(errors).length > 0) {
+      return res.json({ success: false, errors });
+    }
+
+    // ✅ Find user in single User schema
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.json({ success: false, message: "User not found." });
+    }
+
+    // ✅ Hash and save new password
+    const hashedPassword = await bcrypt.hash(new_password, 10);
+    user.password = hashedPassword;
+    await user.save();
+
+    // Optional: Flash success message
+    req.session.success = `Password updated successfully.`;
+
+    // Redirect to login (can be role-based if needed)
+    return res.redirect("/admin-login"); // or "/login" for common login
+
+  } catch (err) {
+    console.error(err);
+    return res.json({ success: false, message: "Server error." });
+  }
+};

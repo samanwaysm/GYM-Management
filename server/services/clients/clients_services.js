@@ -35,3 +35,28 @@ exports.renew_membership = (req, res) => {
         res.send(html)
     })
 }
+
+exports.forgot_password = (req, res) => {
+    const { errors, showOtp, emailOtp} = req.session
+    delete req.session.errors
+    delete req.session.showOtp
+    delete req.session.emailOtp
+    res.render("clients/forgot_password",{errors, showOtp: !!showOtp, emailOtp: emailOtp},(err, html) => {
+        if (err) {
+            console.log(err);
+        }
+        res.send(html)
+    })
+}
+
+exports.change_password = (req, res) => {
+    const { errors, userId} = req.session
+    
+    delete req.session.errors
+    res.render("clients/change_password",{errors,userId},(err, html) => {
+        if (err) {
+            console.log(err);
+        }
+        res.send(html)
+    })
+}

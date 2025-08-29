@@ -32,16 +32,18 @@ route.get("/admin-add-trainers",isAnyAdminAuthenticated,services.add_trainers);
 route.get("/admin-trainers-list",isAnyAdminAuthenticated,services.trainers_list);
 route.get("/admin-edit-trainers/:id",isAnyAdminAuthenticated,services.edit_trainers);
 route.get("/admin-clients-list",isAnyStaffAuthenticated,services.clients_list);
+route.get("/admin-client-details/:id",isAnyStaffAuthenticated,services.client_details);
 route.get("/admin-add-clients",isAnyStaffAuthenticated,services.add_clients);
 route.get("/admin-edit-clients/:id",isAnyStaffAuthenticated,services.edit_clients);
 route.get("/admin-forgot-password",isAnyStaffNotAuthenticated,services.forgot_password)
 route.get("/admin-change-password",isAnyStaffNotAuthenticated,services.change_password)
 route.get("/admin-package-list",isAnyAdminAuthenticated,services.package_list)
 
+route.get("/cam",services.cam)
 
 route.post("/admin/adminlogin",controller.adminLogin);
 route.post("/admin/forgot-send-otp",controller.send_otp);
-route.post("/admin/forgot-verify-otp/:email",controller.verify_OTP);
+route.post("/admin/forgot-verify-otp",controller.verify_OTP);
 route.post("/admin/forgot-change-password",controller.change_password);
 
 route.post("/superadmin/add-admin",controller.addAdmin);
@@ -81,5 +83,7 @@ route.get("/admin/clients-list",controller.clientsList);
 
 route.get("/admin/get-branches-name",controller.getBranchNames);
 route.get("/admin/get-trainers-by-branch/:branchId",controller.getTrainersByBranch);
+route.get("/admin/get-client-details/:id",controller.getClientDetails);
+
 
 module.exports = route;

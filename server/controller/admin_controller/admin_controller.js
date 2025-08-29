@@ -46,6 +46,7 @@ exports.adminLogin = async (req, res) => {
         req.session.isSuperAdminAuthenticated = true;
         req.session.isAnyAdminAuthenticated = true;
         req.session.user = "superAdmin";
+        req.session.userType = "superAdmin";
         return res.redirect("/admin-dashboard");
       } else {
         req.session.errors = { password: "Incorrect SuperAdmin password." };
@@ -70,6 +71,7 @@ exports.adminLogin = async (req, res) => {
     // 3️⃣ Handle login by role
     req.session.userId = user._id;
     req.session.user = user.name;
+    req.session.userType = user.userType;
 
     if (user.userType === "admin") {
       req.session.isAdminAuthenticated = true;
@@ -113,6 +115,84 @@ exports.adminlogout = (req, res) => {
   });
 };
 
+// exports.send_otp = async (req, res) => {
+//   try {
+//     const { email } = req.body;
+
+//     if (!email) {
+//       req.session.errors = { email: "Email is required" };
+//       return res.redirect("/admin-forgot-password");
+//     }
+
+//     // Generate 6-digit OTP
+//     const otp = Math.floor(100000 + Math.random() * 900000);
+
+//     // Save email in session
+//     req.session.email = email;
+
+//     // Delete any existing OTPs for this email
+//     await OtpDb.deleteMany({ email });
+
+//     // Save new OTP to DB with 60s expiry
+//     const newOtp = new OtpDb({
+//       email,
+//       otp,
+//       createdAt: Date.now(),
+//       expiresAt: Date.now() + 60 * 1000 // 60 seconds
+//     });
+
+//     await newOtp.save();
+
+//     // Create Nodemailer transporter
+//     const transporter = nodemailer.createTransport({
+//       service: 'Gmail',
+//       auth: {
+//         user: process.env.AUTH_EMAIL,
+//         pass: process.env.AUTH_PASS,
+//       },
+//     });
+
+//     // Mailgen config
+//     const mailGenerator = new Mailgen({
+//       theme: 'default',
+//       product: {
+//         name: 'Gym Management App',
+//         link: 'https://yourdomain.com/',
+//       },
+//     });
+
+//     // Mail content
+//     const emailTemplate = {
+//       body: {
+//         name: 'User',
+//         intro: `Your OTP code is: **${otp}**`,
+//         outro: 'This OTP is valid for 60 seconds. If you didn’t request this, ignore the email.',
+//       },
+//     };
+
+//     const mailBody = mailGenerator.generate(emailTemplate);
+
+//     const message = {
+//       from: process.env.AUTH_EMAIL,
+//       to: email,
+//       subject: 'OTP Verification Code',
+//       html: mailBody,
+//     };
+
+//     await transporter.sendMail(message);
+
+//     // ✅ Show OTP input in the next render
+//     req.session.showOtp = true;
+//     req.session.emailOtp = req.session.email;
+
+//     return res.redirect("/admin-forgot-password");
+
+//   } catch (error) {
+//     console.error("OTP send error:", error);
+//     req.session.errors = { general: "Failed to send OTP" };
+//     return res.redirect("/admin-forgot-password");
+//   }
+// }
 exports.send_otp = async (req, res) => {
   try {
     const { email } = req.body;
@@ -122,49 +202,63 @@ exports.send_otp = async (req, res) => {
       return res.redirect("/admin-forgot-password");
     }
 
-    // Generate 6-digit OTP
+    // 🔹 Check user type in DB
+    const user = await User.findOne({ email });
+    if (!user) {
+      req.session.errors = { email: "No account found with this email" };
+      return res.redirect("/admin-forgot-password");
+    }
+
+    // 🔹 Generate 6-digit OTP
     const otp = Math.floor(100000 + Math.random() * 900000);
 
-    // Save email in session
+    // 🔹 Save email and userType in session
     req.session.email = email;
+    req.session.userType = user.userType;
 
-    // Delete any existing OTPs for this email
-    await OtpDb.deleteMany({ email });
+    // 🔹 Check if same OTP already exists for this email
+    const existingOtp = await OtpDb.findOne({ email, otp });
 
-    // Save new OTP to DB with 60s expiry
+    if (existingOtp) {
+      await OtpDb.deleteOne({ _id: existingOtp._id }); // remove duplicate
+    } else {
+      await OtpDb.deleteMany({ email }); // remove old OTPs for this email
+    }
+
+    // 🔹 Save new OTP with 60s expiry
     const newOtp = new OtpDb({
       email,
       otp,
       createdAt: Date.now(),
-      expiresAt: Date.now() + 60 * 1000 // 60 seconds
+      expiresAt: Date.now() + 60 * 1000, // 60 seconds
     });
 
     await newOtp.save();
 
-    // Create Nodemailer transporter
+    // 🔹 Nodemailer transporter
     const transporter = nodemailer.createTransport({
-      service: 'Gmail',
+      service: "Gmail",
       auth: {
         user: process.env.AUTH_EMAIL,
         pass: process.env.AUTH_PASS,
       },
     });
 
-    // Mailgen config
+    // 🔹 Mailgen configuration
     const mailGenerator = new Mailgen({
-      theme: 'default',
+      theme: "default",
       product: {
-        name: 'Gym Management App',
-        link: 'https://yourdomain.com/',
+        name: "Gym Management App",
+        link: "https://yourdomain.com/",
       },
     });
 
-    // Mail content
+    // 🔹 Mail content
     const emailTemplate = {
       body: {
-        name: 'User',
+        name: user.name || "User",
         intro: `Your OTP code is: **${otp}**`,
-        outro: 'This OTP is valid for 60 seconds. If you didn’t request this, ignore the email.',
+        outro: "This OTP is valid for 60 seconds. If you didn’t request this, ignore the email.",
       },
     };
 
@@ -173,77 +267,185 @@ exports.send_otp = async (req, res) => {
     const message = {
       from: process.env.AUTH_EMAIL,
       to: email,
-      subject: 'OTP Verification Code',
+      subject: "OTP Verification Code",
       html: mailBody,
     };
 
+    // 🔹 Send the email
     await transporter.sendMail(message);
 
-    // ✅ Show OTP input in the next render
+    // ✅ Show OTP input in correct page based on user type
     req.session.showOtp = true;
-    req.session.emailOtp = req.session.email;
 
-    return res.redirect("/admin-forgot-password");
+    if (user.userType === "client") {
+      return res.redirect("/forgot-password");
+    } else {
+      return res.redirect("/admin-forgot-password");
+    }
 
-  } catch (error) {
-    console.error("OTP send error:", error);
-    req.session.errors = { general: "Failed to send OTP" };
+  }catch (error) {
+  console.error("OTP send error:", error);
+  req.session.errors = { general: "Failed to send OTP" };
+
+  // 🔹 Redirect based on userType if available
+  if (req.session.userType === "client") {
+    return res.redirect("/forgot-password");
+  } else {
     return res.redirect("/admin-forgot-password");
   }
 }
+};
+
+
+
+// exports.verify_OTP = async (req, res) => {
+//   const { otp } = req.body;
+//   const { email } = req.params;
+
+//   try {
+//     const otpRecord = await OtpDb.findOne({ email }).sort({ createdAt: -1 });
+
+//     if (!otpRecord) {
+//       req.session.errors = { otp: "OTP not found." };
+//       req.session.showOtp = true;
+//       return res.redirect("/admin-forgot-password");
+//     }
+
+//     if (Date.now() > otpRecord.expiresAt) {
+//       await OtpDb.deleteOne({ _id: otpRecord._id });
+//       req.session.errors = { otp: "OTP expired." };
+//       req.session.showOtp = true;
+//       return res.redirect("/admin-forgot-password");
+//     }
+
+//     if (otpRecord.otp.toString() !== otp.join("")) {
+//       req.session.errors = { otp: "Invalid OTP." };
+//       req.session.showOtp = true;
+//       return res.redirect("/admin-forgot-password");
+//     }
+
+//     // OTP is valid → clear OTP and go to change password page
+//     await OtpDb.deleteOne({ _id: otpRecord._id });
+
+//     req.session.resetEmail = email; // store email for next step
+//     return res.redirect("/admin-change-password");
+
+//   } catch (err) {
+//     console.error(err);
+//     req.session.errors = { otp: "Server error." };
+//     req.session.showOtp = true;
+//     return res.redirect("/admin-forgot-password");
+//   }
+// };
 
 exports.verify_OTP = async (req, res) => {
   const { otp } = req.body;
-  const { email } = req.params;
-
+  const email = req.session.email;
+  console.log(otp, email);
+  
   try {
     const otpRecord = await OtpDb.findOne({ email }).sort({ createdAt: -1 });
 
     if (!otpRecord) {
       req.session.errors = { otp: "OTP not found." };
       req.session.showOtp = true;
-      return res.redirect("/admin-forgot-password");
+      return req.session.userType === "client"
+        ? res.redirect("/forgot-password")
+        : res.redirect("/admin-forgot-password");
     }
 
     if (Date.now() > otpRecord.expiresAt) {
       await OtpDb.deleteOne({ _id: otpRecord._id });
       req.session.errors = { otp: "OTP expired." };
       req.session.showOtp = true;
-      return res.redirect("/admin-forgot-password");
+      return req.session.userType === "client"
+        ? res.redirect("/forgot-password")
+        : res.redirect("/admin-forgot-password");
     }
 
     if (otpRecord.otp.toString() !== otp.join("")) {
       req.session.errors = { otp: "Invalid OTP." };
       req.session.showOtp = true;
-      return res.redirect("/admin-forgot-password");
+      return req.session.userType === "client"
+        ? res.redirect("/forgot-password")
+        : res.redirect("/admin-forgot-password");
     }
 
-    // OTP is valid → clear OTP and go to change password page
+    // ✅ OTP valid
     await OtpDb.deleteOne({ _id: otpRecord._id });
 
     req.session.resetEmail = email; // store email for next step
-    return res.redirect("/admin-change-password");
+
+    return req.session.userType === "client"
+      ? res.redirect("/change-password")
+      : res.redirect("/admin-change-password");
 
   } catch (err) {
     console.error(err);
     req.session.errors = { otp: "Server error." };
     req.session.showOtp = true;
-    return res.redirect("/admin-forgot-password");
+    return req.session.userType === "client"
+      ? res.redirect("/forgot-password")
+      : res.redirect("/admin-forgot-password");
   }
 };
 
+// exports.change_password = async (req, res) => {
+//   const { new_password, confirm_password } = req.body;
+//   const email = req.session?.resetEmail; // ✅ Get email from session
+//   const errors = {};
+
+//   try {
+//     // ✅ Session email check
+//     if (!email) {
+//       return res.json({ success: false, message: "Session expired. Please log in again." });
+//     }
+
+//     // ✅ Password match check
+//     if (!new_password || !confirm_password) {
+//       errors.password = "Both password fields are required.";
+//     } else if (new_password !== confirm_password) {
+//       errors.password = "Passwords do not match.";
+//     }
+
+//     if (Object.keys(errors).length > 0) {
+//       return res.json({ success: false, errors });
+//     }
+
+//     // ✅ Find user in single User schema
+//     const user = await User.findOne({ email });
+//     if (!user) {
+//       return res.json({ success: false, message: "User not found." });
+//     }
+
+//     // ✅ Hash and save new password
+//     const hashedPassword = await bcrypt.hash(new_password, 10);
+//     user.password = hashedPassword;
+//     await user.save();
+
+//     // Optional: Flash success message
+//     req.session.success = `Password updated successfully.`;
+
+//     // Redirect to login (can be role-based if needed)
+//     return res.redirect("/admin-login"); // or "/login" for common login
+
+//   } catch (err) {
+//     console.error(err);
+//     return res.json({ success: false, message: "Server error." });
+//   }
+// };
+
 exports.change_password = async (req, res) => {
   const { new_password, confirm_password } = req.body;
-  const email = req.session?.resetEmail; // ✅ Get email from session
+  const email = req.session?.resetEmail;  // ✅ email stored in session
+  const userType = req.session?.userType; // ✅ userType stored in session
   const errors = {};
 
   try {
-    // ✅ Session email check
     if (!email) {
-      return res.json({ success: false, message: "Session expired. Please log in again." });
+      return res.json({ success: false, message: "Session expired. Please try again." });
     }
 
-    // ✅ Password match check
     if (!new_password || !confirm_password) {
       errors.password = "Both password fields are required.";
     } else if (new_password !== confirm_password) {
@@ -254,22 +456,22 @@ exports.change_password = async (req, res) => {
       return res.json({ success: false, errors });
     }
 
-    // ✅ Find user in single User schema
     const user = await User.findOne({ email });
     if (!user) {
       return res.json({ success: false, message: "User not found." });
     }
 
-    // ✅ Hash and save new password
     const hashedPassword = await bcrypt.hash(new_password, 10);
     user.password = hashedPassword;
     await user.save();
 
-    // Optional: Flash success message
-    req.session.success = `Password updated successfully.`;
+    // Success message
+    req.session.success = "Password updated successfully.";
 
-    // Redirect to login (can be role-based if needed)
-    return res.redirect("/admin-login"); // or "/login" for common login
+    // ✅ Redirect to correct login page
+    return userType === "client"
+      ? res.redirect("/login")
+      : res.redirect("/admin-login");
 
   } catch (err) {
     console.error(err);
@@ -427,7 +629,7 @@ exports.deleteAdmin = async (req, res) => {
 
 exports.getAdminProfile = async (req, res) => {
   try {
-    const userId = req.query.userId;
+    const userId = req.session.userId;
 
     if (!userId) {
       return res.status(401).json({ error: "Not authorized. Please log in." });
@@ -1593,3 +1795,314 @@ exports.addPackages = async (req, res) => {
     res.status(500).json({ success: false, message: "Server error." });
   }
 };
+
+exports.getClientDetails = async (req, res) => {
+  try {
+    const clientId = new mongoose.Types.ObjectId(req.params.id);
+
+    const clientData = await ClientDetails.aggregate([
+      { $match: { clientId: clientId } },
+
+      // Join with User (client basic info)
+      {
+        $lookup: {
+          from: "users",
+          localField: "clientId",
+          foreignField: "_id",
+          as: "clientUser"
+        }
+      },
+      { $unwind: "$clientUser" },
+
+      // Join with Trainer (optional)
+      {
+        $lookup: {
+          from: "users",
+          localField: "trainerId",
+          foreignField: "_id",
+          as: "trainer"
+        }
+      },
+      { $unwind: { path: "$trainer", preserveNullAndEmptyArrays: true } },
+
+      // Join with Branch
+      {
+        $lookup: {
+          from: "branches",
+          localField: "branch",
+          foreignField: "_id",
+          as: "branch"
+        }
+      },
+      { $unwind: "$branch" },
+
+      // Join with Membership
+      {
+        $lookup: {
+          from: "memberships",
+          localField: "clientId",
+          foreignField: "clientId",
+          as: "membership"
+        }
+      },
+
+      // Pick latest membership
+      {
+        $addFields: {
+          membership: {
+            $arrayElemAt: [
+              {
+                $slice: [
+                  {
+                    $reverseArray: {
+                      $sortArray: { input: "$membership", sortBy: { createdAt: 1 } }
+                    }
+                  },
+                  1
+                ]
+              },
+              0
+            ]
+          }
+        }
+      },
+
+      // Join with Package inside membership
+      {
+        $lookup: {
+          from: "packages",
+          localField: "membership.package",
+          foreignField: "_id",
+          as: "package"
+        }
+      },
+      { $unwind: { path: "$package", preserveNullAndEmptyArrays: true } },
+
+      // Add calculated expiryDate if not set
+      {
+        $addFields: {
+          "membership.expiredDate": {
+            $ifNull: [
+              "$membership.expiredDate",
+              { $add: ["$membership.paidDate", { $multiply: ["$package.durationInDays", 24 * 60 * 60 * 1000] }] }
+            ]
+          }
+        }
+      },
+
+      // Final Projection
+      {
+        $project: {
+          _id: 0,
+          clientId: "$clientUser._id",
+          name: "$clientUser.name",
+          email: "$clientUser.email",
+          phone: "$clientUser.phone",
+          gender: 1,
+          age: 1,
+          altphone: 1,
+          height: 1,
+          weight: 1,
+          joinedDate: 1,
+          trainer: "$trainer.name",
+          branch: "$branch.name",
+          membership: {
+            packageType: "$package.packageType",
+            durationInDays: "$package.durationInDays",
+            price: "$membership.price",
+            paymentMethod: "$membership.paymentMethod",
+            confirmedPayment: "$membership.confirmedPayment",
+            paidDate: "$membership.paidDate",
+            expiredDate: "$membership.expiredDate",
+            status: "$membership.status"
+          }
+        }
+      }
+    ]);
+
+    console.log(clientData[0]);
+    
+    res.json({ success: true, data: clientData[0] || {} });
+  } catch (err) {
+    console.error("❌ Error in getClientDetails:", err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+
+// exports.getClientDetails = async (req, res) => {
+//   try {
+//     const clientId = new mongoose.Types.ObjectId(req.params.id);
+
+//     const clientData = await ClientDetails.aggregate([
+//       { $match: { clientId: clientId } },
+
+//       // Join with User (for client basic info)
+//       {
+//         $lookup: {
+//           from: "users",
+//           localField: "clientId",
+//           foreignField: "_id",
+//           as: "clientUser"
+//         }
+//       },
+//       { $unwind: "$clientUser" },
+
+//       // Join with Trainer (if assigned)
+//       {
+//         $lookup: {
+//           from: "users",
+//           localField: "trainerId",
+//           foreignField: "_id",
+//           as: "trainer"
+//         }
+//       },
+//       { $unwind: { path: "$trainer", preserveNullAndEmptyArrays: true } },
+
+//       // Join with Branch
+//       {
+//         $lookup: {
+//           from: "branches", // 👈 collection name should be lowercase plural in Mongo
+//           localField: "branch",
+//           foreignField: "_id",
+//           as: "branch"
+//         }
+//       },
+//       { $unwind: "$branch" },
+
+//       // Join with Membership
+//       {
+//         $lookup: {
+//           from: "memberships",
+//           localField: "clientId",
+//           foreignField: "clientId",
+//           as: "membership"
+//         }
+//       },
+
+//       // Pick latest membership (sort + limit)
+//       {
+//         $addFields: {
+//           membership: {
+//             $arrayElemAt: [
+//               {
+//                 $slice: [
+//                   {
+//                     $reverseArray: {
+//                       $sortArray: { input: "$membership", sortBy: { createdAt: 1 } }
+//                     }
+//                   },
+//                   1
+//                 ]
+//               },
+//               0
+//             ]
+//           }
+//         }
+//       },
+
+//       // Final projection
+//       {
+//         $project: {
+//           _id: 0,
+//           clientId: "$clientUser._id",
+//           name: "$clientUser.name",
+//           email: "$clientUser.email",
+//           phone: "$clientUser.phone",
+//           gender: 1,
+//           age: 1,
+//           altphone: 1,
+//           height: 1,
+//           weight: 1,
+//           img: 1,
+//           joinedDate: 1,
+//           trainer: "$trainer.name",
+//           branch: "$branch.name",
+//           membership: {
+//             package: "$membership.package",
+//             price: "$membership.price",
+//             paymentMethod: "$membership.paymentMethod",
+//             confirmedPayment: "$membership.confirmedPayment",
+//             paidDate: "$membership.paidDate",
+//             expiredDate: "$membership.expiredDate",
+//             status: "$membership.status"
+//           }
+//         }
+//       }
+//     ]);
+
+//     res.json({ success: true, data: clientData[0] || {} });
+//   } catch (err) {
+//     console.error("❌ Error in getClientDetails:", err);
+//     res.status(500).json({ success: false, message: "Server error" });
+//   }
+// };
+
+
+// exports.getClientDetails = async (req, res) => {
+//   try {
+//     const clientId = req.params.id;
+
+//     // ✅ Find client with user + membership info
+//     const client = await ClientDetails.findOne({ clientId })
+//       .populate("clientId", "name email phone altPhone gender age image") // from User schema
+//       .populate("branchId", "branchName")
+//       .populate("trainerId", "name")
+//       .lean();
+
+//     if (!client) {
+//       return res.json({ success: false, message: "Client not found" });
+//     }
+
+//     // ✅ Find membership info
+//     const membership = await Membership.findOne({ clientId })
+//       .sort({ createdAt: -1 }) // latest membership
+//       .lean();
+
+//     const data = {
+//       // from User
+//       name: client.clientId?.name,
+//       email: client.clientId?.email,
+//       phone: client.clientId?.phone,
+//       altPhone: client.clientId?.altPhone,
+//       gender: client.clientId?.gender,
+//       age: client.clientId?.age,
+//       image: client.clientId?.image || "/admin/images/faces/default.png",
+
+//       // from ClientDetails
+//       branch: client.branchId?.branchName || "N/A",
+//       trainer: client.trainerId?.name || "N/A",
+//       height: client.height,
+//       weight: client.weight,
+//       joinedDate: client.joinedDate
+//         ? new Date(client.joinedDate).toLocaleDateString("en-GB")
+//         : "N/A",
+
+//       // from Membership
+//       membership: membership
+//         ? {
+//             package: membership.packageName || "N/A",
+//             expiryDate: membership.expiredDate
+//               ? new Date(membership.expiredDate).toLocaleDateString("en-GB")
+//               : "N/A",
+//             status:
+//               membership.confirmedPayment &&
+//               membership.expiredDate > new Date()
+//                 ? "Active"
+//                 : "Expired",
+//           }
+//         : { package: "N/A", expiryDate: "N/A", status: "No Membership" },
+//     };
+
+//     console.log(data);
+    
+
+//     return res.json({ success: true, data });
+//   } catch (error) {
+//     console.error("Error fetching client details:", error);
+//     return res.json({
+//       success: false,
+//       message: "Server error fetching client details",
+//     });
+//   }
+// };

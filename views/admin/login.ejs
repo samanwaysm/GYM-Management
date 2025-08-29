@@ -7,6 +7,8 @@
   <link rel="stylesheet" href="/admin/vendors/mdi/css/materialdesignicons.min.css">
   <link rel="stylesheet" href="/admin/vendors/css/vendor.bundle.base.css">
   <!-- endinject -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <!-- Plugin css for this page -->
   <!-- End plugin css for this page -->
   <!-- inject:css -->
@@ -26,10 +28,9 @@
             <div class="card-body px-5 py-5">
               <h3 class="card-title text-left mb-3">Login</h3>
               <form id="loginForm" method="POST" action="/admin/adminlogin" class="needs-validation" novalidate>
-                <div class="form-group mb-3">
-                  <label for="email"> Email </label>
-                  <input type="email" id="email" name="email" class="form-control p_input" required>
-                  <div class="invalid-feedback">Please enter a valid email address.</div>
+                <div class="mb-3">
+                  <label class="form-label text-white">Email</label>
+                  <input type="email" name="email" class="form-control" placeholder="Enter email">
                   <% if (errors && errors.email) { %>
                     <div class="text-danger small">
                       <%= errors.email %>
@@ -37,17 +38,36 @@
                     <% } %>
                 </div>
 
-                <div class="form-group mb-3">
-                  <label for="password"> Password </label>
-                  <input type="password" id="password" name="password" class="form-control p_input" required
-                    minlength="6">
-                  <div class="invalid-feedback">Password must be at least 6 characters.</div>
+                <div class="mb-3">
+                  <label class="form-label text-white">Password</label>
+                  <div class="input-group">
+                    <input type="password" id="password" name="password" class="form-control"
+                      placeholder="Enter password">
+                    <div class="input-group-append">
+                      <span class="input-group-text" onclick="togglePassword('password', this)">
+                        <i class="mdi mdi-eye-off"></i>
+                      </span>
+                    </div>
+                  </div>
                   <% if (errors && errors.password) { %>
                     <div class="text-danger small">
                       <%= errors.password %>
                     </div>
                     <% } %>
                 </div>
+
+                <!-- <div class="form-group mb-3">
+                  <label for="password"> Password </label>
+                  <input type="password" id="password" name="password" class="form-control p_input" required
+                    minlength="6">
+                  <div class="invalid-feedback">Password must be at least 6 characters.</div>
+                  <%# if (errors && errors.password) { %>
+                    <div class="text-danger small">
+                      <%#= errors.password %>
+                    </div>
+                    <%# } %>
+                </div> -->
+
 
                 <div class="form-group d-flex align-items-center justify-content-between">
                   <div class="form-check">
@@ -74,6 +94,22 @@
   <!-- container-scroller -->
   <!-- plugins:js -->
   <script src="/admin/vendors/js/vendor.bundle.base.js"></script>
+  <script>
+    function togglePassword(inputId, el) {
+      const input = document.getElementById(inputId);
+      const icon = el.querySelector("i");
+
+      if (input.type === "password") {
+        input.type = "text";
+        icon.classList.remove("mdi-eye-off");
+        icon.classList.add("mdi-eye");
+      } else {
+        input.type = "password";
+        icon.classList.remove("mdi-eye");
+        icon.classList.add("mdi-eye-off");
+      }
+    }
+  </script>
   <!-- endinject -->
   <!-- Plugin js for this page -->
   <!-- End plugin js for this page -->
