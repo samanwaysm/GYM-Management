@@ -199,7 +199,10 @@ $(document).ready(function () {
             contentType: "application/json",
             data: JSON.stringify(data),
             success: function (res) {
-                if (res.success) alert("Client details updated!");
+                if (res.success) {
+                    alert("Client details updated!");
+                    window.location.href = "/admin-clients-list";
+                }
                 else alert(res.message || "Failed");
             }
         });

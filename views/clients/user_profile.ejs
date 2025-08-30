@@ -72,6 +72,80 @@
             color: #f5f5f5;
             border: 1px solid #444;
         }
+
+        /* Layout */
+        .header-inner {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .header-inner .logo {
+            flex: 0 0 auto;
+        }
+
+        .header-inner .nav-container {
+            flex: 1 1 auto;
+        }
+
+        .header-inner .login-desktop {
+            flex: 0 0 auto;
+            margin-left: auto;
+        }
+
+        /* Button styling */
+        .btn-login {
+            display: inline-block;
+            background-color: rgb(228, 56, 28);
+            border: 2px solid #ffffff;
+            padding: 10px 80px;
+            /* border-radius: 25px; */
+            font-weight: 600;
+            color: #fff;
+            text-decoration: none;
+            line-height: 1;
+            text-align: center;
+        }
+
+        /* Visibility defaults */
+        .login-desktop {
+            display: block;
+        }
+
+        .login-mobile {
+            display: none;
+        }
+
+        /* Mobile behavior */
+        @media (max-width: 991px) {
+
+            /* Hide desktop button, show mobile one inside menu */
+            .login-desktop {
+                display: none !important;
+            }
+
+            .login-mobile {
+                display: block !important;
+            }
+
+            /* Make the mobile login look good inside the menu */
+            .mainmenu .login-mobile a,
+            /* If you use a plugin like SlickNav, ensure it shows there too */
+            .slicknav_nav .login-mobile a {
+                display: block;
+                width: 100%;
+                text-align: center;
+                padding: 10px 16px;
+            }
+        }
+
+        /* Optional: if your mobile menu plugin wraps items,
+   ensure the li stays visible there as well */
+        @media (max-width: 991px) {
+            .slicknav_nav .login-mobile {
+                display: block !important;
+            }
+        }
     </style>
 
 </head>
@@ -84,47 +158,34 @@
 
     <!-- Header Section Begin -->
     <header class="header-section">
-        <div class="container-fluid">
+        <div class="container-fluid header-inner">
             <div class="logo">
-                <a href="./index.html">
+                <a href="/home">
                     <img src="/client/img/logo.png" alt="">
                 </a>
             </div>
-            <div class="top-social">
-                <a href="#"><i class="fa fa-pinterest-p"></i></a>
-                <a href="#"><i class="fa fa-linkedin"></i></a>
-                <a href="#"><i class="fa fa-pinterest-p"></i></a>
-                <a href="#"><i class="fa fa-youtube-play"></i></a>
-                <a href="#"><i class="fa fa-instagram"></i></a>
-            </div>
-            <div class="container">
+
+            <div class="container nav-container">
                 <div class="nav-menu">
                     <nav class="mainmenu mobile-menu">
                         <ul>
-                            <li class="active"><a href="./index.html">Home</a></li>
-                            <!-- <li><a href="./about-us.html">About us</a></li> -->
-                            <!-- <li><a href="./schedule.html">Schedule</a></li> -->
-                            <li><a href="./gallery.html">Gallery</a></li>
-                            <!-- <li><a href="./blog.html">Blog</a>
-                                <ul class="dropdown">
-                                    <li><a href="./about-us.html">About Us</a></li>
-                                    <li><a href="./blog-single.html">Blog Details</a></li>
-                                </ul>
-                            </li> -->
-                            <li><a href="./contact.html">Contacts</a></li>
-                            <li><a href="/login">Renew Membership</a></li>
+                            <li class="active"><a href="/home">Home</a></li>
+                            <li><a href="/renew-membership">Membership</a></li>
+
+                            <!-- Mobile-only Login (shows in hamburger menu) -->
+                            <li class="login-mobile">
+                                <a href="/login" class="btn-login">Login</a>
+                            </li>
                         </ul>
                     </nav>
                 </div>
-                <!-- 🔹 Login Button -->
-                <!-- <div class="d-flex justify-content-center mt-3">
-                    <a href="/login" class="btn btn-danger w-100"
-                        style="background-color:rgb(228,56,28); border:none; padding:10px; border-radius:25px; font-weight:600;">
-                        Login
-                    </a>
-                </div> -->
-
             </div>
+
+            <!-- Desktop-only Login (right side) -->
+            <div class="login-desktop">
+                <a href="/login" class="btn-login">Login</a>
+            </div>
+
             <div id="mobile-menu-wrap"></div>
         </div>
     </header>
@@ -134,7 +195,7 @@
         <!-- Profile Card -->
         <div id="profile-card" class="profile-card d-flex align-items-center" style="display:none;">
             <div>
-                <img id="user-photo" src="https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250"
+                <img id="user-photo" src="/client/img/noProfile/profile.png"
                     alt="User Photo" class="profile-img">
             </div>
             <div class="ms-4">
@@ -277,7 +338,7 @@
 
                         $("#profile-card").html(`
                             <div class="profile-card d-flex align-items-center">
-                            <img src="https://www.gravatar.com/avatar/${c._id}?s=200" class="profile-img" alt="User"/>
+                            <img src="/client/img/noProfile/profile.png" class="profile-img" alt="User"/>
                             <div class="ms-4">
                                 <h4>${c.name}</h4>
                                 <p><i class="fa fa-envelope"></i> ${c.email}</p>
@@ -379,6 +440,27 @@
                 });
             });
 
+        });
+
+        document.addEventListener("DOMContentLoaded", function () {
+            const loginDesktop = document.querySelector(".login-desktop");
+            const loginMobile = document.querySelector(".login-mobile");
+
+            function toggleLoginButtons() {
+                if (window.innerWidth <= 991) {
+                    if (loginDesktop) loginDesktop.style.display = "none";
+                    if (loginMobile) loginMobile.style.display = "block";
+                } else {
+                    if (loginDesktop) loginDesktop.style.display = "block";
+                    if (loginMobile) loginMobile.style.display = "none";
+                }
+            }
+
+            // Run on load
+            toggleLoginButtons();
+
+            // Run on resize
+            window.addEventListener("resize", toggleLoginButtons);
         });
     </script>
 

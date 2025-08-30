@@ -96,12 +96,12 @@
       if (result.success) {
         const c = result.data;
         // ✅ Client Image
-        document.getElementById("clientImage").src = c.img || "/admin/images/faces/default.png";
+        document.getElementById("clientImage").src = c.img || "/admin/images/noProfile/profile.png";
 
         // ✅ Membership Details
         document.getElementById("package").textContent = c.membership?.packageType || "-";
         document.getElementById("expiryDate").textContent = c.membership?.expiredDate 
-            ? new Date(c.membership.expiredDate).toLocaleDateString("en-GB") 
+            ? new Date(c.membership.expiredDate).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) 
             : "-";
 
         document.getElementById("status").innerHTML =
@@ -120,7 +120,7 @@
         document.getElementById("height").textContent = c.height;
         document.getElementById("weight").textContent = c.weight;
         document.getElementById("joinedDate").textContent = c.joinedDate 
-            ? new Date(c.joinedDate).toLocaleDateString("en-GB") 
+            ? new Date(c.joinedDate).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) 
             : "-";
         // Set Edit button link dynamically
         document.getElementById("editBtn").href = `/admin-edit-clients/${c.clientId}`;

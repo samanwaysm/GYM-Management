@@ -24,11 +24,11 @@ exports.login = (req, res) => {
     })
 }
 
-exports.renew_membership = (req, res) => {
+exports.user_profile = (req, res) => {
     const { errors, userId} = req.session
     
     delete req.session.errors
-    res.render("clients/renew_membership",{errors,userId},(err, html) => {
+    res.render("clients/user_profile",{errors,userId},(err, html) => {
         if (err) {
             console.log(err);
         }

@@ -358,6 +358,11 @@ ol {
 	padding: 40px 0;
 }
 
+/* .header-section.header-normal .nav-menu .mainmenu ul .liststyle {
+	/* padding: 40px 0;
+	margin-left: 75%; */
+/* } */ */
+
 .header-section.header-normal .nav-menu .mainmenu ul li a:after {
 	bottom: 35px;
 }
@@ -373,6 +378,7 @@ ol {
 .header-section.header-normal .nav-menu .mainmenu ul li .dropdown li a {
 	padding: 14px 22px;
 }
+
 
 .header-section.header-normal .top-social {
 	padding: 39px 0;
@@ -400,6 +406,13 @@ ol {
 	margin-right: 45px;
 	position: relative;
 }
+
+/* .nav-menu .mainmenu ul .liststyle {
+	display: inline-block;
+	list-style: none;
+	margin-right: 200px;
+	position: relative;
+} */
 
 .nav-menu .mainmenu ul li:last-child {
 	margin-right: 0;
@@ -2918,6 +2931,9 @@ ol {
 	.nav-menu .mainmenu ul li {
 		margin-right: 25px;
 	}
+	/* .nav-menu .mainmenu ul .liststyle {
+		margin-left: 100px;
+	} */
 	.nav-menu .mainmenu ul li .dropdown {
 		left: auto;
 		right: 0;

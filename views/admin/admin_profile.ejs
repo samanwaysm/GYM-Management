@@ -6,8 +6,8 @@
             <h3 class="page-title"> Admin Profile </h3>
             <nav aria-label="breadcrumb">
               <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="#"> Admin</a></li>
-                <li class="breadcrumb-item active" aria-current="page">Add Admin</li>
+                <li class="breadcrumb-item"><a href="/admin-dashboard"> Admin</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Admin Profile</li>
               </ol>
             </nav>
           </div>
@@ -87,9 +87,13 @@
                         </div>
                       </div>
                     </div>
-                    <div class="text-center mt-2">
-                      <button type="button" class="btn btn-primary mr-2" id="sendOtpBtn">Submit</button>
+                    <div class="mt-2 text-right">
+                      <!-- <button type="button" id="cancelBtn" class="btn btn-secondary">Cancel</button> -->
+                      <button type="submit" class="btn btn-success mr-2 text-dark">Submit</button>
                     </div>
+                    <!-- <div class="text-center mt-2">
+                      <button type="button" class="btn btn-primary mr-2" id="sendOtpBtn">Submit</button>
+                    </div> -->
                   </form>
                 </div>
               </div>
@@ -117,9 +121,12 @@
                     <input type="text" maxlength="1" class="form-control text-center mx-1 otp-input" required>
                     <input type="text" maxlength="1" class="form-control text-center mx-1 otp-input" required>
                   </div>
-                  <div class="text-center mt-4">
-                    <button type="submit" class="btn btn-success">Verify OTP</button>
+                  <div class="mt-2 text-right">
+                    <button type="submit" class="btn btn-success mr-2 text-dark">Verify OTP</button>
                   </div>
+                  <!-- <div class="text-center mt-4">
+                    <button type="submit" class="btn btn-success"></button>
+                  </div> -->
                 </form>
               </div>
             </div>
@@ -141,6 +148,10 @@
         icon.classList.add("mdi-eye-off");
       }
     }
+
+    // $("#cancelBtn").on("click", function () {
+    //   window.location.href = "/admin-dashboard";
+    // });
 
   </script>    
   <script src="/admin/logics/admin_profile.js"></script>

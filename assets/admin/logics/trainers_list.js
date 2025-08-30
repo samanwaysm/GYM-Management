@@ -20,13 +20,11 @@ function loadTrainers(page = 1, query = "", branch = "") {
             <td>${trainer.clientsCount}</td>
             <td>${trainer.branchName || "-"}</td>
             <td>
-                <a href="/admin-edit-trainers/${trainer.trainerId}" class="btn btn-outline-secondary btn-icon-text"> 
-                    Edit <i class="mdi mdi-file-check btn-icon-append"></i>
+                <a href="/admin-edit-trainers/${trainer.trainerId}" class="btn btn-outline-secondary btn-icon-text" title="Edit"> 
+                    <i class="mdi mdi-file-check btn-icon-append"></i>
                 </a>
-            </td>
-            <td>
                 <button type="button" class="btn btn-outline-danger btn-icon-text" 
-                    onclick="confirmDelete('${trainer.trainerId}')">Delete
+                    onclick="confirmDelete('${trainer.trainerId}')" title="Delete">
                         <i class="mdi mdi-delete btn-icon-prepend"></i> 
                 </button>
             </td>

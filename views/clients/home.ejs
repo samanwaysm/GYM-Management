@@ -23,6 +23,159 @@
     <link rel="stylesheet" href="/client/css/slicknav.min.css" type="text/css">
     <link rel="stylesheet" href="/client/css/style.css" type="text/css">
     <link rel="shortcut icon" href="/client/img/fevicon/fevicon.png" />
+    <!-- 🔹 CSS -->
+    <style>
+        /* Dark transparent header */
+        /* .header-section {
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 999;
+    padding-bottom: 50px;
+} */
+
+        /* Optional: make menu links white for better contrast */
+        /* .header-section .mainmenu ul li a,
+.header-section .btn-login {
+    color: #fff;
+} */
+
+        /* Layout */
+        .header-inner {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .header-inner .logo {
+            flex: 0 0 auto;
+        }
+
+        .header-inner .nav-container {
+            flex: 1 1 auto;
+        }
+
+        .header-inner .login-desktop {
+            flex: 0 0 auto;
+            margin-left: auto;
+        }
+
+        /* .btn-login {
+            display: inline-block;
+            font-weight: 600;
+            text-decoration: none;
+            line-height: 1;
+            text-align: center;
+            padding: 10px 80px;
+            transition: all 0.3s ease;
+        }
+
+        .login-desktop .btn-login {
+            background: transparent;
+            border: 2px solid #000;
+            color: #fcfcfc;
+        }
+
+        .login-mobile .btn-login {
+            background-color: rgb(228, 56, 28);
+            border: 1px solid #fff;
+            color: #fff;
+        }
+
+        .login-desktop .btn-login:hover {
+            background: #000;
+            color: #fff;
+        } */
+
+        /* Desktop button style (transparent with black border/text) */
+        .login-desktop .btn-login {
+            padding: 10px 60px;
+            background: transparent;
+            border: 1px solid #000;
+            color: #ffffff;
+            box-shadow: 0 4px 0 #000;
+            transition: all 0.2s ease;
+            position: relative;
+            top: 0;
+        }
+
+        /* Hover effect: lift up like 3D */
+        .login-desktop .btn-login:hover {
+            top: -2px;
+            /* moves button up slightly */
+            box-shadow: 0 6px 0 #000;
+            /* deeper shadow below */
+            background: #000;
+            /* optional fill */
+            color: #fff;
+            /* text turns white */
+        }
+
+        /* Active effect: pressed down */
+        .login-desktop .btn-login:active {
+            top: 2px;
+            /* move button down */
+            box-shadow: 0 2px 0 #000;
+            /* shallow shadow */
+        }
+
+
+
+        /* .btn-login {
+            display: inline-block;
+            background-color: rgb(228, 56, 28);
+            border: 2px solid #ffffff;
+            padding: 10px 80px;
+            font-weight: 600;
+            color: #fff;
+            text-decoration: none;
+            line-height: 1;
+            text-align: center;
+        }
+
+        .login-desktop {
+            display: block;
+        }
+
+        .login-mobile {
+            display: none;
+        } */
+
+        /* Mobile behavior */
+        @media (max-width: 991px) {
+
+            /* Hide desktop button, show mobile one inside menu */
+            .login-desktop {
+                display: none !important;
+            }
+
+            .login-mobile {
+                display: block !important;
+            }
+
+            /* Make the mobile login look good inside the menu */
+            .mainmenu .login-mobile a,
+            /* If you use a plugin like SlickNav, ensure it shows there too */
+            .slicknav_nav .login-mobile a {
+                display: block;
+                width: 100%;
+                text-align: center;
+                padding: 10px 16px;
+            }
+        }
+
+        /* Optional: if your mobile menu plugin wraps items,
+   ensure the li stays visible there as well */
+        @media (max-width: 991px) {
+            .slicknav_nav .login-mobile {
+                display: block !important;
+            }
+        }
+    </style>
 </head>
 
 <body>
@@ -31,53 +184,43 @@
         <div class="loader"></div>
     </div>
 
-    <!-- Header Section Begin -->
     <header class="header-section">
-        <div class="container-fluid">
+        <div class="container-fluid header-inner">
             <div class="logo">
-                <a href="./index.html">
+                <a href="/home">
                     <img src="/client/img/logo.png" alt="">
                 </a>
             </div>
-            <div class="top-social">
-                <a href="#"><i class="fa fa-pinterest-p"></i></a>
-                <a href="#"><i class="fa fa-linkedin"></i></a>
-                <a href="#"><i class="fa fa-pinterest-p"></i></a>
-                <a href="#"><i class="fa fa-youtube-play"></i></a>
-                <a href="#"><i class="fa fa-instagram"></i></a>
-            </div>
-            <div class="container">
+
+            <div class="container nav-container">
                 <div class="nav-menu">
                     <nav class="mainmenu mobile-menu">
                         <ul>
-                            <li class="active"><a href="./index.html">Home</a></li>
-                            <!-- <li><a href="./about-us.html">About us</a></li> -->
-                            <!-- <li><a href="./schedule.html">Schedule</a></li> -->
-                            <li><a href="./gallery.html">Gallery</a></li>
-                            <!-- <li><a href="./blog.html">Blog</a>
-                                <ul class="dropdown">
-                                    <li><a href="./about-us.html">About Us</a></li>
-                                    <li><a href="./blog-single.html">Blog Details</a></li>
-                                </ul>
-                            </li> -->
-                            <li><a href="./contact.html">Contacts</a></li>
-                            <li><a href="/renew-membership">Renew Membership</a></li>
+                            <li class="active"><a href="/home">Home</a></li>
+                            <li><a href="/user-profile">Membership</a></li>
+
+                            <!-- Mobile-only Login (shows in hamburger menu) -->
+                            <% if(!userId){ %>
+                                <li class="login-mobile">
+                                    <a href="/login" class="btn-login">Login</a>
+                                </li>
+                                <% } %>
                         </ul>
                     </nav>
                 </div>
-                <!-- 🔹 Login Button -->
-                <div class="d-flex justify-content-center mt-3">
-                    <a href="/login" class="btn btn-danger w-100"
-                        style="background-color:rgb(228,56,28); border:none; padding:10px; border-radius:25px; font-weight:600;">
-                        Login
-                    </a>
-                </div>
-
             </div>
-            <div id="mobile-menu-wrap"></div>
+
+
+            <!-- Desktop-only Login (right side) -->
+            <% if(!userId){ %>
+                <div class="login-desktop">
+                    <a href="/login" class="btn-login">Login</a>
+                </div>
+                <% } %>
+                    <div id="mobile-menu-wrap"></div>
         </div>
     </header>
-    <!-- Header End -->
+
 
     <!-- Hero Section Begin -->
     <section class="hero-section">
@@ -772,6 +915,29 @@
     <script src="/client/js/owl.carousel.min.js"></script>
     <script src="/client/js/masonry.pkgd.min.js"></script>
     <script src="/client/js/main.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const loginDesktop = document.querySelector(".login-desktop");
+            const loginMobile = document.querySelector(".login-mobile");
+
+            function toggleLoginButtons() {
+                if (window.innerWidth <= 991) {
+                    if (loginDesktop) loginDesktop.style.display = "none";
+                    if (loginMobile) loginMobile.style.display = "block";
+                } else {
+                    if (loginDesktop) loginDesktop.style.display = "block";
+                    if (loginMobile) loginMobile.style.display = "none";
+                }
+            }
+
+            // Run on load
+            toggleLoginButtons();
+
+            // Run on resize
+            window.addEventListener("resize", toggleLoginButtons);
+        });
+
+    </script>
 </body>
 
 </html>

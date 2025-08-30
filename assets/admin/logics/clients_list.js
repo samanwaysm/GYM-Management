@@ -13,20 +13,30 @@ function loadClients(page = 1, query = "", branchId = "") {
             } else {
                 res.clients.forEach(client => {
                     rows += `
-                    <tr class="text-white" style="cursor: pointer;" onclick="window.location='/admin-client-details/${client.clientId}'">
-                        <td>${client.name}</td>
-                        <td>${client.email}</td>
-                        <td>${client.phone}</td>
-                        <td>${client.branch || "-"}</td>
-                        <td>${client.trainer || "-"}</td>
-                        <td>
-                            <a href="/admin-edit-clients/${client.clientId}" class="btn btn-outline-secondary btn-icon-text"> 
-                                Edit <i class="mdi mdi-file-check btn-icon-append"></i>
-                            </a>
+                    <tr>
+                        <td class="text-white" style="cursor: pointer;" onclick="window.location='/admin-client-details/${client.clientId}'">${client.name}</td>
+                        
+                        <td class="text-white" style="cursor: pointer;" onclick="window.location='/admin-client-details/${client.clientId}'">${client.phone}</td>
+                        <td class="text-white" style="cursor: pointer;" onclick="window.location='/admin-client-details/${client.clientId}'">${client.branch || "-"}</td>
+                        <td class="text-white" style="cursor: pointer;" onclick="window.location='/admin-client-details/${client.clientId}'">${client.trainer || "-"}</td>
+                        <td class="text-white" style="cursor: pointer;" 
+                            onclick="window.location='/admin-client-details/${client.clientId}'">
+                            ${client.expiredDate 
+                                ? new Date(client.expiredDate).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) 
+                                : "-"}
                         </td>
+                        <td class="text-white" style="cursor: pointer;" onclick="window.location='/admin-client-details/${client.clientId}'">
+                            <button class="btn ${client.status === 'Active' ? 'btn-success' : 'btn-danger'}">
+                            ${client.status}
+                            </button>
+                        </td>
+
                         <td>
+                            <a href="/admin-edit-clients/${client.clientId}" class="btn btn-outline-secondary btn-icon-text" title="Edit"> 
+                                <i class="mdi mdi-file-check btn-icon-append"></i>
+                            </a>
                             <button type="button" class="btn btn-outline-danger btn-icon-text" 
-                                onclick="confirmDelete('${client.clientId}')">Delete
+                                onclick="confirmDelete('${client.clientId}')" title="Delete">
                                     <i class="mdi mdi-delete btn-icon-prepend"></i> 
                             </button>
                         </td>

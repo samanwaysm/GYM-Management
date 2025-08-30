@@ -115,84 +115,6 @@ exports.adminlogout = (req, res) => {
   });
 };
 
-// exports.send_otp = async (req, res) => {
-//   try {
-//     const { email } = req.body;
-
-//     if (!email) {
-//       req.session.errors = { email: "Email is required" };
-//       return res.redirect("/admin-forgot-password");
-//     }
-
-//     // Generate 6-digit OTP
-//     const otp = Math.floor(100000 + Math.random() * 900000);
-
-//     // Save email in session
-//     req.session.email = email;
-
-//     // Delete any existing OTPs for this email
-//     await OtpDb.deleteMany({ email });
-
-//     // Save new OTP to DB with 60s expiry
-//     const newOtp = new OtpDb({
-//       email,
-//       otp,
-//       createdAt: Date.now(),
-//       expiresAt: Date.now() + 60 * 1000 // 60 seconds
-//     });
-
-//     await newOtp.save();
-
-//     // Create Nodemailer transporter
-//     const transporter = nodemailer.createTransport({
-//       service: 'Gmail',
-//       auth: {
-//         user: process.env.AUTH_EMAIL,
-//         pass: process.env.AUTH_PASS,
-//       },
-//     });
-
-//     // Mailgen config
-//     const mailGenerator = new Mailgen({
-//       theme: 'default',
-//       product: {
-//         name: 'Gym Management App',
-//         link: 'https://yourdomain.com/',
-//       },
-//     });
-
-//     // Mail content
-//     const emailTemplate = {
-//       body: {
-//         name: 'User',
-//         intro: `Your OTP code is: **${otp}**`,
-//         outro: 'This OTP is valid for 60 seconds. If you didn’t request this, ignore the email.',
-//       },
-//     };
-
-//     const mailBody = mailGenerator.generate(emailTemplate);
-
-//     const message = {
-//       from: process.env.AUTH_EMAIL,
-//       to: email,
-//       subject: 'OTP Verification Code',
-//       html: mailBody,
-//     };
-
-//     await transporter.sendMail(message);
-
-//     // ✅ Show OTP input in the next render
-//     req.session.showOtp = true;
-//     req.session.emailOtp = req.session.email;
-
-//     return res.redirect("/admin-forgot-password");
-
-//   } catch (error) {
-//     console.error("OTP send error:", error);
-//     req.session.errors = { general: "Failed to send OTP" };
-//     return res.redirect("/admin-forgot-password");
-//   }
-// }
 exports.send_otp = async (req, res) => {
   try {
     const { email } = req.body;
@@ -296,52 +218,9 @@ exports.send_otp = async (req, res) => {
 }
 };
 
-
-
-// exports.verify_OTP = async (req, res) => {
-//   const { otp } = req.body;
-//   const { email } = req.params;
-
-//   try {
-//     const otpRecord = await OtpDb.findOne({ email }).sort({ createdAt: -1 });
-
-//     if (!otpRecord) {
-//       req.session.errors = { otp: "OTP not found." };
-//       req.session.showOtp = true;
-//       return res.redirect("/admin-forgot-password");
-//     }
-
-//     if (Date.now() > otpRecord.expiresAt) {
-//       await OtpDb.deleteOne({ _id: otpRecord._id });
-//       req.session.errors = { otp: "OTP expired." };
-//       req.session.showOtp = true;
-//       return res.redirect("/admin-forgot-password");
-//     }
-
-//     if (otpRecord.otp.toString() !== otp.join("")) {
-//       req.session.errors = { otp: "Invalid OTP." };
-//       req.session.showOtp = true;
-//       return res.redirect("/admin-forgot-password");
-//     }
-
-//     // OTP is valid → clear OTP and go to change password page
-//     await OtpDb.deleteOne({ _id: otpRecord._id });
-
-//     req.session.resetEmail = email; // store email for next step
-//     return res.redirect("/admin-change-password");
-
-//   } catch (err) {
-//     console.error(err);
-//     req.session.errors = { otp: "Server error." };
-//     req.session.showOtp = true;
-//     return res.redirect("/admin-forgot-password");
-//   }
-// };
-
 exports.verify_OTP = async (req, res) => {
   const { otp } = req.body;
   const email = req.session.email;
-  console.log(otp, email);
   
   try {
     const otpRecord = await OtpDb.findOne({ email }).sort({ createdAt: -1 });
@@ -389,51 +268,6 @@ exports.verify_OTP = async (req, res) => {
       : res.redirect("/admin-forgot-password");
   }
 };
-
-// exports.change_password = async (req, res) => {
-//   const { new_password, confirm_password } = req.body;
-//   const email = req.session?.resetEmail; // ✅ Get email from session
-//   const errors = {};
-
-//   try {
-//     // ✅ Session email check
-//     if (!email) {
-//       return res.json({ success: false, message: "Session expired. Please log in again." });
-//     }
-
-//     // ✅ Password match check
-//     if (!new_password || !confirm_password) {
-//       errors.password = "Both password fields are required.";
-//     } else if (new_password !== confirm_password) {
-//       errors.password = "Passwords do not match.";
-//     }
-
-//     if (Object.keys(errors).length > 0) {
-//       return res.json({ success: false, errors });
-//     }
-
-//     // ✅ Find user in single User schema
-//     const user = await User.findOne({ email });
-//     if (!user) {
-//       return res.json({ success: false, message: "User not found." });
-//     }
-
-//     // ✅ Hash and save new password
-//     const hashedPassword = await bcrypt.hash(new_password, 10);
-//     user.password = hashedPassword;
-//     await user.save();
-
-//     // Optional: Flash success message
-//     req.session.success = `Password updated successfully.`;
-
-//     // Redirect to login (can be role-based if needed)
-//     return res.redirect("/admin-login"); // or "/login" for common login
-
-//   } catch (err) {
-//     console.error(err);
-//     return res.json({ success: false, message: "Server error." });
-//   }
-// };
 
 exports.change_password = async (req, res) => {
   const { new_password, confirm_password } = req.body;
@@ -821,7 +655,7 @@ exports.addBranch = async (req, res) => {
 exports.branchList = async (req, res) => {
   try {
     let page = parseInt(req.query.page) || 1;
-    let limit = 5; // adjust as needed
+    let limit = 5;
     let skip = (page - 1) * limit;
 
     let search = req.query.search || "";
@@ -836,22 +670,28 @@ exports.branchList = async (req, res) => {
 
     const branches = await Branch.aggregate([
       { $match: match },
+
+      // ✅ Join with TrainerDetails
       {
         $lookup: {
-          from: "trainers",
+          from: "trainerdetails", // correct collection
           localField: "_id",
           foreignField: "branch",
           as: "trainersList"
         }
       },
+
+      // ✅ Join with ClientDetails
       {
         $lookup: {
-          from: "clients",
+          from: "clientdetails", // correct collection
           localField: "_id",
-          foreignField: "branchId",
+          foreignField: "branch", // correct field name
           as: "clientsList"
         }
       },
+
+      // ✅ Project with counts
       {
         $project: {
           name: 1,
@@ -859,9 +699,11 @@ exports.branchList = async (req, res) => {
           clientsCount: { $size: "$clientsList" }
         }
       },
+
       { $skip: skip },
       { $limit: limit }
     ]);
+
     res.status(200).json({
       branches,
       totalPages: Math.ceil(totalBranches / limit),
@@ -1024,12 +866,13 @@ exports.trainersList = async (req, res) => {
       match.branch = new mongoose.Types.ObjectId(branch);
     }
 
+    // total trainers count
     const totalTrainers = await TrainerDetails.countDocuments(match);
 
     const trainers = await TrainerDetails.aggregate([
       { $match: match },
 
-      // Join with User collection
+      // Join with User collection (trainer info)
       {
         $lookup: {
           from: "users", // User collection
@@ -1043,16 +886,16 @@ exports.trainersList = async (req, res) => {
       // Search filter
       ...(search
         ? [
-          {
-            $match: {
-              $or: [
-                { "trainerInfo.name": { $regex: search, $options: "i" } },
-                { "trainerInfo.email": { $regex: search, $options: "i" } },
-                { "trainerInfo.phone": { $regex: search, $options: "i" } }
-              ]
+            {
+              $match: {
+                $or: [
+                  { "trainerInfo.name": { $regex: search, $options: "i" } },
+                  { "trainerInfo.email": { $regex: search, $options: "i" } },
+                  { "trainerInfo.phone": { $regex: search, $options: "i" } }
+                ]
+              }
             }
-          }
-        ]
+          ]
         : []),
 
       // Join with Branch collection
@@ -1066,16 +909,16 @@ exports.trainersList = async (req, res) => {
       },
       { $unwind: { path: "$branchInfo", preserveNullAndEmptyArrays: true } },
 
-      // Join with Client collection
+      // Join with ClientDetails collection
       {
         $lookup: {
-          from: "clients",
+          from: "clientdetails", // ✅ correct collection name
           let: { trainerId: "$trainerId" },
           pipeline: [
             {
               $match: {
                 $expr: { $eq: ["$trainerId", "$$trainerId"] },
-                status: "Active"
+                isActive: true // ✅ correct field from schema
               }
             }
           ],
@@ -1090,10 +933,10 @@ exports.trainersList = async (req, res) => {
         }
       },
 
-      // ✅ Select final fields (including trainerId)
+      // ✅ Select final fields
       {
         $project: {
-          trainerId: "$trainerInfo._id", // <-- added
+          trainerId: "$trainerInfo._id",
           name: "$trainerInfo.name",
           email: "$trainerInfo.email",
           phone: "$trainerInfo.phone",
@@ -1424,19 +1267,18 @@ exports.clientsList = async (req, res) => {
       },
       { $unwind: "$clientInfo" },
 
-      // 🔹 Apply search on clientInfo (name/email/phone)
+      // 🔹 Apply search on clientInfo (name/phone only, no email)
       ...(search
         ? [
-          {
-            $match: {
-              $or: [
-                { "clientInfo.name": { $regex: search, $options: "i" } },
-                { "clientInfo.email": { $regex: search, $options: "i" } },
-                { "clientInfo.phone": { $regex: search, $options: "i" } },
-              ],
+            {
+              $match: {
+                $or: [
+                  { "clientInfo.name": { $regex: search, $options: "i" } },
+                  { "clientInfo.phone": { $regex: search, $options: "i" } },
+                ],
+              },
             },
-          },
-        ]
+          ]
         : []),
 
       // 🔹 Join branch info
@@ -1450,7 +1292,7 @@ exports.clientsList = async (req, res) => {
       },
       { $unwind: { path: "$branchInfo", preserveNullAndEmptyArrays: true } },
 
-      // 🔹 Join trainer info (User with userType = trainer)
+      // 🔹 Join trainer info
       {
         $lookup: {
           from: "users",
@@ -1461,16 +1303,28 @@ exports.clientsList = async (req, res) => {
       },
       { $unwind: { path: "$trainerInfo", preserveNullAndEmptyArrays: true } },
 
+      // 🔹 Join membership info (only need expiredDate, status)
+      {
+        $lookup: {
+          from: "memberships",
+          localField: "clientId",
+          foreignField: "clientId",
+          as: "membershipInfo",
+        },
+      },
+      { $unwind: { path: "$membershipInfo", preserveNullAndEmptyArrays: true } },
+
       // 🔹 Project only needed fields
       {
         $project: {
           _id: 1,
           clientId: "$clientInfo._id",
           name: "$clientInfo.name",
-          email: "$clientInfo.email",
           phone: "$clientInfo.phone",
           branch: "$branchInfo.name",
           trainer: "$trainerInfo.name",
+          expiredDate: "$membershipInfo.expiredDate",
+          status: "$membershipInfo.status",
         },
       },
 
@@ -1495,22 +1349,21 @@ exports.clientsList = async (req, res) => {
       { $unwind: "$clientInfo" },
       ...(search
         ? [
-          {
-            $match: {
-              $or: [
-                { "clientInfo.name": { $regex: search, $options: "i" } },
-                { "clientInfo.email": { $regex: search, $options: "i" } },
-                { "clientInfo.phone": { $regex: search, $options: "i" } },
-              ],
+            {
+              $match: {
+                $or: [
+                  { "clientInfo.name": { $regex: search, $options: "i" } },
+                  { "clientInfo.phone": { $regex: search, $options: "i" } },
+                ],
+              },
             },
-          },
-        ]
+          ]
         : []),
       { $count: "count" },
     ]);
 
     const count = totalClients.length > 0 ? totalClients[0].count : 0;
-
+    
     res.status(200).json({
       clients,
       totalPages: Math.ceil(count / limit),
@@ -1521,6 +1374,7 @@ exports.clientsList = async (req, res) => {
     res.status(500).json({ message: "Server Error" });
   }
 };
+
 
 exports.getClientsDetails = async (req, res) => {
   try {
@@ -1733,7 +1587,7 @@ exports.updateMembership = async (req, res) => {
 exports.deleteClients = async (req, res) => {
   try {
     const clientId = req.params.id;
-
+    
     if (!mongoose.Types.ObjectId.isValid(clientId)) {
       return res.status(400).json({ success: false, message: "Invalid client ID" });
     }
@@ -1792,6 +1646,84 @@ exports.addPackages = async (req, res) => {
     });
   } catch (error) {
     console.error("Error adding package:", error);
+    res.status(500).json({ success: false, message: "Server error." });
+  }
+};
+
+exports.getPackageDetails = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const packageData = await Package.findById(id);
+
+    if (!packageData) {
+      return res.status(404).json({
+        success: false,
+        message: "Package not found."
+      });
+    }
+
+    res.json({
+      success: true,
+      package: packageData
+    });
+  } catch (error) {
+    console.error("Error fetching package details:", error);
+    res.status(500).json({ success: false, message: "Server error." });
+  }
+};
+
+
+exports.updatePackage = async (req, res) => {
+  try {
+    const { id } = req.params; // package id from URL
+    const { packageType, durationInDays, price } = req.body;
+
+    // Validate
+    if (!packageType || !price || !durationInDays) {
+      return res.status(400).json({
+        success: false,
+        message: "Package type, duration, and price are required."
+      });
+    }
+
+    const updatedPackage = await Package.findByIdAndUpdate(
+      id,
+      { packageType, durationInDays, price },
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedPackage) {
+      return res.status(404).json({ success: false, message: "Package not found." });
+    }
+
+    res.json({
+      success: true,
+      message: "Package updated successfully.",
+      package: updatedPackage
+    });
+  } catch (error) {
+    console.error("Error updating package:", error);
+    res.status(500).json({ success: false, message: "Server error." });
+  }
+};
+
+exports.deletePackage = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const deletedPackage = await Package.findByIdAndDelete(id);
+
+    if (!deletedPackage) {
+      return res.status(404).json({ success: false, message: "Package not found." });
+    }
+
+    res.json({
+      success: true,
+      message: "Package deleted successfully."
+    });
+  } catch (error) {
+    console.error("Error deleting package:", error);
     res.status(500).json({ success: false, message: "Server error." });
   }
 };
@@ -1919,8 +1851,6 @@ exports.getClientDetails = async (req, res) => {
         }
       }
     ]);
-
-    console.log(clientData[0]);
     
     res.json({ success: true, data: clientData[0] || {} });
   } catch (err) {
@@ -1930,7 +1860,6 @@ exports.getClientDetails = async (req, res) => {
 };
 
 
-// exports.getClientDetails = async (req, res) => {
 //   try {
 //     const clientId = new mongoose.Types.ObjectId(req.params.id);
 

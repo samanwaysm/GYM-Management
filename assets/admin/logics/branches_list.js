@@ -17,13 +17,11 @@
                                 <td>${branch.trainersCount}</td>
                                 <td>${branch.clientsCount}</td>
                                 <td>
-                                    <a href="/admin-edit-branch/${branch._id}" class="btn btn-outline-secondary btn-icon-text"> 
-                                        Edit <i class="mdi mdi-file-check btn-icon-append"></i>
+                                    <a href="/admin-edit-branch/${branch._id}" class="btn btn-outline-secondary btn-icon-text" title="Edit"> 
+                                        <i class="mdi mdi-file-check btn-icon-append"></i>
                                     </a>
-                                </td>
-                                <td>
                                     <button type="button" class="btn btn-outline-danger btn-icon-text" 
-                                            onclick="confirmDelete('${branch._id}')">Delete
+                                            onclick="confirmDelete('${branch._id}')" title="Delete">
                                         <i class="mdi mdi-delete btn-icon-prepend"></i> 
                                     </button>
                                 </td>

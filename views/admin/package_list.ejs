@@ -24,9 +24,9 @@
                                     <thead>
                                         <tr>
                                             <th>Package Name</th>
+                                            <th>Days</th>
                                             <th>Price</th>
-                                            <th>Edit</th>
-                                            <th>Delete</th>
+                                            <th>Action</th>
                                         </tr>
                                     </thead>
 
@@ -41,10 +41,10 @@
                 <div class="modal fade" id="addPackageModal" tabindex="-1" role="dialog"
                     aria-labelledby="addPackageModalLabel" aria-hidden="true">
                     <div class="modal-dialog" role="document">
-                        <div class="modal-content">
+                        <div class="modal-content" style="border: white 2px solid;">
                             <div class="modal-header">
                                 <h5 class="modal-title">Add Package</h5>
-                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <button type="button" class="close text-light" data-dismiss="modal" aria-label="Close">
                                     <span>&times;</span>
                                 </button>
                             </div>
@@ -65,12 +65,43 @@
                                         <input type="number" class="form-control text-white" id="price" name="price" required
                                             min="0">
                                     </div>
-                                    <button type="submit" class="btn btn-primary">Save Package</button>
+                                    <button type="submit" class="btn btn-success float-right">Save Package</button>
                                 </form>
                             </div>
                         </div>
                     </div>
                 </div>
+
+                <!-- Edit Package Modal -->
+                <div class="modal fade" id="editPackageModal" tabindex="-1" role="dialog" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content" style="border: white 2px solid;">
+                        <div class="modal-header">
+                            <h5>Edit Package</h5>
+                            <button type="button" class="close text-light" data-dismiss="modal"><span>&times;</span></button>
+                        </div>
+                        <div class="modal-body">
+                            <form id="editPackageForm">
+                            <input type="hidden" id="editPackageId">
+                            <div class="form-group">
+                                <label>Package Type</label>
+                                <input type="text" class="form-control text-white" id="editPackageType" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Duration in Days</label>
+                                <input type="number" class="form-control text-white" id="editDurationInDays" required min="0">
+                            </div>
+                            <div class="form-group">
+                                <label>Price</label>
+                                <input type="number" class="form-control text-white" id="editPrice" required min="0">
+                            </div>
+                            <button type="submit" class="btn btn-success float-right">Update</button>
+                            </form>
+                        </div>
+                        </div>
+                    </div>
+                </div>
+
 
                 <!-- content-wrapper ends -->
                 
