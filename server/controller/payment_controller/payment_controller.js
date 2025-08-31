@@ -17,7 +17,7 @@ const razorpay = new Razorpay({
 exports.createOrder = async (req, res) => {
   try {
     const { clientId, packageId } = req.query;
-    console.log(req.query);
+    console.log(clientId, packageId);
     
     const membership = await Membership.findOne({ clientId, package: packageId }).populate("clientId");
     if (!membership) return res.status(404).json({ success: false, error: "Membership not found" });
