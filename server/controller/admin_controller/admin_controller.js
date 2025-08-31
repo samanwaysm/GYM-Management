@@ -1674,7 +1674,6 @@ exports.updateMembership = async (req, res) => {
   try {
     const clientId = req.params.id;
     const { packageId, paymentMethod, confirmedPayment } = req.body;
-    console.log('----------------',packageId, paymentMethod, confirmedPayment, clientId,'-------------');
     
     // check package
     const packageExists = await Package.findById(packageId);
@@ -1724,7 +1723,7 @@ exports.updateMembership = async (req, res) => {
 
       return res.json({
         success: true,
-        redirectUrl: `/payment/create-order?clientId=${clientId}&packageId=${packageExists._id}`
+        redirectUrl: `/payment/create-order?clientId=${clientId}&packageId=${packageId}`
       });
     }
 
