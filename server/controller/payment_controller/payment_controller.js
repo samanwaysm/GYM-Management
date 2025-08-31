@@ -19,7 +19,7 @@ exports.createOrder = async (req, res) => {
     const { clientId, packageId } = req.query;
     console.log(clientId, packageId);
     
-    const membership = await Membership.findOne({ clientId, package: packageId }).populate("clientId");
+    const membership = await Membership.findOne({ clientId }).populate("clientId");
     if (!membership) return res.status(404).json({ success: false, error: "Membership not found" });
     
     // Create Payment Link
