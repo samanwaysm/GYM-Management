@@ -1672,6 +1672,7 @@ exports.updateMembership = async (req, res) => {
   try {
     const clientId = req.params.id;
     const { packageId, paymentMethod, confirmedPayment } = req.body;
+    console.log(req.body, clientId);
     
     let paidDate = new Date();
     let expiredDate = null;
@@ -1689,10 +1690,12 @@ exports.updateMembership = async (req, res) => {
     // Find existing membership with client details
     let membership = await Membership.findOne({ clientId }).populate("clientId");
 
+    console.log(paymentMethod?.toLowerCase());
+    
     // If payment method is UPI → redirect to payment (like addClients)
     if (paymentMethod?.toLowerCase() === "upi") {
       return res.redirect(
-        `/payment/create-order?clientId=${clientId}&packageId=${packageExists._id}`
+        `/payment/create-order?clientId=${membership.clientId}&packageId=${packageExists._id}`
       );
     }
 
