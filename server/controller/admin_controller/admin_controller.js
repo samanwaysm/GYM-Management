@@ -1337,17 +1337,14 @@ exports.addClients = async (req, res) => {
     let paymentStatus = "Pending";
     let paidDate = null;
     let expiredDate = null;
+    membershipStatus = "Pending";
     if (isConfirmed) {
       paymentStatus = "Completed";
       paidDate = new Date();
       expiredDate = new Date(paidDate);
       expiredDate.setDate(paidDate.getDate() + packageExists.durationInDays);
+      membershipStatus = "Active";
     }
-    // Decide status
-      let membershipStatus = "Active"; // default
-      if (paymentMethod.toLowerCase() === "upi") {
-        membershipStatus = "Pending"; // don't activate until payment confirmed
-      }
 
     // Create Membership
     const membership = await Membership.create({
