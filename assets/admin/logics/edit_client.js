@@ -177,7 +177,7 @@ $(document).ready(function () {
                         window.location.href = "/admin-clients-list";
                     }
                 } else {
-                    alert(res.message || "Failed");
+                    window.location.href = "/admin-clients-list";
                 }
             }
         });
