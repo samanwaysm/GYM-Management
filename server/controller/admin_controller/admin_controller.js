@@ -1669,12 +1669,13 @@ exports.updateClientDetails = async (req, res) => {
   }
 };
 
+
 // ✅ Update membership route
 exports.updateMembership = async (req, res) => {
   try {
     const clientId = req.params.id;
     const { packageId, paymentMethod, confirmedPayment } = req.body;
-    
+
     // check package
     const packageExists = await Package.findById(packageId);
     if (!packageExists) {
@@ -1682,16 +1683,12 @@ exports.updateMembership = async (req, res) => {
     }
 
     // check membership
-    let membership = await Membership.findOne({ clientId });
+    let membership = await Membership.findOne({ clientId }).populate("clientId");
     if (!membership) {
       return res.status(404).json({ success: false, message: "Membership not found" });
     }
 
-    console.log("mambership",membership);
-    console.log("package",packageExists);
-    console.log('pak', packageId);
-
-    // update membership basic details
+    // update membership base details
     membership.package = packageId;
     membership.price = packageExists.price;
     membership.paymentMethod = paymentMethod;
@@ -1699,19 +1696,36 @@ exports.updateMembership = async (req, res) => {
 
     // ✅ CASH payment handling
     if (paymentMethod.toLowerCase() === "cash" && confirmedPayment) {
+      const paidDate = new Date();
+      const expiredDate = new Date(paidDate);
+      expiredDate.setDate(paidDate.getDate() + packageExists.durationInDays);
+
       membership.paymentStatus = "Completed";
       membership.confirmedPayment = true;
-      membership.paidDate = new Date();
-      membership.expiredDate = new Date(
-        new Date().setDate(new Date().getDate() + packageExists.durationInDays)
-      );
+      membership.paidDate = paidDate;
+      membership.expiredDate = expiredDate;
       membership.status = "Active";
 
       await membership.save();
+
+      // ✅ Send WhatsApp confirmation if payment confirmed
+      try {
+        const phone = membership.clientId.phone;
+        const name = membership.clientId.name;
+
+        await clientTwilio.messages.create({
+          from: "whatsapp:+14155238886", // Twilio sandbox number
+          to: `whatsapp:+91${phone}`,
+          body: `✅ Payment Successful!\n\nHi ${name}, we’ve received your CASH payment for the package: ${packageExists.packageType}.\n\nYour membership is active until: ${expiredDate.toDateString()}.\n\nStay consistent and crush your fitness journey! 🔥`
+        });
+      } catch (whatsErr) {
+        console.error("❌ WhatsApp send error:", whatsErr);
+      }
+
       return res.json({ success: true, message: "Cash payment confirmed", membership });
     }
 
-    // ✅ UPI payment handling → redirect to order creation
+    // ✅ UPI payment handling → redirect to Razorpay order
     if (paymentMethod.toLowerCase() === "upi") {
       membership.paymentStatus = "Pending";
       membership.confirmedPayment = false;
@@ -1732,10 +1746,90 @@ exports.updateMembership = async (req, res) => {
     return res.json({ success: true, message: "Membership updated", membership });
 
   } catch (error) {
-    console.error("Error updating membership:", error);
+    console.error("❌ Error updating membership:", error);
     return res.status(500).json({ success: false, message: "Server error" });
   }
 };
+
+
+// ✅ Update membership route
+// exports.updateMembership = async (req, res) => {
+//   try {
+//     const clientId = req.params.id;
+//     const { packageId, paymentMethod, confirmedPayment } = req.body;
+    
+//     // check package
+//     const packageExists = await Package.findById(packageId);
+//     if (!packageExists) {
+//       return res.status(404).json({ success: false, message: "Package not found" });
+//     }
+
+//     // check membership
+//     let membership = await Membership.findOne({ clientId });
+//     if (!membership) {
+//       return res.status(404).json({ success: false, message: "Membership not found" });
+//     }
+
+//     console.log("mambership",membership);
+//     console.log("package",packageExists);
+//     console.log('pak', packageId);
+
+//     // update membership basic details
+//     membership.package = packageId;
+//     membership.price = packageExists.price;
+//     membership.paymentMethod = paymentMethod;
+//     membership.status = "Pending";
+
+//     // ✅ CASH payment handling
+//     if (paymentMethod.toLowerCase() === "cash" && confirmedPayment) {
+//       membership.paymentStatus = "Completed";
+//       membership.confirmedPayment = true;
+//       membership.paidDate = new Date();
+//       membership.expiredDate = new Date(
+//         new Date().setDate(new Date().getDate() + packageExists.durationInDays)
+//       );
+//       membership.status = "Active";
+
+//       await membership.save();
+//       // ✅ Send WhatsApp confirmation if payment confirmed
+//         if (membership.confirmedPayment) {
+//           const phone = membership.clientId.phone;
+//           const name = membership.clientId.name;
+
+//           await clientTwilio.messages.create({
+//             from: "whatsapp:+14155238886", // Twilio sandbox number
+//             to: `whatsapp:+91${phone}`,
+//             body: `✅ Payment Successful!\n\nHi ${name}, we’ve received your CASH payment for the package: ${packageExists.packageType}.\n\nYour membership is active until: ${expiredDate.toDateString()}.\n\nStay consistent and crush your fitness journey! 🔥`
+//           });
+//         }
+//       return res.json({ success: true, message: "Cash payment confirmed", membership });
+//     }
+
+//     // ✅ UPI payment handling → redirect to order creation
+//     if (paymentMethod.toLowerCase() === "upi") {
+//       membership.paymentStatus = "Pending";
+//       membership.confirmedPayment = false;
+//       membership.paidDate = null;
+//       membership.expiredDate = null;
+//       membership.status = "Pending";
+
+//       await membership.save();
+
+//       return res.json({
+//         success: true,
+//         redirectUrl: `/payment/create-order?clientId=${clientId}&packageId=${packageId}`
+//       });
+//     }
+
+//     // fallback
+//     await membership.save();
+//     return res.json({ success: true, message: "Membership updated", membership });
+
+//   } catch (error) {
+//     console.error("Error updating membership:", error);
+//     return res.status(500).json({ success: false, message: "Server error" });
+//   }
+// };
 
 
 // exports.updateMembership = async (req, res) => {
