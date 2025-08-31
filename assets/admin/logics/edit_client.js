@@ -121,11 +121,11 @@ $(document).ready(function () {
                     }
 
                     // Preselect Package & Payment
-                    if (client.membership) {
-                        $("#package").val(client.packageInfo?._id || "");
-                        $("#paymentMethod").val(client.membership.paymentMethod || "");
-                        originalPackage = client.membership.package; // store original
-                    }
+                    // if (client.membership) {
+                    //     $("#package").val(client.packageInfo?._id || "");
+                    //     $("#paymentMethod").val(client.membership.paymentMethod || "");
+                    //     originalPackage = client.membership.package; // store original
+                    // }
 
                     // Show membership form ONLY if status is 'Expired'
                     if (client.membership && client.membership.status === "Expired") {
