@@ -1672,9 +1672,10 @@ exports.updateClientDetails = async (req, res) => {
 // ✅ Update membership route
 exports.updateMembership = async (req, res) => {
   try {
-    const { clientId } = req.params;
+    const { clientId } = req.params.id;
     const { packageId, paymentMethod, confirmedPayment } = req.body;
-
+    console.log('----------------',packageId, paymentMethod, confirmedPayment, clientId,'-------------');
+    
     // check package
     const packageExists = await Package.findById(packageId);
     if (!packageExists) {
@@ -1686,6 +1687,10 @@ exports.updateMembership = async (req, res) => {
     if (!membership) {
       return res.status(404).json({ success: false, message: "Membership not found" });
     }
+
+    console.log("mambership",membership);
+    console.log("package",packageExists);
+    console.log('pak', packageId);
 
     // update membership basic details
     membership.package = packageId;
