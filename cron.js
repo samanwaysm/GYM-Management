@@ -72,7 +72,6 @@ cron.schedule("*/1 * * * *", async () => {
           { _id: membership._id },
           {
             $set: {
-              package:null,
               paymentMethod:null,
               confirmedPayment: false,
               paymentStatus: "Pending",
