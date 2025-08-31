@@ -1673,7 +1673,7 @@ exports.updateClientDetails = async (req, res) => {
 exports.updateMembership = async (req, res) => {
   try {
     const { clientId } = req.params;
-    const { package: packageId, paymentMethod, confirmedPayment } = req.body;
+    const { packageId, paymentMethod, confirmedPayment } = req.body;
 
     // check package
     const packageExists = await Package.findById(packageId);
