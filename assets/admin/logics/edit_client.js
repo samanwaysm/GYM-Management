@@ -128,7 +128,7 @@ $(document).ready(function () {
                     // }
 
                     // Show membership form ONLY if status is 'Expired'
-                    if (client.membership && client.membership.status === "Expired") {
+                    if (client.membership && client.membership.status === "Expired" || client.membership.status === "Pending") {
                         $("#membershipForm").show();
                     } else {
                         $("#membershipForm").hide();
