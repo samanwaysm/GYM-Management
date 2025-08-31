@@ -151,7 +151,7 @@ $(document).ready(function () {
         e.preventDefault();
 
         const data = {
-            package: $("#package").val(),
+            packageId: $("#package").val(),
             paymentMethod: $("#paymentMethod").val(),
             confirmedPayment: false // default
         };
