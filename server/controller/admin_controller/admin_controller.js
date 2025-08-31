@@ -1671,8 +1671,7 @@ exports.updateClientDetails = async (req, res) => {
 exports.updateMembership = async (req, res) => {
   try {
     const clientId = req.params.id;
-    const { package: packageId, paymentMethod, confirmedPayment } = req.body;
-    console.log(req.body);
+    const { packageId: package, paymentMethod, confirmedPayment } = req.body;
     
     let paidDate = new Date();
     let expiredDate = null;
