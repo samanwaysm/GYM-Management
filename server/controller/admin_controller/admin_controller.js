@@ -1672,7 +1672,7 @@ exports.updateClientDetails = async (req, res) => {
 // ✅ Update membership route
 exports.updateMembership = async (req, res) => {
   try {
-    const { clientId } = req.params.id;
+    const clientId = req.params.id;
     const { packageId, paymentMethod, confirmedPayment } = req.body;
     console.log('----------------',packageId, paymentMethod, confirmedPayment, clientId,'-------------');
     
