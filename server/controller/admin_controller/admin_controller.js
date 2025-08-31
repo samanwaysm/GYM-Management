@@ -1667,7 +1667,7 @@ exports.updateClientDetails = async (req, res) => {
   }
 };
 
-// 🔹 Update client membership
+
 exports.updateMembership = async (req, res) => {
   try {
     const clientId = req.params.id;
@@ -1675,59 +1675,127 @@ exports.updateMembership = async (req, res) => {
 
     let paidDate = new Date();
     let expiredDate = null;
-    let packageData = null;
 
+    // Fetch package details to calculate expiry date
+    let packageExists = null;
     if (packageId) {
-      packageData = await Package.findById(packageId);
-      if (packageData) {
+      packageExists = await Package.findById(packageId);
+      if (packageExists) {
         expiredDate = new Date(paidDate);
-        expiredDate.setDate(paidDate.getDate() + packageData.durationInDays);
+        expiredDate.setDate(paidDate.getDate() + packageExists.durationInDays);
       }
     }
 
-    let membership = await Membership.findOne({ clientId });
+    // Find existing membership with client details
+    let membership = await Membership.findOne({ clientId }).populate("clientId");
 
-    if (membership) {
-      if (packageId) {
-        Object.assign(membership, {
-          package: packageId,
-          paidDate,
-          expiredDate,
-          paymentStatus: "Completed",
-          status: "Active"
-        });
-      }
-      if (paymentMethod) membership.paymentMethod = paymentMethod;
-      if (confirmedPayment) membership.confirmedPayment = true;
-      await membership.save();
-    } else if (packageId) {
-      membership = await Membership.create({
-        clientId,
-        package: packageId,
-        paymentMethod,
-        paymentStatus: "Completed",
-        confirmedPayment: confirmedPayment || false,
-        paidDate,
-        expiredDate,
-        status: "Active"
-      });
-    }
-
-    // If UPI → redirect to payment
+    // If payment method is UPI → redirect to payment (like addClients)
     if (paymentMethod?.toLowerCase() === "upi") {
-      return res.json({
-        success: true,
-        redirect: `/payment/create-order?clientId=${clientId}&packageId=${packageId}`
-      });
+      return res.redirect(
+        `/payment/create-order?clientId=${clientId}&packageId=${packageExists._id}`
+      );
     }
 
-    return res.json({ success: true, redirect: "/admin-clients-list" });
+    // If payment method is Cash → update membership only (no creation)
+    if (paymentMethod?.toLowerCase() === "cash") {
+      if (membership) {
+        membership.package = packageId;
+        membership.paymentMethod = "Cash";
+        membership.confirmedPayment = confirmedPayment === true || confirmedPayment === "true";
+        membership.paymentStatus = membership.confirmedPayment ? "Completed" : "Pending";
+        membership.paidDate = paidDate;
+        membership.expiredDate = expiredDate;
+        membership.status = "Active";
+
+        await membership.save();
+
+        // ✅ Send WhatsApp confirmation if payment confirmed
+        if (membership.confirmedPayment) {
+          const phone = membership.clientId.phone;
+          const name = membership.clientId.name;
+
+          await clientTwilio.messages.create({
+            from: "whatsapp:+14155238886", // Twilio sandbox number
+            to: `whatsapp:+91${phone}`,
+            body: `✅ Payment Successful!\n\nHi ${name}, we’ve received your CASH payment for the package: ${packageExists.packageType}.\n\nYour membership is active until: ${expiredDate.toDateString()}.\n\nStay consistent and crush your fitness journey! 🔥`
+          });
+        }
+
+        return res.redirect("/admin-clients-list");
+      } else {
+        return res.status(404).json({ success: false, message: "No existing membership found for this client" });
+      }
+    }
+
+    return res.json({ success: false, message: "Invalid payment method" });
 
   } catch (err) {
     console.error("❌ Error updating membership:", err);
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
+
+// 🔹 Update client membership
+// exports.updateMembership = async (req, res) => {
+//   try {
+//     const clientId = req.params.id;
+//     const { package: packageId, paymentMethod, confirmedPayment } = req.body;
+
+//     let paidDate = new Date();
+//     let expiredDate = null;
+//     let packageData = null;
+
+//     if (packageId) {
+//       packageData = await Package.findById(packageId);
+//       if (packageData) {
+//         expiredDate = new Date(paidDate);
+//         expiredDate.setDate(paidDate.getDate() + packageData.durationInDays);
+//       }
+//     }
+
+//     let membership = await Membership.findOne({ clientId });
+
+//     if (membership) {
+//       if (packageId) {
+//         Object.assign(membership, {
+//           package: packageId,
+//           paidDate,
+//           expiredDate,
+//           paymentStatus: "Completed",
+//           status: "Active"
+//         });
+//       }
+//       if (paymentMethod) membership.paymentMethod = paymentMethod;
+//       if (confirmedPayment) membership.confirmedPayment = true;
+//       await membership.save();
+//     } else if (packageId) {
+//       membership = await Membership.create({
+//         clientId,
+//         package: packageId,
+//         paymentMethod,
+//         paymentStatus: "Completed",
+//         confirmedPayment: confirmedPayment || false,
+//         paidDate,
+//         expiredDate,
+//         status: "Active"
+//       });
+//     }
+
+//     // If UPI → redirect to payment
+//     if (paymentMethod?.toLowerCase() === "upi") {
+//       return res.json({
+//         success: true,
+//         redirect: `/payment/create-order?clientId=${clientId}&packageId=${packageId}`
+//       });
+//     }
+
+//     return res.json({ success: true, redirect: "/admin-clients-list" });
+
+//   } catch (err) {
+//     console.error("❌ Error updating membership:", err);
+//     res.status(500).json({ success: false, message: "Server error" });
+//   }
+// };
 
 // exports.updateMembership = async (req, res) => {
 //   try {

@@ -51,10 +51,7 @@ exports.createOrder = async (req, res) => {
       razorpayOrderId: paymentLink.id, // store PaymentLink id
       status: "Pending"
     });
-    await newPayment.save();
-
-    console.log(paymentLink,membership.clientId.phone);
-    
+    await newPayment.save();    
 
     // Send WhatsApp link via Twilio
     await clientTwilio.messages.create({
