@@ -76,6 +76,8 @@ route.post("/admin/verify-otp", controller.verifyAdminOTP);
 route.get("/admin/admin-logout", controller.adminlogout);
 route.get("/admin/admin-profile", controller.getAdminProfile);
 
+route.get("/admin/dashboard-counts", controller.getDashboardCounts );
+
 // Superadmin APIs
 route.post("/superadmin/add-admin", controller.addAdmin);
 route.get("/superadmin/get-admin/:id", controller.getAdminDetails);

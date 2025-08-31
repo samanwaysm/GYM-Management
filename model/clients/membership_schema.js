@@ -4,7 +4,7 @@ const schema = new mongoose.Schema(
   {
     clientId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "client", // Reference to Client
+      ref: "User", // Reference to Client
       required: true,
     },
     package: {

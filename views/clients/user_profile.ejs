@@ -170,7 +170,7 @@
                     <nav class="mainmenu mobile-menu">
                         <ul>
                             <li class="active"><a href="/home">Home</a></li>
-                            <li><a href="/renew-membership">Membership</a></li>
+                            <li><a href="/user-profile">Profile</a></li>
 
                             <!-- Mobile-only Login (shows in hamburger menu) -->
                             <li class="login-mobile">
@@ -190,10 +190,45 @@
         </div>
     </header>
 
-    <div class="container py-5 mt-5">
+    <!-- <div class="container py-5 mt-5">
+
+        <div id="profile-card" class="profile-card d-flex align-items-center mt-5" style="display:none;">
+            <div>
+                <img id="user-photo" src="/client/img/noProfile/profile.png"
+                    alt="User Photo" class="profile-img">
+            </div>
+            <div class="ms-4">
+                <h4 class="mb-1" id="user-name"></h4>
+                <p class="mb-1"><i class="fa fa-envelope me-2"></i> <span id="user-email"></span></p>
+                <p class="mb-1"><i class="fa fa-phone me-2"></i> <span id="user-phone"></span></p>
+                <p class="mb-1"><i class="fa fa-map-marker me-2"></i> Branch: <span id="user-branch"></span></p>
+                <p class="mb-1"><i class="fa fa-user me-2"></i> Trainer: <span id="user-trainer"></span></p>
+                <p class="mb-0"><i class="fa fa-calendar me-2"></i> Renewal Date:
+                    <span id="renewal-date"></span>
+                </p>
+            </div>
+        </div>
+
+        <div id="renew-card" class="renew-card d-none">
+            <h5 class="mb-3">Your membership has expired. Please renew:</h5>
+            <div class="row g-3">
+                <div class="col-md-8">
+                    <select id="packageSelect" class="form-select">
+                        <option selected>Select Membership Plan</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <button id="payOnlineBtn" class="btn btn-danger w-100">Pay Online</button>
+                </div>
+            </div>
+        </div>
+
+    </div> -->
+
+    <div class="membership-wrapper container py-5 mt-5">
 
         <!-- Profile Card -->
-        <div id="profile-card" class="profile-card d-flex align-items-center" style="display:none;">
+        <div id="profile-card" class="membership-card profile-card d-flex align-items-center mt-5" style="display:none;">
             <div>
                 <img id="user-photo" src="/client/img/noProfile/profile.png"
                     alt="User Photo" class="profile-img">
@@ -211,7 +246,7 @@
         </div>
 
         <!-- Membership Renewal -->
-        <div id="renew-card" class="renew-card d-none">
+        <div id="renew-card" class="membership-card renew-card d-none">
             <h5 class="mb-3">Your membership has expired. Please renew:</h5>
             <div class="row g-3">
                 <div class="col-md-8">

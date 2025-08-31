@@ -2,6 +2,7 @@ const bcrypt = require("bcrypt");
 const mongoose = require("mongoose");
 const nodemailer = require('nodemailer');
 const Mailgen = require('mailgen');
+const twilio = require("twilio");
 
 const User = require("../../../model/user/user_schema"); // import your new user schema
 const OtpDb = require("../../../model/admin/otp_schema")
@@ -13,6 +14,7 @@ const Membership = require("../../../model/clients/membership_schema")
 
 const { uploadFileToS3 } = require("../../services/s3_service/s3_service");
 
+const clientTwilio = new twilio(process.env.TWILIO_SID, process.env.TWILIO_AUTH_TOKEN);
 
 exports.adminLogin = async (req, res) => {
   const superAdmin = {
@@ -313,6 +315,25 @@ exports.change_password = async (req, res) => {
   }
 };
 
+// Dashboard Counts Controller
+exports.getDashboardCounts = async (req, res) => {
+  try {
+    // Run all counts in parallel for better performance
+    const [branches, trainers, clients] = await Promise.all([
+      Branch.countDocuments({ isActive: true }), // only active branches
+      User.countDocuments({ userType: "trainer", isActive: true }),
+      User.countDocuments({ userType: "client", isActive: true })
+    ]);
+
+    res.json({
+      success: true,
+      data: { branches, trainers, clients }
+    });
+  } catch (error) {
+    console.error("Error fetching dashboard counts:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
 
 exports.addAdmin = async (req, res) => {
   const { name, email, phone } = req.body;
@@ -1105,18 +1126,147 @@ exports.deleteTrainers = async (req, res) => {
   }
 };
 
+// exports.addClients = async (req, res) => {
+//   try {
+//     const {
+//       name, email, phone, altphone, gender, age,
+//       branch, trainer, height, weight,
+//       package: packageId, paymentMethod,
+//       confirmedPayment
+//     } = req.body;
+
+//     const errors = {};
+
+//     // 🔹 Basic validation
+//     if (!name) errors.name = "Name is required.";
+//     if (!email) errors.email = "Email is required.";
+//     if (!phone) errors.phone = "Phone number is required.";
+//     if (!age) errors.age = "Age is required.";
+//     if (!gender) errors.gender = "Gender is required.";
+//     if (!branch) errors.branch = "Branch is required.";
+//     if (!trainer) errors.trainer = "Trainer is required.";
+//     if (!packageId) errors.package = "Package is required.";
+//     if (!paymentMethod) errors.paymentMethod = "Payment Method is required.";
+
+//     if (Object.keys(errors).length > 0) {
+//       req.session.errors = errors;
+//       return res.redirect("/admin-add-clients");
+//     }
+
+//     // 🔹 Ensure no duplicate email
+//     const existingUser = await User.findOne({ email, userType: "client" });
+//     if (existingUser) {
+//       req.session.errors = { email: "Email is already registered." };
+//       return res.redirect("/admin-add-clients");
+//     }
+
+//     // 🔹 Ensure branch/package exist
+//     const branchExists = await Branch.findById(branch);
+//     if (!branchExists) {
+//       req.session.errors = { branch: "Selected branch does not exist." };
+//       return res.redirect("/admin-add-clients");
+//     }
+
+//     const packageExists = await Package.findById(packageId);
+//     if (!packageExists) {
+//       req.session.errors = { package: "Selected package does not exist." };
+//       return res.redirect("/admin-add-clients");
+//     }
+
+//     // 🔹 Generate password from name + phone
+//     const firstFour = name.substring(0, 4);
+//     const lastFour = phone.slice(-4);
+//     const rawPassword = firstFour + lastFour;
+//     const hashedPassword = await bcrypt.hash(rawPassword, 10);
+
+//     // Step 1️⃣ Create User entry
+//     const newUser = new User({
+//       name,
+//       email,
+//       phone,
+//       password: hashedPassword,
+//       userType: "client"
+//     });
+//     const savedUser = await newUser.save();
+
+//     // Step 2️⃣ Upload image to S3 (only if file exists)
+//     let imgUrl = null;
+//     if (req.file) {
+//       imgUrl = await uploadFileToS3(req.file, "clients");
+//     }
+
+//     // Step 3️⃣ Create ClientDetails
+//     const clientDetails = new ClientDetails({
+//       clientId: savedUser._id,
+//       trainerId: trainer,
+//       branch,
+//       gender,
+//       age,
+//       altphone: altphone || null,
+//       height: height || null,
+//       weight: weight || null,
+//       img: imgUrl
+//     });
+//     await clientDetails.save();
+
+//     // Step 4️⃣ Normalize inputs
+//     const isConfirmed = confirmedPayment === true || confirmedPayment === "true";
+
+//     // Payment fields
+//     let paymentStatus = "Pending";
+//     let paidDate = null;
+//     let expiredDate = null;
+
+//     if (isConfirmed) {
+//       paymentStatus = "Completed";
+//       paidDate = new Date();
+//       expiredDate = new Date(paidDate);
+//       expiredDate.setDate(paidDate.getDate() + packageExists.durationInDays);
+//     }
+
+//     // Step 5️⃣ Save Membership
+//     const newMembership = new Membership({
+//       clientId: savedUser._id,
+//       package: packageExists._id,
+//       price: packageExists.price,
+//       paymentMethod,
+//       paymentStatus,
+//       confirmedPayment: isConfirmed,
+//       paidDate,
+//       expiredDate,
+//       status: "Active"
+//     });
+
+//     await newMembership.save();
+
+//     // ✅ If UPI → call paymentController
+//     if (paymentMethod.toLowerCase() === "upi") {
+//       return res.redirect(
+//         `/payment/create-order?clientId=${savedUser._id}&packageId=${packageExists._id}`
+//       );
+//     }
+
+//     // ✅ Success response
+//     req.session.success = "Client & Membership added successfully.";
+//     return res.redirect("/admin-clients-list");
+
+//   } catch (err) {
+//     console.error("❌ Error adding client:", err);
+//     req.session.errors = { server: "Something went wrong while adding the client." };
+//     return res.redirect("/admin-add-clients");
+//   }
+// };
+
+// 🔹 Add new client + membership
 exports.addClients = async (req, res) => {
   try {
     const {
       name, email, phone, altphone, gender, age,
       branch, trainer, height, weight,
-      package: packageId, paymentMethod,
-      confirmedPayment
+      package: packageId, paymentMethod, confirmedPayment
     } = req.body;
-
+    
     const errors = {};
-
-    // 🔹 Basic validation
     if (!name) errors.name = "Name is required.";
     if (!email) errors.email = "Email is required.";
     if (!phone) errors.phone = "Phone number is required.";
@@ -1132,51 +1282,44 @@ exports.addClients = async (req, res) => {
       return res.redirect("/admin-add-clients");
     }
 
-    // 🔹 Ensure no duplicate email
-    const existingUser = await User.findOne({ email, userType: "client" });
-    if (existingUser) {
+    // Ensure unique email
+    if (await User.findOne({ email, userType: "client" })) {
       req.session.errors = { email: "Email is already registered." };
       return res.redirect("/admin-add-clients");
     }
 
-    // 🔹 Ensure branch/package exist
-    const branchExists = await Branch.findById(branch);
+    // Ensure valid branch & package
+    const [branchExists, packageExists] = await Promise.all([
+      Branch.findById(branch),
+      Package.findById(packageId)
+    ]);
     if (!branchExists) {
       req.session.errors = { branch: "Selected branch does not exist." };
       return res.redirect("/admin-add-clients");
     }
-
-    const packageExists = await Package.findById(packageId);
     if (!packageExists) {
       req.session.errors = { package: "Selected package does not exist." };
       return res.redirect("/admin-add-clients");
     }
 
-    // 🔹 Generate password from name + phone
-    const firstFour = name.substring(0, 4);
-    const lastFour = phone.slice(-4);
-    const rawPassword = firstFour + lastFour;
+    // Generate default password: first 4 letters of name + last 4 digits of phone
+    const rawPassword = `${name.substring(0, 4)}${phone.slice(-4)}`;
     const hashedPassword = await bcrypt.hash(rawPassword, 10);
 
-    // Step 1️⃣ Create User entry
-    const newUser = new User({
-      name,
-      email,
-      phone,
+    // Create User
+    const newUser = await User.create({
+      name, email, phone,
       password: hashedPassword,
       userType: "client"
     });
-    const savedUser = await newUser.save();
 
-    // Step 2️⃣ Upload image to S3 (only if file exists)
+    // Upload image (if exists)
     let imgUrl = null;
-    if (req.file) {
-      imgUrl = await uploadFileToS3(req.file, "clients");
-    }
+    if (req.file) imgUrl = await uploadFileToS3(req.file, "clients");
 
-    // Step 3️⃣ Create ClientDetails
-    const clientDetails = new ClientDetails({
-      clientId: savedUser._id,
+    // Create ClientDetails
+    await ClientDetails.create({
+      clientId: newUser._id,
       trainerId: trainer,
       branch,
       gender,
@@ -1186,16 +1329,14 @@ exports.addClients = async (req, res) => {
       weight: weight || null,
       img: imgUrl
     });
-    await clientDetails.save();
 
-    // Step 4️⃣ Normalize inputs
+    // Normalize payment confirmation
     const isConfirmed = confirmedPayment === true || confirmedPayment === "true";
 
-    // Payment fields
+    // Membership dates
     let paymentStatus = "Pending";
     let paidDate = null;
     let expiredDate = null;
-
     if (isConfirmed) {
       paymentStatus = "Completed";
       paidDate = new Date();
@@ -1203,9 +1344,9 @@ exports.addClients = async (req, res) => {
       expiredDate.setDate(paidDate.getDate() + packageExists.durationInDays);
     }
 
-    // Step 5️⃣ Save Membership
-    const newMembership = new Membership({
-      clientId: savedUser._id,
+    // Create Membership
+    const membership = await Membership.create({
+      clientId: newUser._id,
       package: packageExists._id,
       price: packageExists.price,
       paymentMethod,
@@ -1216,16 +1357,29 @@ exports.addClients = async (req, res) => {
       status: "Active"
     });
 
-    await newMembership.save();
+    // 🔹 Always send Welcome WhatsApp message
+    await clientTwilio.messages.create({
+      from: "whatsapp:+14155238886",
+      to: `whatsapp:+91${phone}`,
+      body: `🎉 Welcome to our Gym, ${name}!\n\nWe’re excited to have you onboard. 💪\n\nYour selected package: ${packageExists.packageType}\nTrainer: ${trainer}\nBranch: ${branch}\n\nLet's achieve your fitness goals together! 🏋️‍♂️🔥`
+    });
 
-    // ✅ If UPI → call paymentController
+    // If UPI → go to payment route
     if (paymentMethod.toLowerCase() === "upi") {
       return res.redirect(
-        `/payment/create-order?clientId=${savedUser._id}&packageId=${packageExists._id}`
+        `/payment/create-order?clientId=${newUser._id}&packageId=${packageExists._id}`
       );
     }
 
-    // ✅ Success response
+    // 🔹 If Cash and Confirmed → send WhatsApp payment confirmation
+    if (paymentMethod.toLowerCase() === "cash" && isConfirmed) {
+      await clientTwilio.messages.create({
+        from: "whatsapp:+14155238886",
+        to: `whatsapp:+91${phone}`,
+        body: `✅ Payment Successful!\n\nHi ${name}, we’ve received your CASH payment for the package: ${packageExists.packageType}.\n\nYour membership is active until: ${expiredDate.toDateString()}.\n\nStay consistent and crush your fitness journey! 🔥`
+      });
+    }
+
     req.session.success = "Client & Membership added successfully.";
     return res.redirect("/admin-clients-list");
 
@@ -1513,15 +1667,15 @@ exports.updateClientDetails = async (req, res) => {
   }
 };
 
+// 🔹 Update client membership
 exports.updateMembership = async (req, res) => {
   try {
     const clientId = req.params.id;
     const { package: packageId, paymentMethod, confirmedPayment } = req.body;
 
-    // Fetch package details if packageId provided
-    let packageData = null;
     let paidDate = new Date();
     let expiredDate = null;
+    let packageData = null;
 
     if (packageId) {
       packageData = await Package.findById(packageId);
@@ -1531,30 +1685,22 @@ exports.updateMembership = async (req, res) => {
       }
     }
 
-    // Find existing membership
     let membership = await Membership.findOne({ clientId });
 
     if (membership) {
-      // Update membership fields if package changed
       if (packageId) {
-        membership.package = packageId;
-        membership.paidDate = paidDate;
-        membership.expiredDate = expiredDate;
-        membership.paymentStatus = "Completed";
-        membership.status = "Active";
+        Object.assign(membership, {
+          package: packageId,
+          paidDate,
+          expiredDate,
+          paymentStatus: "Completed",
+          status: "Active"
+        });
       }
-
-      // Update payment method
-      if (paymentMethod && paymentMethod !== membership.paymentMethod) {
-        membership.paymentMethod = paymentMethod;
-      }
-
-      // Update confirmedPayment
+      if (paymentMethod) membership.paymentMethod = paymentMethod;
       if (confirmedPayment) membership.confirmedPayment = true;
-
       await membership.save();
     } else if (packageId) {
-      // Create new membership if none exists
       membership = await Membership.create({
         clientId,
         package: packageId,
@@ -1563,26 +1709,96 @@ exports.updateMembership = async (req, res) => {
         confirmedPayment: confirmedPayment || false,
         paidDate,
         expiredDate,
-        status: "Active",
+        status: "Active"
       });
     }
 
-    // ✅ If payment method is UPI → redirect to payment route
-    if (paymentMethod && paymentMethod.toLowerCase() === "upi") {
+    // If UPI → redirect to payment
+    if (paymentMethod?.toLowerCase() === "upi") {
       return res.json({
         success: true,
         redirect: `/payment/create-order?clientId=${clientId}&packageId=${packageId}`
       });
     }
 
-    // ✅ Otherwise → redirect to client list
-    res.json({ success: true, redirect: "/admin-clients-list" });
+    return res.json({ success: true, redirect: "/admin-clients-list" });
 
   } catch (err) {
-    console.error(err);
+    console.error("❌ Error updating membership:", err);
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
+
+// exports.updateMembership = async (req, res) => {
+//   try {
+//     const clientId = req.params.id;
+//     const { package: packageId, paymentMethod, confirmedPayment } = req.body;
+
+//     // Fetch package details if packageId provided
+//     let packageData = null;
+//     let paidDate = new Date();
+//     let expiredDate = null;
+
+//     if (packageId) {
+//       packageData = await Package.findById(packageId);
+//       if (packageData) {
+//         expiredDate = new Date(paidDate);
+//         expiredDate.setDate(paidDate.getDate() + packageData.durationInDays);
+//       }
+//     }
+
+//     // Find existing membership
+//     let membership = await Membership.findOne({ clientId });
+
+//     if (membership) {
+//       // Update membership fields if package changed
+//       if (packageId) {
+//         membership.package = packageId;
+//         membership.paidDate = paidDate;
+//         membership.expiredDate = expiredDate;
+//         membership.paymentStatus = "Completed";
+//         membership.status = "Active";
+//       }
+
+//       // Update payment method
+//       if (paymentMethod && paymentMethod !== membership.paymentMethod) {
+//         membership.paymentMethod = paymentMethod;
+//       }
+
+//       // Update confirmedPayment
+//       if (confirmedPayment) membership.confirmedPayment = true;
+
+//       await membership.save();
+//     } else if (packageId) {
+//       // Create new membership if none exists
+//       membership = await Membership.create({
+//         clientId,
+//         package: packageId,
+//         paymentMethod,
+//         paymentStatus: "Completed",
+//         confirmedPayment: confirmedPayment || false,
+//         paidDate,
+//         expiredDate,
+//         status: "Active",
+//       });
+//     }
+
+//     // ✅ If payment method is UPI → redirect to payment route
+//     if (paymentMethod && paymentMethod.toLowerCase() === "upi") {
+//       return res.json({
+//         success: true,
+//         redirect: `/payment/create-order?clientId=${clientId}&packageId=${packageId}`
+//       });
+//     }
+
+//     // ✅ Otherwise → redirect to client list
+//     res.json({ success: true, redirect: "/admin-clients-list" });
+
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).json({ success: false, message: "Server error" });
+//   }
+// };
 
 exports.deleteClients = async (req, res) => {
   try {
