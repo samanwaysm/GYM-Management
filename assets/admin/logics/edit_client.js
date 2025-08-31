@@ -156,10 +156,16 @@ $(document).ready(function () {
             confirmedPayment: false // default
         };
 
-        // Only if package changed and payment is Cash
-        if (originalPackage !== data.package && data.paymentMethod === "Cash") {
-            if (!confirm("Payment is Cash. Confirm to auto-complete payment?")) return;
-            data.confirmedPayment = true; // send confirmedPayment = true
+        if (paymentMethod === "Cash") {
+        // Cash → confirm and mark as paid
+        if (confirm("Are you sure you want to confirm Cash Payment?")) {
+            data.confirmedPayment = true;
+        } else {
+            return; // stop submit if not confirmed
+        }
+        } else if (paymentMethod === "UPI") {
+            // UPI → backend will generate Razorpay link
+            data.confirmedPayment = false;
         }
 
         $.ajax({
