@@ -37,7 +37,7 @@ const schema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["Active", "Expired"],
+      enum: ["Active", "Expired", "Pending"],
     },
   },
   { timestamps: true }

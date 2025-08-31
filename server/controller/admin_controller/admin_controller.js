@@ -1343,6 +1343,11 @@ exports.addClients = async (req, res) => {
       expiredDate = new Date(paidDate);
       expiredDate.setDate(paidDate.getDate() + packageExists.durationInDays);
     }
+    // Decide status
+      let membershipStatus = "Active"; // default
+      if (paymentMethod.toLowerCase() === "upi") {
+        membershipStatus = "Pending"; // don't activate until payment confirmed
+      }
 
     // Create Membership
     const membership = await Membership.create({
@@ -1354,7 +1359,7 @@ exports.addClients = async (req, res) => {
       confirmedPayment: isConfirmed,
       paidDate,
       expiredDate,
-      status: "Active"
+      status: membershipStatus
     });
 
     // 🔹 Always send Welcome WhatsApp message

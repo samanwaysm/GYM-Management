@@ -110,7 +110,8 @@ exports.handleWebhook = async (req, res) => {
             paymentStatus: "Completed",
             confirmedPayment: true,
             paidDate,
-            expiredDate
+            expiredDate,
+            status: "Active"   // ✅ Activate after payment success
           }
         );
 
