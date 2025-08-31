@@ -1694,9 +1694,10 @@ exports.updateMembership = async (req, res) => {
     
     // If payment method is UPI → redirect to payment (like addClients)
     if (paymentMethod?.toLowerCase() === "upi") {
-      return res.redirect(
-        `/payment/create-order?clientId=${membership.clientId}&packageId=${packageExists._id}`
-      );
+      return res.json({
+        success: true,
+        redirect: `/payment/create-order?clientId=${membership.clientId._id}&packageId=${packageExists._id}`
+    });
     }
 
     // If payment method is Cash → update membership only (no creation)

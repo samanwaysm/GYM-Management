@@ -171,13 +171,17 @@ $(document).ready(function () {
             data: JSON.stringify(data),
             success: function (res) {
                 if (res.success) {
-                    // Redirect instead of alert
-                    window.location.href = "/admin-clients-list";
+                    if (res.redirect) {
+                        window.location.href = res.redirect; // redirect if backend provides URL
+                    } else {
+                        window.location.href = "/admin-clients-list";
+                    }
                 } else {
                     alert(res.message || "Failed");
                 }
             }
         });
+
     });
 
     // --- Details form submit ---
