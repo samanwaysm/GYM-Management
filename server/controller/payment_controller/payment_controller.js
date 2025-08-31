@@ -4,7 +4,8 @@ const twilio = require("twilio");
 
 const Payment = require("../../../model/payment/payment_schema");
 const Membership = require("../../../model/clients/membership_schema");
-const Package = require("../../../model/admin/package_schema")
+const Package = require("../../../model/admin/package_schema");
+const { log } = require("console");
 
 const clientTwilio = new twilio(process.env.TWILIO_SID, process.env.TWILIO_AUTH_TOKEN);
 
@@ -17,7 +18,6 @@ const razorpay = new Razorpay({
 exports.createOrder = async (req, res) => {
   try {
     const { clientId, packageId } = req.query;
-    console.log(clientId, packageId);
     
     const membership = await Membership.findOne({ clientId }).populate("clientId");
     if (!membership) return res.status(404).json({ success: false, error: "Membership not found" });
@@ -41,7 +41,6 @@ exports.createOrder = async (req, res) => {
         membershipId: membership._id.toString()
       }
     });
-
 
     // Save Payment
     const newPayment = new Payment({

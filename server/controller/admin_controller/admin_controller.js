@@ -1732,13 +1732,11 @@ exports.updateMembership = async (req, res) => {
       membership.paidDate = null;
       membership.expiredDate = null;
       membership.status = "Pending";
-
+      
       await membership.save();
 
-      return res.json({
-        success: true,
-        redirectUrl: `/payment/create-order?clientId=${clientId}&packageId=${packageId}`
-      });
+      // 🔑 Force GET redirect (303)
+      return res.redirect(303, `/payment/create-order?clientId=${clientId}&packageId=${packageId}`);
     }
 
     // fallback
