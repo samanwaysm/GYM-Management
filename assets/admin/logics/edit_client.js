@@ -156,16 +156,12 @@ $(document).ready(function () {
             confirmedPayment: false // default
         };
 
-        if (paymentMethod === "Cash") {
-        // Cash → confirm and mark as paid
-        if (confirm("Are you sure you want to confirm Cash Payment?")) {
+        // Handle confirmation based on payment method
+        if (data.paymentMethod === "Cash") {
+            if (!confirm("Are you sure you want to confirm Cash Payment?")) return;
             data.confirmedPayment = true;
-        } else {
-            return; // stop submit if not confirmed
-        }
-        } else if (paymentMethod === "UPI") {
-            // UPI → backend will generate Razorpay link
-            data.confirmedPayment = false;
+        } else if (data.paymentMethod === "UPI") {
+            data.confirmedPayment = false; // backend will handle UPI flow
         }
 
         $.ajax({
@@ -175,9 +171,11 @@ $(document).ready(function () {
             data: JSON.stringify(data),
             success: function (res) {
                 if (res.success) {
-                    alert("Membership updated!");
-                    originalPackage = data.package;
-                } else alert(res.message || "Failed");
+                    // Redirect instead of alert
+                    window.location.href = "/admin-clients-list";
+                } else {
+                    alert(res.message || "Failed");
+                }
             }
         });
     });
@@ -206,7 +204,6 @@ $(document).ready(function () {
             data: JSON.stringify(data),
             success: function (res) {
                 if (res.success) {
-                    alert("Client details updated!");
                     window.location.href = "/admin-clients-list";
                 }
                 else alert(res.message || "Failed");
