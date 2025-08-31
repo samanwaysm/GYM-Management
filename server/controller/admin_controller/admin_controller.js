@@ -1669,74 +1669,134 @@ exports.updateClientDetails = async (req, res) => {
   }
 };
 
-
+// ✅ Update membership route
 exports.updateMembership = async (req, res) => {
   try {
-    const clientId = req.params.id;
-    const { packageId, paymentMethod, confirmedPayment } = req.body;
-    
-    let paidDate = new Date();
-    let expiredDate = null;
+    const { clientId } = req.params;
+    const { package: packageId, paymentMethod, confirmedPayment } = req.body;
 
-    // Fetch package details to calculate expiry date
-    let packageExists = null;
-    if (packageId) {
-      packageExists = await Package.findById(packageId);
-      if (packageExists) {
-        expiredDate = new Date(paidDate);
-        expiredDate.setDate(paidDate.getDate() + packageExists.durationInDays);
-      }
+    // check package
+    const packageExists = await Package.findById(packageId);
+    if (!packageExists) {
+      return res.status(404).json({ success: false, message: "Package not found" });
     }
 
-    // Find existing membership with client details
-    let membership = await Membership.findOne({ clientId }).populate("clientId");
+    // check membership
+    let membership = await Membership.findOne({ clientId });
+    if (!membership) {
+      return res.status(404).json({ success: false, message: "Membership not found" });
+    }
 
-    // If payment method is UPI → redirect to payment (like addClients)
-    if (paymentMethod?.toLowerCase() === "upi") {
+    // update membership basic details
+    membership.package = packageId;
+    membership.price = packageExists.price;
+    membership.paymentMethod = paymentMethod;
+    membership.status = "Pending";
+
+    // ✅ CASH payment handling
+    if (paymentMethod.toLowerCase() === "cash" && confirmedPayment) {
+      membership.paymentStatus = "Completed";
+      membership.confirmedPayment = true;
+      membership.paidDate = new Date();
+      membership.expiredDate = new Date(
+        new Date().setDate(new Date().getDate() + packageExists.durationInDays)
+      );
+      membership.status = "Active";
+
+      await membership.save();
+      return res.json({ success: true, message: "Cash payment confirmed", membership });
+    }
+
+    // ✅ UPI payment handling → redirect to order creation
+    if (paymentMethod.toLowerCase() === "upi") {
+      membership.paymentStatus = "Pending";
+      membership.confirmedPayment = false;
+      await membership.save();
+
       return res.json({
         success: true,
-        redirect: `/payment/create-order?clientId=${clientId}&packageId=${packageId}`
-    });
+        redirectUrl: `/payment/create-order?clientId=${clientId}&packageId=${packageExists._id}`
+      });
     }
 
-    // If payment method is Cash → update membership only (no creation)
-    if (paymentMethod?.toLowerCase() === "cash") {
-      if (membership) {
-        membership.package = packageId;
-        membership.paymentMethod = "Cash";
-        membership.confirmedPayment = confirmedPayment === true || confirmedPayment === "true";
-        membership.paymentStatus = membership.confirmedPayment ? "Completed" : "Pending";
-        membership.paidDate = paidDate;
-        membership.expiredDate = expiredDate;
-        membership.status = "Active";
+    // fallback
+    await membership.save();
+    return res.json({ success: true, message: "Membership updated", membership });
 
-        await membership.save();
-
-        // ✅ Send WhatsApp confirmation if payment confirmed
-        if (membership.confirmedPayment) {
-          const phone = membership.clientId.phone;
-          const name = membership.clientId.name;
-
-          await clientTwilio.messages.create({
-            from: "whatsapp:+14155238886", // Twilio sandbox number
-            to: `whatsapp:+91${phone}`,
-            body: `✅ Payment Successful!\n\nHi ${name}, we’ve received your CASH payment for the package: ${packageExists.packageType}.\n\nYour membership is active until: ${expiredDate.toDateString()}.\n\nStay consistent and crush your fitness journey! 🔥`
-          });
-        }
-
-        return res.redirect("/admin-clients-list");
-      } else {
-        return res.status(404).json({ success: false, message: "No existing membership found for this client" });
-      }
-    }
-
-    return res.json({ success: false, message: "Invalid payment method" });
-
-  } catch (err) {
-    console.error("❌ Error updating membership:", err);
-    res.status(500).json({ success: false, message: "Server error" });
+  } catch (error) {
+    console.error("Error updating membership:", error);
+    return res.status(500).json({ success: false, message: "Server error" });
   }
 };
+
+
+// exports.updateMembership = async (req, res) => {
+//   try {
+//     const clientId = req.params.id;
+//     const { packageId, paymentMethod, confirmedPayment } = req.body;
+    
+//     let paidDate = new Date();
+//     let expiredDate = null;
+
+//     // Fetch package details to calculate expiry date
+//     let packageExists = null;
+//     if (packageId) {
+//       packageExists = await Package.findById(packageId);
+//       if (packageExists) {
+//         expiredDate = new Date(paidDate);
+//         expiredDate.setDate(paidDate.getDate() + packageExists.durationInDays);
+//       }
+//     }
+
+//     // Find existing membership with client details
+//     let membership = await Membership.findOne({ clientId }).populate("clientId");
+
+//     // If payment method is UPI → redirect to payment (like addClients)
+//     if (paymentMethod?.toLowerCase() === "upi") {
+//       return res.json({
+//         success: true,
+//         redirect: `/payment/create-order?clientId=${clientId}&packageId=${packageId}`
+//     });
+//     }
+
+//     // If payment method is Cash → update membership only (no creation)
+//     if (paymentMethod?.toLowerCase() === "cash") {
+//       if (membership) {
+//         membership.package = packageId;
+//         membership.paymentMethod = "Cash";
+//         membership.confirmedPayment = confirmedPayment === true || confirmedPayment === "true";
+//         membership.paymentStatus = membership.confirmedPayment ? "Completed" : "Pending";
+//         membership.paidDate = paidDate;
+//         membership.expiredDate = expiredDate;
+//         membership.status = "Active";
+
+//         await membership.save();
+
+//         // ✅ Send WhatsApp confirmation if payment confirmed
+//         if (membership.confirmedPayment) {
+//           const phone = membership.clientId.phone;
+//           const name = membership.clientId.name;
+
+//           await clientTwilio.messages.create({
+//             from: "whatsapp:+14155238886", // Twilio sandbox number
+//             to: `whatsapp:+91${phone}`,
+//             body: `✅ Payment Successful!\n\nHi ${name}, we’ve received your CASH payment for the package: ${packageExists.packageType}.\n\nYour membership is active until: ${expiredDate.toDateString()}.\n\nStay consistent and crush your fitness journey! 🔥`
+//           });
+//         }
+
+//         return res.redirect("/admin-clients-list");
+//       } else {
+//         return res.status(404).json({ success: false, message: "No existing membership found for this client" });
+//       }
+//     }
+
+//     return res.json({ success: false, message: "Invalid payment method" });
+
+//   } catch (err) {
+//     console.error("❌ Error updating membership:", err);
+//     res.status(500).json({ success: false, message: "Server error" });
+//   }
+// };
 
 // 🔹 Update client membership
 // exports.updateMembership = async (req, res) => {
