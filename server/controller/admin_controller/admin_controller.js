@@ -1689,14 +1689,11 @@ exports.updateMembership = async (req, res) => {
     // Find existing membership with client details
     let membership = await Membership.findOne({ clientId }).populate("clientId");
 
-    console.log(packageExists);
-    console.log(membership);
-
     // If payment method is UPI → redirect to payment (like addClients)
     if (paymentMethod?.toLowerCase() === "upi") {
       return res.json({
         success: true,
-        redirect: `/payment/create-order?clientId=${membership.clientId._id}&packageId=${packageExists._id}`
+        redirect: `/payment/create-order?clientId=${clientId}&packageId=${packageId}`
     });
     }
 
