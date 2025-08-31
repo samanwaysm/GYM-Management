@@ -1711,6 +1711,10 @@ exports.updateMembership = async (req, res) => {
     if (paymentMethod.toLowerCase() === "upi") {
       membership.paymentStatus = "Pending";
       membership.confirmedPayment = false;
+      membership.paidDate = null;
+      membership.expiredDate = null;
+      membership.status = "Pending";
+
       await membership.save();
 
       return res.json({
