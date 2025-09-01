@@ -194,7 +194,7 @@ $(document).ready(function () {
             phone: $("#phone").val(),
             altphone: $("#altphone").val(),
             gender: $("#gender").val(),
-            age: $("#age").val(),
+            dob: $("#dob").val(),
             branch: $("#branch").val(),
             trainer: $("#trainer").val(),
             height: $("#height").val(),
