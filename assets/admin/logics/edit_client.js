@@ -100,7 +100,7 @@ $(document).ready(function () {
                     $("#phone").val(client.userInfo.phone);
                     $("#altphone").val(client.altphone || "");
                     $("#gender").val(client.gender || "");
-                    $("#age").val(client.age || "");
+                    $("#dob").val(client.dob || "");
                     $("#branch").val(client.branchInfo?._id || "");
                     $("#trainer").val(client.trainerInfo?._id || "");
                     $("#height").val(client.height || "");
@@ -160,8 +160,8 @@ $(document).ready(function () {
         if (data.paymentMethod === "Cash") {
             if (!confirm("Are you sure you want to confirm Cash Payment?")) return;
             data.confirmedPayment = true;
-        } else if (data.paymentMethod === "UPI") {
-            data.confirmedPayment = false; // backend will handle UPI flow
+        } else if (data.paymentMethod === "Online") {
+            data.confirmedPayment = false; // backend will handle Online flow
         }
 
         $.ajax({

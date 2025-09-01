@@ -1261,7 +1261,7 @@ exports.deleteTrainers = async (req, res) => {
 exports.addClients = async (req, res) => {
   try {
     const {
-      name, email, phone, altphone, gender, age,
+      name, email, phone, altphone, gender, dob,
       branch, trainer, height, weight,
       package: packageId, paymentMethod, confirmedPayment
     } = req.body;
@@ -1270,7 +1270,7 @@ exports.addClients = async (req, res) => {
     if (!name) errors.name = "Name is required.";
     if (!email) errors.email = "Email is required.";
     if (!phone) errors.phone = "Phone number is required.";
-    if (!age) errors.age = "Age is required.";
+    if (!dob) errors.dob = "dob is required.";
     if (!gender) errors.gender = "Gender is required.";
     if (!branch) errors.branch = "Branch is required.";
     if (!trainer) errors.trainer = "Trainer is required.";
@@ -1323,7 +1323,7 @@ exports.addClients = async (req, res) => {
       trainerId: trainer,
       branch,
       gender,
-      age,
+      dob,
       altphone: altphone || null,
       height: height || null,
       weight: weight || null,
@@ -1367,7 +1367,7 @@ exports.addClients = async (req, res) => {
     });
 
     // If UPI → go to payment route
-    if (paymentMethod.toLowerCase() === "upi") {
+    if (paymentMethod.toLowerCase() === "online") {
       return res.redirect(
         `/payment/create-order?clientId=${newUser._id}&packageId=${packageExists._id}`
       );
@@ -1600,7 +1600,7 @@ exports.getClientsDetails = async (req, res) => {
           _id: 1,
           altphone: 1,
           gender: 1,
-          age: 1,
+          dob: 1,
           height: 1,
           weight: 1,
           img: 1,
@@ -1649,7 +1649,7 @@ exports.updateClientDetails = async (req, res) => {
     const clientId = req.params.id;
 
     const {
-      name, email, phone, altphone, gender, age, branch, trainer, height, weight
+      name, email, phone, altphone, gender, dob, branch, trainer, height, weight
     } = req.body;
 
 
@@ -1657,7 +1657,7 @@ exports.updateClientDetails = async (req, res) => {
     await User.findByIdAndUpdate(clientId, { name, email, phone });
 
     // Update ClientDetails
-    const updateData = { altphone, gender, age, branch, trainerId: trainer, height, weight };
+    const updateData = { altphone, gender, dob, branch, trainerId: trainer, height, weight };
     if (req.file) updateData.img = req.file.path;
 
     await ClientDetails.findOneAndUpdate({ clientId }, updateData);
@@ -1726,7 +1726,7 @@ exports.updateMembership = async (req, res) => {
     }
 
     // ✅ UPI payment handling → redirect to Razorpay order
-    if (paymentMethod.toLowerCase() === "upi") {
+    if (paymentMethod.toLowerCase() === "online") {
       membership.paymentStatus = "Pending";
       membership.confirmedPayment = false;
       membership.paidDate = null;
@@ -2278,7 +2278,7 @@ exports.getClientDetails = async (req, res) => {
           email: "$clientUser.email",
           phone: "$clientUser.phone",
           gender: 1,
-          age: 1,
+          dob: 1,
           altphone: 1,
           height: 1,
           weight: 1,

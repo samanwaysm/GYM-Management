@@ -17,7 +17,7 @@ const schema = new mongoose.Schema(
     },
     paymentMethod: {
       type: String,
-      enum: ["Cash","UPI",],
+      enum: ["Cash","Online",],
     },
     paymentStatus: {
       type: String,

@@ -10,13 +10,16 @@ const schema = new mongoose.Schema(
     },
     razorpayOrderId: {
       type: String,
-      required: true,
     },
     razorpayPaymentId: {
       type: String,
     },
     razorpaySignature: {
       type: String,
+    },
+    paymentMethod: {
+      type: String,
+      enum: ["Cash","Online",],
     },
     amount: {
       type: Number,

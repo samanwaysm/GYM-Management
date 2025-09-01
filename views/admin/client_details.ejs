@@ -88,6 +88,19 @@
     }
   });
 
+    function calculateAge(dob) {
+    const today = new Date();
+    const birthDate = new Date(dob);
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    return age;
+  }
+
+
   async function fetchClientDetails(clientId) {
     try {
       const res = await fetch(`/admin/get-client-details/${clientId}`);
@@ -112,9 +125,9 @@
         document.getElementById("name").textContent = c.name;
         document.getElementById("email").textContent = c.email;
         document.getElementById("phone").textContent = c.phone;
-        document.getElementById("altPhone").textContent = c.altPhone;
+        document.getElementById("altPhone").textContent = c.altPhone || '-';
         document.getElementById("gender").textContent = c.gender;
-        document.getElementById("age").textContent = c.age;
+        document.getElementById("age").textContent = calculateAge(c.dob);
         document.getElementById("branch").textContent = c.branch;
         document.getElementById("trainer").textContent = c.trainer;
         document.getElementById("height").textContent = c.height;

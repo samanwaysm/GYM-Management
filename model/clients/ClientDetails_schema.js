@@ -20,8 +20,8 @@ const clientDetailsSchema = new mongoose.Schema({
     enum: ['Male', 'Female', 'Other'],
     required: true
   },
-  age: {
-    type: Number,
+  dob: {
+    type: Date,
     required: true
   },
   altphone: {

@@ -94,6 +94,19 @@
                       </div>
                       <div class="col-md-6">
                         <div class="form-group row">
+                          <label class="col-sm-3 col-form-label">DOB :</label>
+                          <div class="col-sm-9">
+                            <input type="date" id="dob" name="dob" class="form-control text-white" />
+                            <% if (errors && errors.dob) { %>
+                              <div class="text-danger small">
+                                <%= errors.dob %>
+                              </div>
+                            <% } %>
+                          </div>
+                        </div>
+                      </div>
+                      <!-- <div class="col-md-6">
+                        <div class="form-group row">
                           <label class="col-sm-3 col-form-label">Age : </label>
                           <div class="col-sm-9">
                             <input type="number" id="age" name="age" class="form-control text-white" />
@@ -104,7 +117,7 @@
                               <% } %>
                           </div>
                         </div>
-                      </div>
+                      </div> -->
                     </div>
                     <div class="row">
                       <div class="col-md-6">
@@ -204,7 +217,7 @@
                   <select class="form-control text-white" id="paymentMethod" name="paymentMethod" required>
                     <option class="text-white" value="">-- Select Payment Method --</option>
                     <option class="text-white" value="Cash">Cash</option>
-                    <option class="text-white" value="UPI">UPI</option>
+                    <option class="text-white" value="Online">Online</option>
                   </select>
                 </div>
               </div>

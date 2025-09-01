@@ -212,7 +212,7 @@ exports.verifyPayment = async (req, res) => {
 
     // ✅ Update Membership
     await Membership.findByIdAndUpdate({_id: membershipId}, {
-      paymentMethod : "UPI",
+      paymentMethod : "Online",
       paymentStatus: "Completed",
       confirmedPayment: true,
       paidDate,

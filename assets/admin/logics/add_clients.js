@@ -59,7 +59,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 membershipModal.hide();
                 form.submit();
             }
-        } else if (paymentMethod === "UPI") {
+        } else if (paymentMethod === "Online") {
             // let backend handle sending WhatsApp link
             document.getElementById("hiddenConfirmedPayment").value = false;
             membershipModal.hide();
