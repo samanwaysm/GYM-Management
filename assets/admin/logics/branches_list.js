@@ -74,11 +74,11 @@
                 const result = await res.json();
 
                 if (result.success) {
-                    alert("✅ Admin deleted successfully!");
+                    alert("✅ Branch deleted successfully!");
                     // Reload or remove the row dynamically
                     window.location.reload();
                 } else {
-                    alert("❌ " + (result.error || "Failed to delete admin"));
+                    alert("❌ " + (result.error || "Failed to delete branch"));
                 }
             } catch (err) {
                 console.error("❌ Error deleting admin:", err);

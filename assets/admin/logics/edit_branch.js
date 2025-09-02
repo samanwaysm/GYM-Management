@@ -47,7 +47,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 // ✅ Redirect after success
                 window.location.href = "/admin-branches-list";
             } else {
-                alert(result.error || "Failed to update admin");
+                alert(result.error || "Failed to update branch");
             }
         } catch (err) {
             console.error("❌ Error updating admin:", err);
