@@ -1361,7 +1361,7 @@ exports.addClients = async (req, res) => {
 
     // 🔹 Always send Welcome WhatsApp message
     await clientTwilio.messages.create({
-      from: `whatsapp:${process.env.TWILIO_NUMBER}`,
+      from: "whatsapp:+14155238886",
       to: `whatsapp:+91${phone}`,
       body: `🎉 Welcome to our Gym, ${name}!\n\nWe’re excited to have you onboard. 💪\n\nYour selected package: ${packageExists.packageType}\nTrainer: ${trainer}\nBranch: ${branch}\n\nLet's achieve your fitness goals together! 🏋️‍♂️🔥`
     });
