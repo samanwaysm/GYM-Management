@@ -1309,7 +1309,7 @@ exports.addClients = async (req, res) => {
       return res.redirect("/admin-add-clients");
     }
 
-    console.log(trainerExists);
+    console.log(branchExists);
     
 
     // Generate default password: first 4 letters of name + last 4 digits of phone
