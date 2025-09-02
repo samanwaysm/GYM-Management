@@ -1309,6 +1309,8 @@ exports.addClients = async (req, res) => {
       return res.redirect("/admin-add-clients");
     }
 
+    console.log(trainerExists);
+    
 
     // Generate default password: first 4 letters of name + last 4 digits of phone
     const rawPassword = `${name.substring(0, 4)}${phone.slice(-4)}`;
