@@ -33,7 +33,7 @@ document.addEventListener("DOMContentLoaded", () => {
     paymentMethodSelect.addEventListener("change", function () {
         if (this.value === "Cash") {
             confirmSave.textContent = "Confirm Cash Payment";
-        } else if (this.value === "UPI") {
+        } else if (this.value === "Online") {
             confirmSave.textContent = "Submit & Send WhatsApp Link";
         } else {
             confirmSave.textContent = "Save & Submit";
