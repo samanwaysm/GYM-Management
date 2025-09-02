@@ -1373,7 +1373,7 @@ exports.addClients = async (req, res) => {
     await clientTwilio.messages.create({
       from: "whatsapp:+14155238886",
       to: `whatsapp:+91${phone}`,
-      body: `🎉 Welcome to our Gym, ${name}!\n\nWe’re excited to have you onboard. 💪\n\nYour selected package: ${packageExists.packageType}\nTrainer: ${trainerExists.name}\nBranch: ${branchExists.branchName}\n\nLet's achieve your fitness goals together! 🏋️‍♂️🔥`
+      body: `🎉 Welcome to our Gym, ${name}!\n\nWe’re excited to have you onboard. 💪\n\nYour selected package: ${packageExists.packageType}\nTrainer: ${trainerExists.name}\nBranch: ${branchExists.name}\n\nLet's achieve your fitness goals together! 🏋️‍♂️🔥`
     });
 
     // If UPI → go to payment route
