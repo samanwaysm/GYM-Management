@@ -13,11 +13,11 @@ const clientTwilio = new twilio(process.env.TWILIO_SID, process.env.TWILIO_AUTH_
 // cron.schedule("0 0 * * *", async () => {
 //   console.log("⏰ Running cron job for expired memberships");
 
-cron.schedule("*/1 * * * *", async () => {
-  console.log("⏰ Cron job running every 1 minutes!");
+// cron.schedule("*/1 * * * *", async () => {
+//   console.log("⏰ Cron job running every 1 minutes!");
 
-  // cron.schedule("0 9 * * *", async () => {
-  //   console.log("⏰ Cron job running at 9:00 AM every day!");
+  cron.schedule("0 9 * * *", async () => {
+    console.log("⏰ Cron job running at 9:00 AM every day!");
 
   try {
     // --------------------- Expired Membership Check ---------------------
@@ -138,12 +138,12 @@ cron.schedule("*/1 * * * *", async () => {
         console.log(`🎉 Birthday: ${client.name} (${client.email})`);
 
         // ✅ Send WhatsApp Birthday WishF
-//         await clientTwilio.messages.create({
-//           from: "whatsapp:+14155238886",
-//           to: `whatsapp:+91${client.phone}`,
-//           body: `🎂 Happy Birthday ${client.name}! 🎉  
-// Wishing you a fantastic year ahead from all of us at ${process.env.APP_NAME}! 🏋️‍♂️`
-//         });
+        await clientTwilio.messages.create({
+          from: "whatsapp:+14155238886",
+          to: `whatsapp:+91${client.phone}`,
+          body: `🎂 Happy Birthday ${client.name}! 🎉  
+Wishing you a fantastic year ahead from all of us at ${process.env.APP_NAME}! 🏋️‍♂️`
+        });
       })
     );
 
