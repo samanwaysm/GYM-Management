@@ -1289,10 +1289,13 @@ exports.addClients = async (req, res) => {
     }
 
     // Ensure valid branch & package
-    const [branchExists, packageExists] = await Promise.all([
+    // Ensure valid branch & package
+    const [branchExists, packageExists, trainerExists] = await Promise.all([
       Branch.findById(branch),
-      Package.findById(packageId)
+      Package.findById(packageId),
+      User.findById(trainer) // 👈 fetch trainer details
     ]);
+
     if (!branchExists) {
       req.session.errors = { branch: "Selected branch does not exist." };
       return res.redirect("/admin-add-clients");
@@ -1301,6 +1304,11 @@ exports.addClients = async (req, res) => {
       req.session.errors = { package: "Selected package does not exist." };
       return res.redirect("/admin-add-clients");
     }
+    if (!trainerExists || trainerExists.userType !== "trainer") {
+      req.session.errors = { trainer: "Selected trainer does not exist." };
+      return res.redirect("/admin-add-clients");
+    }
+
 
     // Generate default password: first 4 letters of name + last 4 digits of phone
     const rawPassword = `${name.substring(0, 4)}${phone.slice(-4)}`;
@@ -1363,7 +1371,7 @@ exports.addClients = async (req, res) => {
     await clientTwilio.messages.create({
       from: "whatsapp:+14155238886",
       to: `whatsapp:+91${phone}`,
-      body: `🎉 Welcome to our Gym, ${name}!\n\nWe’re excited to have you onboard. 💪\n\nYour selected package: ${packageExists.packageType}\nTrainer: ${trainer}\nBranch: ${branch}\n\nLet's achieve your fitness goals together! 🏋️‍♂️🔥`
+      body: `🎉 Welcome to our Gym, ${name}!\n\nWe’re excited to have you onboard. 💪\n\nYour selected package: ${packageExists.packageType}\nTrainer: ${trainerExists.name}\nBranch: ${branchExists.branchName}\n\nLet's achieve your fitness goals together! 🏋️‍♂️🔥`
     });
 
     // If UPI → go to payment route
@@ -1378,7 +1386,7 @@ exports.addClients = async (req, res) => {
       await clientTwilio.messages.create({
         from: "whatsapp:+14155238886",
         to: `whatsapp:+91${phone}`,
-        body: `✅ Payment Successful!\n\nHi ${name}, we’ve received your CASH payment for the package: ${packageExists.packageType}.\n\nYour membership is active until: ${expiredDate.toDateString()}.\n\nStay consistent and crush your fitness journey! 🔥`
+        body: `✅ Payment Successful!\n\nHi ${name}, we’ve received your CASH payment for the package: ${packageExists.packageType}.\n\n📅 Start Date: ${paidDate.toDateString()}\n📅 Expiry Date: ${expiredDate.toDateString()}\n\nStay consistent and crush your fitness journey! 🔥`
       });
     }
 
