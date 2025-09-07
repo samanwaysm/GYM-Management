@@ -36,7 +36,6 @@ const schema = new mongoose.Schema(
     },
     paymentDate: {
       type: Date,
-      default: Date.now,
     },
     confirmedPayment: {
       type: Boolean,

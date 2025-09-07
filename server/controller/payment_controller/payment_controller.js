@@ -42,15 +42,12 @@ exports.createOrder = async (req, res) => {
       }
     });
 
-    // Save Payment
-    const newPayment = new Payment({
-      clientId,
-      membershipId: membership._id,
-      amount: membership.price,
-      razorpayOrderId: paymentLink.id, // store PaymentLink id
-      status: "Pending"
-    });
-    await newPayment.save();    
+    // 🔹 Update only razorpayOrderId
+    await Payment.findOneAndUpdate(
+      { clientId },
+      { razorpayOrderId: paymentLink.id },
+      { new: true }
+    );    
 
     // Send WhatsApp link via Twilio
     await clientTwilio.messages.create({
@@ -96,7 +93,7 @@ exports.handleWebhook = async (req, res) => {
           { razorpayOrderId: paymentLink.id },
           {
             razorpayPaymentId: paymentData.id,
-            status: "Success",
+            status: "Completed",
             confirmedPayment: true,
             paidAt: new Date()
           }
@@ -224,15 +221,18 @@ exports.updateMembership = async (req, res) => {
     // ✅ Create Razorpay order
     const order = await razorpay.orders.create(options);
 
-    // ✅ Save Payment in DB (Pending)
-    await Payment.create({
-      clientId,
-      membershipId: membership._id,
-      packageId,
-      amount: packageData.price,
-      razorpayOrderId: order.id,
-      status: "Pending"
-    });
+    // ✅ Update existing Payment instead of creating new
+    await Payment.findOneAndUpdate(
+      { clientId }, 
+      {
+        razorpayOrderId: order.id,
+        status: "Pending",        // keep pending until webhook confirms
+        paymentMethod: "Online",  // set payment method
+        confirmedPayment: false,
+        paymentDate: null
+      },
+      { new: true }
+    );
 
     // ✅ Return order details to frontend
     res.json({
@@ -281,9 +281,9 @@ exports.verifyPayment = async (req, res) => {
       { razorpayOrderId: razorpay_order_id },
       {
         razorpayPaymentId: razorpay_payment_id,
-        status: "Success",
+        status: "Completed",
         confirmedPayment: true,
-        paidAt: paidDate
+        paymentDate: paidDate
       },
       { new: true }
     );
