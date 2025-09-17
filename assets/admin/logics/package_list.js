@@ -89,7 +89,10 @@ function addPackage() {
                 text: data.message,
                 icon: "success",
                 timer: 1000,
-                showConfirmButton: false
+                showConfirmButton: false,
+                background: "#1e1e2f",     // dark background
+                color: "#ffffff",          // white text
+                iconColor: "#00d97e"       // success green for dark theme
             }).then(() => {
                 document.getElementById("addPackageForm").reset();
                 document.getElementById("addPackageForm").classList.remove("was-validated");
@@ -166,7 +169,10 @@ function updatePackage() {
                 text: 'Package updated successfully.',
                 icon: 'success',
                 timer: 1000,
-                showConfirmButton: false
+                showConfirmButton: false,
+                background: "#1e1e2f",
+                color: "#ffffff",
+                iconColor: "#00d97e"
             });
             fetchPackages();
         } else if (data.field) {
@@ -187,7 +193,10 @@ function confirmDelete(id) {
         confirmButtonColor: '#d33',
         cancelButtonColor: '#3085d6',
         confirmButtonText: 'Yes, delete it!',
-        cancelButtonText: 'Cancel'
+        cancelButtonText: 'Cancel',
+        background: "#1e1e2f",
+        color: "#ffffff",
+        iconColor: "#ffc107"
     }).then((result) => {
         if (result.isConfirmed) {
             deletePackage(id);
@@ -205,15 +214,21 @@ function deletePackage(id) {
                     text: 'The package has been deleted.',
                     icon: 'success',
                     timer: 1000,
-                    showConfirmButton: false
+                    showConfirmButton: false,
+                    background: "#1e1e2f",
+                    color: "#ffffff",
+                    iconColor: "#00d97e"
                 });
                 fetchPackages();
             } else {
                 Swal.fire({
                     title: 'Error!',
                     text: data.message || 'Failed to delete package.',
-                    icon: 'error'
-                });
+                    icon: 'error',
+                    background: "#1e1e2f",
+                    color: "#ffffff",
+                    iconColor: "#ff6b6b"
+            });
             }
         })
         .catch(err => {
@@ -221,7 +236,10 @@ function deletePackage(id) {
             Swal.fire({
                 title: 'Error!',
                 text: 'Something went wrong. Please try again later.',
-                icon: 'error'
+                icon: 'error',
+                background: "#1e1e2f",
+                color: "#ffffff",
+                iconColor: "#ff6b6b"
             });
         });
 }
