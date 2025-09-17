@@ -49,15 +49,32 @@ exports.createOrder = async (req, res) => {
       { new: true }
     );    
 
-    // Send WhatsApp link via Twilio
-    await clientTwilio.messages.create({
-      from: "whatsapp:+14155238886", // Twilio sandbox
-      to: `whatsapp:+91${membership.clientId.phone}`,
-      body: `Hi ${membership.clientId.name}, please complete your gym membership payment using this link: ${paymentLink.short_url}`
-    });
-
-    // ✅ Redirect admin back to client list after sending message
+    // ✅ Send response FIRST
+    req.session.success = "Payment link created & sent to client.";
     res.redirect("/admin-clients-list");
+
+    // 🔹 WhatsApp message in BACKGROUND
+    (async () => {
+      try {
+        await clientTwilio.messages.create({
+          from: "whatsapp:+14155238886", // Twilio sandbox
+          to: `whatsapp:+91${membership.clientId.phone}`,
+          body: `Hi ${membership.clientId.name}, please complete your gym membership payment using this link: ${paymentLink.short_url}`
+        });
+      } catch (err) {
+        console.error("⚠️ WhatsApp sending failed:", err.message);
+      }
+    })();
+
+    // // Send WhatsApp link via Twilio
+    // await clientTwilio.messages.create({
+    //   from: "whatsapp:+14155238886", // Twilio sandbox
+    //   to: `whatsapp:+91${membership.clientId.phone}`,
+    //   body: `Hi ${membership.clientId.name}, please complete your gym membership payment using this link: ${paymentLink.short_url}`
+    // });
+
+    // // ✅ Redirect admin back to client list after sending message
+    // res.redirect("/admin-clients-list");
 
   } catch (err) {
     console.error("❌ Payment creation failed:", err);

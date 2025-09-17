@@ -17,6 +17,91 @@ const { uploadFileToS3 } = require("../../services/s3_service/s3_service");
 
 const clientTwilio = new twilio(process.env.TWILIO_SID, process.env.TWILIO_AUTH_TOKEN);
 
+// exports.adminLogin = async (req, res) => {
+//   const superAdmin = {
+//     email: process.env.ADMIN_EMAIL,
+//     password: process.env.ADMIN_PASS,
+//   };
+
+//   console.log(req.body);
+  
+//   const { email, password } = req.body;
+//   const errors = {};
+
+//   // Required fields
+//   if (!email) errors.email = "Email is required.";
+//   if (!password) errors.password = "Password is required.";
+
+//   if (Object.keys(errors).length > 0) {
+//     req.session.errors = errors;
+//     return res.redirect("/admin-login");
+//   }
+
+//   // Email format validation
+//   const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+//   if (!emailPattern.test(email)) {
+//     req.session.errors = { email: "Invalid email format." };
+//     return res.redirect("/admin-login");
+//   }
+
+//   try {
+//     // 1️⃣ SuperAdmin Login
+//     if (email === superAdmin.email) {
+//       if (password === superAdmin.password) {
+//         req.session.isSuperAdminAuthenticated = true;
+//         req.session.isAnyAdminAuthenticated = true;
+//         req.session.user = "superAdmin";
+//         req.session.userType = "superAdmin";
+//         return res.redirect("/admin-dashboard");
+//       } else {
+//         req.session.errors = { password: "Incorrect SuperAdmin password." };
+//         return res.redirect("/admin-login");
+//       }
+//     }
+
+//     // 2️⃣ Find User in DB
+//     const user = await User.findOne({ email, userType: { $in: ["admin", "trainer"] } });
+//     if (!user) {
+//       req.session.errors = { email: "No admin or trainer account found with this email." };
+//       return res.redirect("/admin-login");
+//     }
+
+//     // ✅ Compare password
+//     const isMatch = await bcrypt.compare(password, user.password);
+//     if (!isMatch) {
+//       req.session.errors = { password: "Incorrect password." };
+//       return res.redirect("/admin-login");
+//     }
+
+//     // 3️⃣ Handle login by role
+//     req.session.userId = user._id;
+//     req.session.user = user.name;
+//     req.session.userType = user.userType;
+
+//     if (user.userType === "admin") {
+//       req.session.isAdminAuthenticated = true;
+//       req.session.isAnyAdminAuthenticated = true;
+//       return res.redirect("/admin-dashboard");
+//     }
+
+//     if (user.userType === "trainer") {
+//       req.session.isTrainerAuthenticated = true;
+//       return res.redirect("/trainer-dashboard");
+//     }
+
+//     // ❌ Just in case
+//     // req.session.errors = { loginError: "Invalid user role." };
+//     // return res.redirect("/admin-login");
+//     return res.json({ success: false, errors });
+
+
+//   } catch (err) {
+//     console.error(err);
+//     req.session.errors = { loginError: "Something went wrong during login." };
+//     return res.redirect("/admin-login");
+//   }
+// };
+
 exports.adminLogin = async (req, res) => {
   const superAdmin = {
     email: process.env.ADMIN_EMAIL,
@@ -26,52 +111,61 @@ exports.adminLogin = async (req, res) => {
   const { email, password } = req.body;
   const errors = {};
 
-  // Required fields
   if (!email) errors.email = "Email is required.";
   if (!password) errors.password = "Password is required.";
 
+  // If AJAX request -> return JSON
+  const isAjax = req.xhr || req.headers.accept.indexOf('json') > -1;
+
   if (Object.keys(errors).length > 0) {
+    if (isAjax) return res.json({ success: false, errors });
     req.session.errors = errors;
     return res.redirect("/admin-login");
   }
 
-  // Email format validation
   const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailPattern.test(email)) {
-    req.session.errors = { email: "Invalid email format." };
+    const err = { email: "Invalid email format." };
+    if (isAjax) return res.json({ success: false, errors: err });
+    req.session.errors = err;
     return res.redirect("/admin-login");
   }
 
   try {
-    // 1️⃣ SuperAdmin Login
+    // SuperAdmin
     if (email === superAdmin.email) {
       if (password === superAdmin.password) {
         req.session.isSuperAdminAuthenticated = true;
         req.session.isAnyAdminAuthenticated = true;
-        req.session.user = "superAdmin";
+        req.session.user = "Super Admin";
         req.session.userType = "superAdmin";
+        if (isAjax) return res.json({ success: true, redirect: "/admin-dashboard" });
         return res.redirect("/admin-dashboard");
       } else {
-        req.session.errors = { password: "Incorrect SuperAdmin password." };
+        const err = { password: "Incorrect SuperAdmin password." };
+        if (isAjax) return res.json({ success: false, errors: err });
+        req.session.errors = err;
         return res.redirect("/admin-login");
       }
     }
 
-    // 2️⃣ Find User in DB
+    // DB User
     const user = await User.findOne({ email, userType: { $in: ["admin", "trainer"] } });
     if (!user) {
-      req.session.errors = { email: "No admin or trainer account found with this email." };
+      const err = { email: "No admin or trainer account found with this email." };
+      if (isAjax) return res.json({ success: false, errors: err });
+      req.session.errors = err;
       return res.redirect("/admin-login");
     }
 
-    // ✅ Compare password
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      req.session.errors = { password: "Incorrect password." };
+      const err = { password: "Incorrect password." };
+      if (isAjax) return res.json({ success: false, errors: err });
+      req.session.errors = err;
       return res.redirect("/admin-login");
     }
 
-    // 3️⃣ Handle login by role
     req.session.userId = user._id;
     req.session.user = user.name;
     req.session.userType = user.userType;
@@ -79,24 +173,27 @@ exports.adminLogin = async (req, res) => {
     if (user.userType === "admin") {
       req.session.isAdminAuthenticated = true;
       req.session.isAnyAdminAuthenticated = true;
+      req.session.isAdminOrTrainerAuthenticated = true;
+      if (isAjax) return res.json({ success: true, redirect: "/admin-dashboard" });
       return res.redirect("/admin-dashboard");
     }
 
     if (user.userType === "trainer") {
       req.session.isTrainerAuthenticated = true;
+      req.session.isAdminOrTrainerAuthenticated = true;
+      if (isAjax) return res.json({ success: true, redirect: "/trainer-dashboard" });
       return res.redirect("/trainer-dashboard");
     }
 
-    // ❌ Just in case
-    req.session.errors = { loginError: "Invalid user role." };
-    return res.redirect("/admin-login");
-
   } catch (err) {
     console.error(err);
-    req.session.errors = { loginError: "Something went wrong during login." };
+    const errMsg = { loginError: "Something went wrong during login." };
+    if (isAjax) return res.json({ success: false, errors: errMsg });
+    req.session.errors = errMsg;
     return res.redirect("/admin-login");
   }
 };
+
 
 exports.adminlogout = (req, res) => {
   // Clear session variables
@@ -342,20 +439,20 @@ exports.addAdmin = async (req, res) => {
 
   // Validation
   if (!name || name.trim().length < 3) {
-    errors.nameError = "Name must be at least 3 characters.";
+    errors.name = "Name must be at least 3 characters.";
   }
 
   if (!email) {
-    errors.emailError = "Email is required.";
+    errors.email = "Email is required.";
   } else {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      errors.emailError = "Invalid email format.";
+      errors.email = "Invalid email format.";
     }
   }
 
   if (!phone) {
-    errors.phoneError = "Phone number is required.";
+    errors.phone = "Phone number is required.";
   }
 
   const firstFour = name.substring(0, 4);
@@ -363,23 +460,19 @@ exports.addAdmin = async (req, res) => {
   const rawPassword = firstFour + lastFour;
 
   try {
-    // Check for duplicates (email or phone)
-    const existingUser = await User.findOne({
-      $or: [{ email }, { phone }]
-    });
-
+    // Check for duplicates
+    const existingUser = await User.findOne({ $or: [{ email }, { phone }] });
     if (existingUser) {
       if (existingUser.email === email) {
-        errors.emailError = "User already exists with this email.";
+        errors.email = "User already exists with this email.";
       }
       if (existingUser.phone === phone) {
-        errors.phoneError = "User already exists with this phone number.";
+        errors.phone = "User already exists with this phone number.";
       }
     }
 
     if (Object.keys(errors).length > 0) {
-      req.session.errors = errors;
-      return res.redirect('/superadmin-add-admin');
+      return res.status(400).json({ errors });
     }
 
     const hashedPassword = await bcrypt.hash(rawPassword, 10);
@@ -394,12 +487,10 @@ exports.addAdmin = async (req, res) => {
 
     await newAdmin.save();
 
-    req.session.success = "Admin added successfully.";
-    return res.redirect('/superadmin-admin-list');
+    return res.status(200).json({ message: "Admin added successfully." });
   } catch (err) {
     console.error(err);
-    req.session.errors = { signUpError: "An error occurred during signup." };
-    res.redirect('/superadmin-add-admin');
+    return res.status(500).json({ errors: { signUpError: "An error occurred during signup." } });
   }
 };
 
@@ -635,44 +726,184 @@ exports.verifyAdminOTP = async (req, res) => {
 };
 
 
+// exports.addBranch = async (req, res) => {
+//   try {
+//     const {
+//       name, // branch name
+//       phone,
+//       address,
+//       city,
+//       state,
+//       pincode,
+//       lat,
+//       lng
+//     } = req.body;
+
+
+//     // Create branch object
+//     const newBranch = new Branch({
+//       name: name,
+//       location: {
+//         address,
+//         city,
+//         state,
+//         pincode,
+//         geo: {
+//           lat: lat || null,
+//           lng: lng || null
+//         }
+//       },
+//       phone
+//     });
+
+//     await newBranch.save();
+
+//     return res.redirect('/admin-branches-list'); // adjust this redirect path as needed
+//   } catch (error) {
+//     console.error('Error creating branch:', error);
+//     res.status(500).send('Server error while adding branch.');
+//   }
+// };
+
+// exports.addBranch = async (req, res) => {
+//   try {
+//     const {
+//       name,
+//       phone,
+//       address,
+//       city,
+//       state,
+//       pincode,
+//       lat,
+//       lng
+//     } = req.body;
+
+//     let errors = {};
+
+//     // ✅ Field-wise validation
+//     if (!name || name.trim() === '') {
+//       errors.name = "Branch name is required";
+//     }
+
+//     if (!phone || phone.trim() === '') {
+//       errors.phone = "Phone number is required";
+//     } else if (!/^\d{10}$/.test(phone)) {
+//       errors.phone = "Phone number must be 10 digits";
+//     }
+
+//     if (!address || address.trim() === '') {
+//       errors.address = "Address is required";
+//     }
+
+//     if (!city || city.trim() === '') {
+//       errors.city = "City is required";
+//     }
+
+//     if (!state || state.trim() === '') {
+//       errors.state = "State is required";
+//     }
+
+//     if (!pincode || !/^\d{6}$/.test(pincode)) {
+//       errors.pincode = "Valid 6-digit pincode is required";
+//     }
+
+//     // ✅ If errors exist → save in session and redirect back
+//     if (Object.keys(errors).length > 0) {
+//       req.session.errors = errors;
+//       req.session.formData = req.body; // store input so form can be refilled
+//       return res.redirect('/admin-add-branch');
+//     }
+
+//     // ✅ Save new branch if valid
+//     const newBranch = new Branch({
+//       name,
+//       location: {
+//         address,
+//         city,
+//         state,
+//         pincode,
+//         geo: {
+//           lat: lat || null,
+//           lng: lng || null
+//         }
+//       },
+//       phone
+//     });
+
+//     await newBranch.save();
+
+//     req.session.success = "Branch added successfully!";
+//     return res.redirect('/admin-branches-list');
+
+//   } catch (error) {
+//     console.error('Error creating branch:', error);
+//     req.session.errors = { server: "Server error while adding branch." };
+//     return res.redirect('/admin-add-branch');
+//   }
+// };
+
 exports.addBranch = async (req, res) => {
   try {
-    const {
-      name, // branch name
-      phone,
-      address,
-      city,
-      state,
-      pincode,
-      lat,
-      lng
-    } = req.body;
+    const { name, phone, address, city, state, pincode, lat, lng } = req.body;
 
+    let errors = {};
 
-    // Create branch object
+    if (!name || name.trim() === '') {
+      errors.name = "Branch name is required";
+    }
+
+    if (!phone || !/^\d{10}$/.test(phone)) {
+      errors.phone = "Valid 10-digit phone number is required";
+    }
+
+    if (Object.keys(errors).length > 0) {
+      return res.status(400).json({ success: false, errors });
+    }
+
+    // ✅ Duplicate check (by branch name, you can also include city)
+    const branchExists = await Branch.findOne({ name: name.trim(), "location.city": city.trim() });
+    if (branchExists) {
+      return res.status(400).json({ success: false, errors: { name: "Branch already exists in this city." } });
+    }
+
     const newBranch = new Branch({
-      name: name,
+      name,
+      phone,
       location: {
         address,
         city,
         state,
         pincode,
-        geo: {
-          lat: lat || null,
-          lng: lng || null
-        }
-      },
-      phone
+        geo: { lat: lat || null, lng: lng || null }
+      }
     });
 
     await newBranch.save();
 
-    return res.redirect('/admin-branches-list'); // adjust this redirect path as needed
+    return res.json({ success: true });
   } catch (error) {
-    console.error('Error creating branch:', error);
-    res.status(500).send('Server error while adding branch.');
+    console.error("Error creating branch:", error);
+    return res.status(500).json({ success: false, errors: { server: "Server error" } });
   }
 };
+
+exports.checkBranch = async (req, res) => {
+  try {
+    console.log(req.query);
+    
+    const { name } = req.query;
+    if (!name || !name.trim()) {
+      return res.json({ exists: false });
+    }
+
+    const branchExists = await Branch.findOne({ name: name.trim() });
+    return res.json({ exists: !!branchExists });
+  } catch (err) {
+    console.error("Error checking branch:", err);
+    return res.status(500).json({ exists: false });
+  }
+}
+
 
 exports.branchList = async (req, res) => {
   try {
@@ -827,15 +1058,155 @@ exports.deleteBranch = async (req, res) => {
   }
 }
 
+// exports.addTrainers = async (req, res) => {
+//   try {
+//     const { name, email, phone, branch } = req.body;
+
+//     // Check if trainer already exists
+//     const existingTrainer = await User.findOne({ email, userType: "trainer" });
+//     if (existingTrainer) {
+//       req.session.errors = ['Trainer with this email already exists'];
+//       return res.redirect('/admin-add-trainer');
+//     }
+
+//     // Generate password from name + phone
+//     const firstFour = name.substring(0, 4);
+//     const lastFour = phone.slice(-4);
+//     const rawPassword = firstFour + lastFour;
+//     const hashedPassword = await bcrypt.hash(rawPassword, 10);
+
+//     // Step 1: Create trainer in User collection
+//     const newTrainer = new User({
+//       name,
+//       email,
+//       phone,
+//       password: hashedPassword,
+//       userType: "trainer"
+//     });
+//     const savedTrainer = await newTrainer.save();
+
+//     // Step 2: Create trainer details (branch mapping)
+//     const trainerDetails = new TrainerDetails({
+//       trainerId: savedTrainer._id,
+//       branch
+//     });
+
+//     await trainerDetails.save();
+
+//     req.session.success = 'Trainer added successfully!';
+//     return res.redirect('/admin-trainers-list');
+
+//   } catch (error) {
+//     console.error('Error creating trainer:', error);
+//     res.status(500).send('Server error while adding trainer.');
+//   }
+// };
+
+// exports.addTrainers = async (req, res) => {
+//   try {
+//     const { name, email, phone, branch } = req.body;
+
+//     let errors = {};
+
+//     // ✅ Name validation
+//     if (!name || name.trim() === "") {
+//       errors.name = "Trainer name is required";
+//     }
+
+//     // ✅ Email validation
+//     if (!email || email.trim() === "") {
+//       errors.email = "Email is required";
+//     } else {
+//       const existingTrainer = await User.findOne({ email, userType: "trainer" });
+//       if (existingTrainer) {
+//         errors.email = "Trainer with this email already exists";
+//       }
+//     }
+
+//     // ✅ Phone validation
+//     if (!phone || phone.trim() === "") {
+//       errors.phone = "Phone number is required";
+//     } else if (!/^\d{10}$/.test(phone)) {
+//       errors.phone = "Phone number must be 10 digits";
+//     }
+
+//     // ✅ Branch validation
+//     if (!branch || branch.trim() === "") {
+//       errors.branch = "Branch selection is required";
+//     }
+
+//     // ❌ If validation errors exist → store in session
+//     if (Object.keys(errors).length > 0) {
+//       req.session.errors = errors;
+//       req.session.formData = req.body; // store input so user doesn’t retype
+//       return res.redirect("/admin-add-trainer");
+//     }
+
+//     // ✅ Generate password from name + phone
+//     const firstFour = name.substring(0, 4);
+//     const lastFour = phone.slice(-4);
+//     const rawPassword = firstFour + lastFour;
+//     const hashedPassword = await bcrypt.hash(rawPassword, 10);
+
+//     // ✅ Step 1: Create trainer in User collection
+//     const newTrainer = new User({
+//       name,
+//       email,
+//       phone,
+//       password: hashedPassword,
+//       userType: "trainer"
+//     });
+//     const savedTrainer = await newTrainer.save();
+
+//     // ✅ Step 2: Create trainer details (branch mapping)
+//     const trainerDetails = new TrainerDetails({
+//       trainerId: savedTrainer._id,
+//       branch
+//     });
+
+//     await trainerDetails.save();
+
+//     req.session.success = "Trainer added successfully!";
+//     return res.redirect("/admin-trainers-list");
+
+//   } catch (error) {
+//     console.error("Error creating trainer:", error);
+//     req.session.errors = { server: "Server error while adding trainer." };
+//     return res.redirect("/admin-add-trainer");
+//   }
+// };
+
 exports.addTrainers = async (req, res) => {
   try {
+    console.log(req.body);
+    
     const { name, email, phone, branch } = req.body;
+    let errors = {};
 
-    // Check if trainer already exists
-    const existingTrainer = await User.findOne({ email, userType: "trainer" });
-    if (existingTrainer) {
-      req.session.errors = ['Trainer with this email already exists'];
-      return res.redirect('/admin-add-trainer');
+    // Name validation
+    if (!name || name.trim() === "") {
+      errors.name = "Trainer name is required";
+    }
+
+    // Phone validation
+    if (!phone || phone.trim() === "") {
+      errors.phone = "Phone number is required";
+    } else if (!/^\d{10}$/.test(phone)) {
+      errors.phone = "Phone number must be 10 digits";
+    }
+
+    // If validation fails
+    if (Object.keys(errors).length > 0) {
+      return res.json({ success: false, errors });
+    }
+
+    // ✅ Check duplicate phone number
+    const existingUser = await User.findOne({ phone });
+    if (existingUser) {
+      return res.json({
+        success: false,
+        errors: { phone: "Phone number already exists" }
+      });
     }
 
     // Generate password from name + phone
@@ -844,7 +1215,7 @@ exports.addTrainers = async (req, res) => {
     const rawPassword = firstFour + lastFour;
     const hashedPassword = await bcrypt.hash(rawPassword, 10);
 
-    // Step 1: Create trainer in User collection
+    // Save trainer
     const newTrainer = new User({
       name,
       email,
@@ -854,22 +1225,22 @@ exports.addTrainers = async (req, res) => {
     });
     const savedTrainer = await newTrainer.save();
 
-    // Step 2: Create trainer details (branch mapping)
-    const trainerDetails = new TrainerDetails({
+    await new TrainerDetails({
       trainerId: savedTrainer._id,
       branch
-    });
+    }).save();
 
-    await trainerDetails.save();
-
-    req.session.success = 'Trainer added successfully!';
-    return res.redirect('/admin-trainers-list');
+    return res.json({ success: true });
 
   } catch (error) {
-    console.error('Error creating trainer:', error);
-    res.status(500).send('Server error while adding trainer.');
+    console.error("Error creating trainer:", error);
+    return res.json({
+      success: false,
+      errors: { server: "Server error while adding trainer." }
+    });
   }
 };
+
 
 exports.trainersList = async (req, res) => {
   try {
@@ -1258,6 +1629,27 @@ exports.deleteTrainers = async (req, res) => {
 //   }
 // };
 
+
+exports.checkClientPhone = async (req, res) => {
+  try {
+    console.log(req.query);
+    
+    const { phone } = req.query;
+
+    const exists = await User.findOne({ phone, userType: "client" });
+
+    if (exists) {
+      return res.json({ success: false, message: "Phone number already exists" });
+    }
+
+    // If phone does not exist, just send success true with no message
+    return res.json({ success: true });
+  } catch (error) {
+    console.error("Error checking phone:", error);
+    return res.json({ success: false, message: "Server error" });
+  }
+}
+
 // 🔹 Add new client + membership
 exports.addClients = async (req, res) => {
   try {
@@ -1377,12 +1769,44 @@ exports.addClients = async (req, res) => {
       paymentDate: paidDate
     });
 
+    // 🔹 Success response FIRST
+    req.session.success = "Client & Membership added successfully.";
+
+    if (paymentMethod.toLowerCase() === "online") {
+      return res.redirect(
+        `/payment/create-order?clientId=${newUser._id}&packageId=${packageExists._id}`
+      );
+    } else {
+      res.json({ success: true });
+    }
+
+    // 🔹 Fire WhatsApp message in background (non-blocking)
+    (async () => {
+      try {
+        await clientTwilio.messages.create({
+          from: "whatsapp:+14155238886",
+          to: `whatsapp:+91${phone}`,
+          body: `🎉 Welcome to our Gym, ${name}!\n\nWe’re excited to have you onboard. 💪\n\nYour selected package: ${packageExists.packageType}\nTrainer: ${trainerExists.name}\nBranch: ${branchExists.name}\n\nLet's achieve your fitness goals together! 🏋️‍♂️🔥`
+        });
+
+        if (paymentMethod.toLowerCase() === "cash" && isConfirmed) {
+          await clientTwilio.messages.create({
+            from: "whatsapp:+14155238886",
+            to: `whatsapp:+91${phone}`,
+            body: `✅ Payment Successful!\n\nHi ${name}, we’ve received your CASH payment for the package: ${packageExists.packageType}.\n\n📅 Start Date: ${paidDate.toDateString()}\n📅 Expiry Date: ${expiredDate.toDateString()}\n\nStay consistent and crush your fitness journey! 🔥`
+          });
+        }
+      } catch (err) {
+        console.error("⚠️ WhatsApp sending failed:", err.message);
+      }
+    })();
+
     // 🔹 Always send Welcome WhatsApp message
-    await clientTwilio.messages.create({
-      from: "whatsapp:+14155238886",
-      to: `whatsapp:+91${phone}`,
-      body: `🎉 Welcome to our Gym, ${name}!\n\nWe’re excited to have you onboard. 💪\n\nYour selected package: ${packageExists.packageType}\nTrainer: ${trainerExists.name}\nBranch: ${branchExists.name}\n\nLet's achieve your fitness goals together! 🏋️‍♂️🔥`
-    });
+    // await clientTwilio.messages.create({
+    //   from: "whatsapp:+14155238886",
+    //   to: `whatsapp:+91${phone}`,
+    //   body: `🎉 Welcome to our Gym, ${name}!\n\nWe’re excited to have you onboard. 💪\n\nYour selected package: ${packageExists.packageType}\nTrainer: ${trainerExists.name}\nBranch: ${branchExists.name}\n\nLet's achieve your fitness goals together! 🏋️‍♂️🔥`
+    // });
 
     // If UPI → go to payment route
     if (paymentMethod.toLowerCase() === "online") {
@@ -1392,16 +1816,15 @@ exports.addClients = async (req, res) => {
     }
 
     // 🔹 If Cash and Confirmed → send WhatsApp payment confirmation
-    if (paymentMethod.toLowerCase() === "cash" && isConfirmed) {
-      await clientTwilio.messages.create({
-        from: "whatsapp:+14155238886",
-        to: `whatsapp:+91${phone}`,
-        body: `✅ Payment Successful!\n\nHi ${name}, we’ve received your CASH payment for the package: ${packageExists.packageType}.\n\n📅 Start Date: ${paidDate.toDateString()}\n📅 Expiry Date: ${expiredDate.toDateString()}\n\nStay consistent and crush your fitness journey! 🔥`
-      });
-    }
-
-    req.session.success = "Client & Membership added successfully.";
-    return res.redirect("/admin-clients-list");
+    // if (paymentMethod.toLowerCase() === "cash" && isConfirmed) {
+    //   console.log('msg');
+      
+    //   await clientTwilio.messages.create({
+    //     from: "whatsapp:+14155238886",
+    //     to: `whatsapp:+91${phone}`,
+    //     body: `✅ Payment Successful!\n\nHi ${name}, we’ve received your CASH payment for the package: ${packageExists.packageType}.\n\n📅 Start Date: ${paidDate.toDateString()}\n📅 Expiry Date: ${expiredDate.toDateString()}\n\nStay consistent and crush your fitness journey! 🔥`
+    //   });
+    // }
 
   } catch (err) {
     console.error("❌ Error adding client:", err);
@@ -2196,16 +2619,58 @@ exports.getPackageList = async (req, res) => {
 };
 
 
+// exports.addPackages = async (req, res) => {
+//   try {
+//     const { packageType, durationInDays, price } = req.body;
+//     // Validate required fields
+//     if (!packageType || !price) {
+//       return res.status(400).json({ success: false, message: "Duration and price are required." });
+//     }
+
+//     // Create and save new package
+//     const newPackage = new Package({ packageType, durationInDays, price });
+//     await newPackage.save();
+
+//     res.status(201).json({
+//       success: true,
+//       message: "Package added successfully.",
+//       package: newPackage
+//     });
+//   } catch (error) {
+//     console.error("Error adding package:", error);
+//     res.status(500).json({ success: false, message: "Server error." });
+//   }
+// };
+
 exports.addPackages = async (req, res) => {
   try {
     const { packageType, durationInDays, price } = req.body;
-    // Validate required fields
-    if (!packageType || !price) {
-      return res.status(400).json({ success: false, message: "Duration and price are required." });
+
+    // Validate each field
+    if (!packageType || packageType.trim() === "") {
+      return res.status(400).json({ success: false, field: "packageType", message: "Package type is required." });
+    }
+
+    if (!durationInDays || durationInDays <= 0) {
+      return res.status(400).json({ success: false, field: "durationInDays", message: "Duration must be greater than 0." });
+    }
+
+    if (!price || price < 0) {
+      return res.status(400).json({ success: false, field: "price", message: "Price must be a positive number." });
+    }
+
+    // Check if package with same name already exists (optional)
+    const existingPackage = await Package.findOne({ packageType: packageType.trim() });
+    if (existingPackage) {
+      return res.status(400).json({ success: false, field: "packageType", message: "Package type already exists." });
     }
 
     // Create and save new package
-    const newPackage = new Package({ packageType, durationInDays, price });
+    const newPackage = new Package({
+      packageType: packageType.trim(),
+      durationInDays,
+      price
+    });
     await newPackage.save();
 
     res.status(201).json({
@@ -2213,6 +2678,7 @@ exports.addPackages = async (req, res) => {
       message: "Package added successfully.",
       package: newPackage
     });
+
   } catch (error) {
     console.error("Error adding package:", error);
     res.status(500).json({ success: false, message: "Server error." });

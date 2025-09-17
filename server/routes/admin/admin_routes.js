@@ -16,6 +16,7 @@ const {
   isAnyAdminNotAuthenticated,
   isAnyStaffAuthenticated,
   isAnyStaffNotAuthenticated,
+  isAdminOrTrainerAuthenticated
 } = require("../../middleware/admin/auth");
 
 const gateCheck = require("../../middleware/admin/gateCheck");
@@ -25,38 +26,41 @@ const gateCheck = require("../../middleware/admin/gateCheck");
 // 🔹 PAGE RENDER ROUTES (Services)
 // ========================
 
-// Auth pages
-route.get("/admin-login", isAnyStaffNotAuthenticated, services.adminLogin);
-route.get("/admin-forgot-password", isAnyStaffNotAuthenticated, services.forgot_password);
-route.get("/admin-change-password", isAnyStaffNotAuthenticated, services.change_password);
+// Auth pages (no role needed → only "not authenticated" check if you want)
+route.get("/admin-login", services.adminLogin);
+route.get("/admin-forgot-password", services.forgot_password);
+route.get("/admin-change-password", services.change_password);
 
 // Dashboard & profile
-route.get("/admin-dashboard", isAnyAdminAuthenticated, gateCheck(["superadmin","admin"]), services.dashboard);
-route.get("/admin-profile", isAnyStaffAuthenticated, services.admin_profile);
+route.get("/admin-dashboard", gateCheck(["superadmin","admin"]), services.dashboard);
+route.get("/admin-profile", gateCheck(["admin","trainer"]), services.admin_profile);
 
 // Superadmin pages
-route.get("/superadmin-add-admin", isSuperAdminAuthenticated, gateCheck(["superadmin"]), services.add_admin);
-route.get("/superadmin-edit-admin/:id", isSuperAdminAuthenticated, services.edit_admin);
-route.get("/superadmin-admin-list", isSuperAdminAuthenticated, services.admin_list);
+route.get("/superadmin-add-admin", gateCheck(["superadmin"]), services.add_admin);
+route.get("/superadmin-edit-admin/:id", gateCheck(["superadmin"]), services.edit_admin);
+route.get("/superadmin-admin-list", gateCheck(["superadmin"]), services.admin_list);
 
-// Branch pages
-route.get("/admin-branches-list", isAnyAdminAuthenticated, services.branches_list);
-route.get("/admin-add-branch", isAnyAdminAuthenticated, services.add_branch);
-route.get("/admin-edit-branch/:id", isAnyAdminAuthenticated, services.edit_branch);
+// Branch pages (admins only)
+route.get("/admin-branches-list", gateCheck(["superadmin","admin"]), services.branches_list);
+route.get("/admin-add-branch", gateCheck(["superadmin","admin"]), services.add_branch);
+route.get("/admin-edit-branch/:id", gateCheck(["superadmin","admin"]), services.edit_branch);
 
-// Trainer pages
-route.get("/admin-add-trainers", isAnyAdminAuthenticated, services.add_trainers);
-route.get("/admin-trainers-list", isAnyAdminAuthenticated, services.trainers_list);
-route.get("/admin-edit-trainers/:id", isAnyAdminAuthenticated, services.edit_trainers);
+// Trainer pages (admins only)
+route.get("/admin-add-trainers", gateCheck(["superadmin","admin"]), services.add_trainers);
+route.get("/admin-trainers-list", gateCheck(["superadmin","admin"]), services.trainers_list);
+route.get("/admin-edit-trainers/:id", gateCheck(["superadmin","admin"]), services.edit_trainers);
 
-// Client pages
-route.get("/admin-clients-list", isAnyStaffAuthenticated, services.clients_list);
-route.get("/admin-client-details/:id", isAnyStaffAuthenticated, services.client_details);
-route.get("/admin-add-clients", isAnyStaffAuthenticated, services.add_clients);
-route.get("/admin-edit-clients/:id", isAnyStaffAuthenticated, services.edit_clients);
+// Client pages (all staff: superadmin, admin, trainer)
+route.get("/admin-clients-list", gateCheck(["superadmin","admin","trainer"]), services.clients_list);
+route.get("/admin-client-details/:id", gateCheck(["superadmin","admin","trainer"]), services.client_details);
+route.get("/admin-add-clients", gateCheck(["superadmin","admin","trainer"]), services.add_clients);
+route.get("/admin-edit-clients/:id", gateCheck(["superadmin","admin","trainer"]), services.edit_clients);
 
-// Package pages
-route.get("/admin-package-list", isAnyAdminAuthenticated, services.package_list);
+// Package pages (admins only)
+route.get("/admin-package-list", gateCheck(["superadmin","admin"]), services.package_list);
+
+// Payment pages (admins only)
+route.get("/admin-payments-list", gateCheck(["superadmin","admin"]), services.payment_list);
 
 // Utility
 route.get("/cam", services.cam);
@@ -92,6 +96,7 @@ route.put("/admin/update-branch/:id", controller.updateBranch);
 route.delete("/admin/delete-branch/:id", controller.deleteBranch);
 route.get("/admin/branch-list", controller.branchList);
 route.get("/admin/get-branches-name", controller.getBranchNames);
+route.get("/admin/check-branch", controller.checkBranch);
 
 // Trainer APIs
 route.post("/admin/add-trainers", controller.addTrainers);
@@ -109,7 +114,7 @@ route.patch("/admin/update-membership/:id", controller.updateMembership);
 route.delete("/admin/delete-clients/:id", controller.deleteClients);
 route.get("/admin/clients-list", controller.clientsList);
 route.get("/admin/get-client-details/:id", controller.getClientDetails);
-
+route.get("/admin/check-phone", controller.checkClientPhone);
 // Package APIs
 route.post("/admin/add-packages", controller.addPackages);
 route.get("/admin/get-package-details/:id", controller.getPackageDetails);

@@ -16,123 +16,106 @@
               <div class="card">
                 <div class="card-body mt-3">
                   <!-- <h4 class="card-title">Horizontal Two column</h4> -->
-                  <form class="form-sample" id="admin_register" method="POST" action="/admin/add-clients"
-                    enctype="multipart/form-data">
-                    <!-- <p class="card-description"> Personal info </p> -->
+                  <form class="form-sample" id="admin_register" enctype="multipart/form-data">
                     <div class="row">
                       <div class="col-md-6">
                         <div class="form-group row">
-                          <label class="col-sm-3 col-form-label">Name : </label>
+                          <label class="col-sm-3 col-form-label">Name:</label>
                           <div class="col-sm-9">
-                            <input type="text" id="name" name="name" class="form-control text-white" />
-                            <% if (errors && errors.name) { %>
-                              <div class="text-danger small">
-                                <%= errors.name %>
-                              </div>
-                              <% } %>
+                            <input type="text" id="name" name="name" class="form-control text-white"  />
+                            <small name="nameError" class="text-danger error-text"></small>
                           </div>
                         </div>
                       </div>
                       <div class="col-md-6">
                         <div class="form-group row">
-                          <label class="col-sm-3 col-form-label">Email : </label>
+                          <label class="col-sm-3 col-form-label">Email:</label>
                           <div class="col-sm-9">
                             <input type="email" id="email" name="email" class="form-control text-white" />
-                            <% if (errors && errors.email) { %>
-                              <div class="text-danger small">
-                                <%= errors.email %>
-                              </div>
-                              <% } %>
+                            <small name="emailError" class="text-danger error-text"></small>
                           </div>
                         </div>
                       </div>
                     </div>
-                    <div class="row">
-                      <div class="col-md-6">
-                        <div class="form-group row">
-                          <label class="col-sm-3 col-form-label">Phone Number : </label>
-                          <div class="col-sm-9 d-flex align-items-center">
-                            <!-- <span class="input-group-text">+91</span> -->
-                            <input type="tel" id="phone" name="phone" class="form-control text-white" maxlength="10"
-                              pattern="[0-9]{10}" oninput="this.value=this.value.replace(/[^0-9]/g,'')" required />
-                          </div>
-                          <% if (errors && errors.phoneError) { %>
-                            <div class="text-danger small mt-1">
-                              <%= errors.phoneError %>
-                            </div>
-                            <% } %>
-                        </div>
-                      </div>
-                      <div class="col-md-6">
-                        <div class="form-group row">
-                          <label class="col-sm-3 col-form-label">Alt.Phone : </label>
-                          <div class="col-sm-9">
-                            <input type="tel" id="altphone" name="altphone" class="form-control text-white"
-                              placeholder="(optional)" />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="row">
-                      <div class="col-md-6">
-                        <div class="form-group row">
-                          <label class="col-sm-3 col-form-label">Gender : </label>
-                          <div class="col-sm-9">
-                            <select class="form-control text-white" name="gender" id="gender" required>
-                              <option class="form-control text-white" value="">-- Select Gender --</option>
-                              <option class="form-control text-white" value="Male">Male</option>
-                              <option class="form-control text-white" value="Female">Female</option>
-                              <option class="form-control text-white" value="Other">Other</option>
-                            </select>
-                            <% if (errors && errors.gender) { %>
-                              <div class="text-danger small">
-                                <%= errors.gender %>
-                              </div>
-                              <% } %>
-                          </div>
-                        </div>
-                      </div>
-                      <div class="col-md-6">
-                        <div class="form-group row">
-                          <label class="col-sm-3 col-form-label">DOB :</label>
-                          <div class="col-sm-9">
-                            <input type="date" id="dob" name="dob" class="form-control text-white" />
-                            <% if (errors && errors.dob) { %>
-                              <div class="text-danger small">
-                                <%= errors.dob %>
-                              </div>
-                            <% } %>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="row">
-                      <div class="col-md-6">
-                        <div class="form-group row">
-                          <label class="col-sm-3 col-form-label">Branch : </label>
-                          <div class="col-sm-9">
-                            <select class="form-control text-white" name="branch" id="branch" required>
-                              <option class="form-control text-white" value="">-- Select Branch --</option>
-                            </select>
-                          </div>
-                        </div>
-                      </div>
-                      <div class="col-md-6">
-                        <div class="form-group row">
-                          <label class="col-sm-3 col-form-label"> Trainer : </label>
-                          <div class="col-sm-9">
-                            <select class="form-control text-white" name="trainer" id="trainer" required>
-                              <option class="form-control text-white" value="">-- Select Trainer --</option>
-                            </select>
 
+                    <div class="row">
+                      <div class="col-md-6">
+                        <div class="form-group row">
+                          <label class="col-sm-3 col-form-label">Phone:</label>
+                          <div class="col-sm-9">
+                            <input type="tel" id="phone" name="phone" class="form-control text-white" maxlength="10"
+                                  pattern="\d{10}" oninput="this.value=this.value.replace(/[^0-9]/g,'')"  />
+                            <small name="phoneError" class="text-danger error-text"></small>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col-md-6">
+                        <div class="form-group row">
+                          <label class="col-sm-3 col-form-label">Alt. Phone:</label>
+                          <div class="col-sm-9">
+                            <input type="tel" id="altphone" name="altphone" class="form-control text-white" placeholder="optional" />
                           </div>
                         </div>
                       </div>
                     </div>
+
+                    <!-- Gender, DOB, Branch, Trainer -->
                     <div class="row">
                       <div class="col-md-6">
                         <div class="form-group row">
-                          <label class="col-sm-3 col-form-label">Height : </label>
+                          <label class="col-sm-3 col-form-label">Gender:</label>
+                          <div class="col-sm-9">
+                            <select class="form-control text-white" name="gender" id="gender" >
+                              <option value="">-- Select Gender --</option>
+                              <option value="Male">Male</option>
+                              <option value="Female">Female</option>
+                              <option value="Other">Other</option>
+                            </select>
+                            <small name="genderError" class="text-danger error-text"></small>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col-md-6">
+                        <div class="form-group row">
+                          <label class="col-sm-3 col-form-label">DOB:</label>
+                          <div class="col-sm-9">
+                            <input type="date" id="dob" name="dob" class="form-control text-white"  />
+                            <small name="dobError" class="text-danger error-text"></small>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="row">
+                      <div class="col-md-6">
+                        <div class="form-group row">
+                          <label class="col-sm-3 col-form-label">Branch:</label>
+                          <div class="col-sm-9">
+                            <select class="form-control text-white" name="branch" id="branch" >
+                              <option value="">-- Select Branch --</option>
+                            </select>
+                            <small name="branchError" class="text-danger error-text"></small>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col-md-6">
+                        <div class="form-group row">
+                          <label class="col-sm-3 col-form-label">Trainer:</label>
+                          <div class="col-sm-9">
+                            <select class="form-control text-white" name="trainer" id="trainer" >
+                              <option value="">-- Select Trainer --</option>
+                            </select>
+                            <small name="trainerError" class="text-danger error-text"></small>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Height, Weight, Image -->
+                    <div class="row">
+                      <div class="col-md-6">
+                        <div class="form-group row">
+                          <label class="col-sm-3 col-form-label">Height:</label>
                           <div class="col-sm-9">
                             <input type="number" id="height" name="height" class="form-control text-white" />
                           </div>
@@ -140,37 +123,34 @@
                       </div>
                       <div class="col-md-6">
                         <div class="form-group row">
-                          <label class="col-sm-3 col-form-label">Weight : </label>
+                          <label class="col-sm-3 col-form-label">Weight:</label>
                           <div class="col-sm-9">
                             <input type="text" id="weight" name="weight" class="form-control text-white" />
                           </div>
                         </div>
                       </div>
                     </div>
+
                     <div class="row">
                       <div class="col-md-6">
                         <div class="form-group row">
-                          <label class="col-sm-3 col-form-label">Profile Image : </label>
+                          <label class="col-sm-3 col-form-label">Profile Image:</label>
                           <div class="col-sm-9">
-                            <input type="file" id="img" name="img" class="form-control text-white" accept="image/*"
-                              onchange="previewImage(event)" />
+                            <input type="file" id="img" name="img" class="form-control text-white" accept="image/*" onchange="previewImage(event)" />
                             <div class="mt-2">
-                              <img id="imgPreview" src="" alt="Image Preview"
-                                style="max-width: 150px; display: none; border: 1px solid #ccc; border-radius: 5px; padding: 3px;" />
+                              <img id="imgPreview" src="" alt="Image Preview" style="max-width:150px;display:none;border:1px solid #ccc;border-radius:5px;padding:3px;">
                             </div>
-                            <% if (errors && errors.profileImg) { %>
-                              <div class="text-danger small">
-                                <%= errors.profileImg %>
-                              </div>
-                              <% } %>
+                            <small name="profileImgError" class="text-danger error-text"></small>
                           </div>
                         </div>
                       </div>
                     </div>
-                    <!-- hidden inputs to carry modal values -->
-                    <input type="hidden" name="package" id="hiddenPackage">
-                    <input type="hidden" name="paymentMethod" id="hiddenPaymentMethod">
+
+                    <!-- Hidden fields for modal -->
+                    <input type="hidden" id="hiddenPackage" name="package">
+                    <input type="hidden" id="hiddenPaymentMethod" name="paymentMethod">
                     <input type="hidden" id="hiddenConfirmedPayment" name="confirmedPayment">
+
                     <div class="mt-2 text-right">
                       <button type="submit" class="btn btn-success mr-2 text-dark">Submit</button>
                     </div>
@@ -180,42 +160,68 @@
             </div>
           </div>
         </div>
-
-        <div class="modal fade" id="membershipModal" tabindex="-1" aria-labelledby="membershipModalLabel"
-          aria-hidden="true">
+        
+        <div class="modal fade" id="membershipModal" tabindex="-1" aria-hidden="true">
           <div class="modal-dialog">
             <div class="modal-content">
-
               <div class="modal-header">
-                <h5 class="modal-title" id="membershipModalLabel">Membership & Payment Details</h5>
+                <h5 class="modal-title">Membership & Payment Details</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
               </div>
-
               <div class="modal-body">
                 <div class="mb-3">
                   <label for="package" class="form-label">Package</label>
-                  <select class="form-control text-white" id="package" name="package" required>
-                    <option class="text-white" value="">-- Select Package --</option>
+                  <select id="package" class="form-control text-white" required>
+                    <option value="">-- Select Package --</option>
                   </select>
+                  <div class="invalid-feedback" id="packageError"></div>
                 </div>
 
                 <div class="mb-3">
                   <label for="paymentMethod" class="form-label">Payment Method</label>
-                  <select class="form-control text-white" id="paymentMethod" name="paymentMethod" required>
-                    <option class="text-white" value="">-- Select Payment Method --</option>
-                    <option class="text-white" value="Cash">Cash</option>
-                    <option class="text-white" value="Online">Online</option>
+                  <select id="paymentMethod" class="form-control text-white" required>
+                    <option value="">-- Select Payment Method --</option>
+                    <option value="Cash">Cash</option>
+                    <option value="Online">Online</option>
                   </select>
+                  <div class="invalid-feedback" id="paymentMethodError"></div>
                 </div>
               </div>
-
               <div class="modal-footer">
                 <button type="button" id="confirmSave" class="btn btn-success">Save & Submit</button>
               </div>
-
             </div>
           </div>
         </div>
+
+        <!-- Membership Modal -->
+        <!-- <div class="modal fade" id="membershipModal" tabindex="-1" aria-hidden="true">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title">Membership & Payment Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+              </div>
+              <div class="modal-body">
+                <div class="mb-3">
+                  <label for="package" class="form-label">Package</label>
+                  <select id="package" class="form-control text-white" required></select>
+                </div>
+                <div class="mb-3">
+                  <label for="paymentMethod" class="form-label">Payment Method</label>
+                  <select id="paymentMethod" class="form-control text-white" required>
+                    <option value="">-- Select Payment Method --</option>
+                    <option value="Cash">Cash</option>
+                    <option value="Online">Online</option>
+                  </select>
+                </div>
+              </div>
+              <div class="modal-footer">
+                <button type="button" id="confirmSave" class="btn btn-success">Save & Submit</button>
+              </div>
+            </div>
+          </div>
+        </div> -->
         <!-- content-wrapper ends -->
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <script src="/admin/logics/add_clients.js"></script>

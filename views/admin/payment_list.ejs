@@ -1,0 +1,44 @@
+<%-include("../admin/includes/header")-%>
+<!-- partial -->
+            <div class="main-panel">
+                <div class="content-wrapper">
+                    <div class="page-header">
+                        <h3 class="page-title"> Payment List </h3>
+                        <nav aria-label="breadcrumb">
+                            <ol class="breadcrumb">
+                                <li class="breadcrumb-item"><a href="/superadmin-admin-list">Admin</a></li>
+                                <li class="breadcrumb-item active" aria-current="page">Payment List</li>
+                            </ol>
+                        </nav>
+                    </div>
+                    <div class="card">
+                        <div class="card-body">
+                            <!-- <h4 class="card-title">Hoverable Table</h4>
+                            <p class="card-description"> Add class <code>.table-hover</code>
+                            </p> -->
+                            <!-- Search box -->
+                            <div class="mb-3">
+                                <input type="text" id="searchBox" class="form-control text-white"
+                                    placeholder="Search by name, email, phone...">
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>User</th>
+                                            <th>Email</th>
+                                            <th>Phone</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+
+                                    <tbody id="adminsTableBody">
+
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- content-wrapper ends -->
+<%-include("../admin/includes/footer")-%>

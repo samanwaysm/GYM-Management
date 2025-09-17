@@ -215,6 +215,16 @@ exports.package_list = (req, res) => {
     })
 }
 
+exports.payment_list = (req, res) => {
+    const { errors, isSuperAdminAuthenticated, user, userId, userType } = req.session
+    delete req.session.errors
+    res.render("admin/payment_list",{errors, isSuperAdminAuthenticated, user, userId, userType},(err, html) => {
+        if (err) {
+            console.log(err);
+        }
+        res.send(html)
+    })
+}
 
 exports.cam = (req, res) => {
     const { errors } = req.session

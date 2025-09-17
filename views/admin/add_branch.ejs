@@ -15,83 +15,81 @@
               <div class="col-12 grid-margin mt-5">
                 <div class="card">
                   <div class="card-body mt-3">
-                    <!-- <h4 class="card-title">Horizontal Two column</h4> -->
-                    <form class="form-sample" id="admin_register" method="POST" action="/admin/add-branch">
-                      <!-- <p class="card-description"> Personal info </p> -->
+                    <form id="branchForm" novalidate>
                       <div class="row">
+                        <!-- Branch Name -->
                         <div class="col-md-6">
                           <div class="form-group row">
-                            <label class="col-sm-3 col-form-label">Branch Name : </label>
+                            <label class="col-sm-3 col-form-label">Branch Name :</label>
                             <div class="col-sm-9">
-                              <input type="text" id="name" name="name" class="form-control text-white" />
+                              <input type="text" id="name" name="name" class="form-control text-white" required />
+                              <div class="invalid-feedback" id="nameError"></div>
                             </div>
                           </div>
                         </div>
+
+                        <!-- Phone -->
                         <div class="col-md-6">
                           <div class="form-group row">
-                            <label class="col-sm-3 col-form-label">Phone : </label>
-                            <div class="col-sm-9 d-flex align-items-center">
-                            <!-- <span class="input-group-text">+91</span> -->
-                            <input type="tel" id="phone" name="phone" class="form-control text-white" maxlength="10"
-                              pattern="[0-9]{10}" oninput="this.value=this.value.replace(/[^0-9]/g,'')" required />
-                          </div>
-                          </div>
-                        </div>
-                      </div>
-                      <div class="row">
-                        <div class="col-md-6">
-                          <div class="form-group row">
-                            <label class="col-sm-3 col-form-label"> Address : </label>
+                            <label class="col-sm-3 col-form-label">Phone :</label>
                             <div class="col-sm-9">
-                              <input type="text" id="address" name="address" class="form-control text-white" />
-                            </div>
-                          </div>
-                        </div>
-                        <div class="col-md-6">
-                          <div class="form-group row">
-                            <label class="col-sm-3 col-form-label">City : </label>
-                            <div class="col-sm-9">
-                              <input type="text" id="city" name="city" class="form-control text-white" />
+                              <input type="tel" id="phone" name="phone" class="form-control text-white" maxlength="10"
+                                    pattern="[0-9]{10}" required
+                                    oninput="this.value=this.value.replace(/[^0-9]/g,'')" />
+                              <div class="invalid-feedback">Enter a valid 10-digit phone number.</div>
                             </div>
                           </div>
                         </div>
                       </div>
+
                       <div class="row">
+                        <!-- Address -->
                         <div class="col-md-6">
                           <div class="form-group row">
-                            <label class="col-sm-3 col-form-label">State : </label>
+                            <label class="col-sm-3 col-form-label">Address :</label>
                             <div class="col-sm-9">
-                              <input type="text" id="state" name="state" class="form-control text-white" />
+                              <input type="text" id="address" name="address" class="form-control text-white" required />
+                              <div class="invalid-feedback">Address is required.</div>
                             </div>
                           </div>
                         </div>
+
+                        <!-- City -->
                         <div class="col-md-6">
                           <div class="form-group row">
-                            <label class="col-sm-3 col-form-label">Pincode : </label>
+                            <label class="col-sm-3 col-form-label">City :</label>
                             <div class="col-sm-9">
-                              <input type="number" id="pincode" name="pincode" class="form-control text-white" />
+                              <input type="text" id="city" name="city" class="form-control text-white" required />
+                              <div class="invalid-feedback">City is required.</div>
                             </div>
                           </div>
                         </div>
                       </div>
-                      <!-- <div class="row">
+
+                      <div class="row">
+                        <!-- State -->
                         <div class="col-md-6">
                           <div class="form-group row">
-                            <label class="col-sm-3 col-form-label">Lat : </label>
+                            <label class="col-sm-3 col-form-label">State :</label>
                             <div class="col-sm-9">
-                              <input type="number" id="lat" name="lat" class="form-control" placeholder="(optional)"/>
+                              <input type="text" id="state" name="state" class="form-control text-white" required />
+                              <div class="invalid-feedback">State is required.</div>
                             </div>
                           </div>
                         </div>
+
+                        <!-- Pincode -->
                         <div class="col-md-6">
                           <div class="form-group row">
-                            <label class="col-sm-3 col-form-label">Lng : </label>
+                            <label class="col-sm-3 col-form-label">Pincode :</label>
                             <div class="col-sm-9">
-                              <input type="number" id="lng" name="lng" class="form-control" placeholder="(optional)"/>
+                              <input type="text" id="pincode" name="pincode" class="form-control text-white" pattern="[0-9]{6}" required />
+                              <div class="invalid-feedback">Enter a valid 6-digit pincode.</div>
                             </div>
                           </div>
                         </div>
-                      </div> -->
+                      </div>
+
                       <div class="mt-2 text-right">
                         <button type="submit" class="btn btn-success mr-2 text-dark">Submit</button>
                       </div>
@@ -101,5 +99,157 @@
               </div>
             </div>
           </div>
+          <script>
+  const nameInput = document.getElementById("name");
+  const errorDiv = document.getElementById("nameError");
+
+  function showError(message) {
+    nameInput.classList.add("is-invalid");
+    errorDiv.textContent = message; // dynamically inject
+  }
+
+  function clearError() {
+    nameInput.classList.remove("is-invalid");
+    errorDiv.textContent = ""; // remove text completely
+  }
+
+  // Blur event
+  nameInput.addEventListener("blur", async function () {
+    const name = nameInput.value.trim();
+    clearError();
+
+    // Case 1: Empty field
+    if (!name) {
+      showError("Branch name is required.");
+      return;
+    }
+
+    try {
+      // Case 2: Duplicate check
+      const res = await fetch(`/admin/check-branch?name=${encodeURIComponent(name)}`);
+      const data = await res.json();
+
+      if (data.exists) {
+        showError("Branch name already exists.");
+      }
+    } catch (err) {
+      console.error("Error checking branch:", err);
+    }
+  });
+
+  // Submit event
+  document.getElementById("branchForm").addEventListener("submit", async function (e) {
+    e.preventDefault();
+    const form = e.target;
+
+    if (!form.checkValidity()) {
+      form.classList.add("was-validated");
+      return;
+    }
+
+    const formData = Object.fromEntries(new FormData(form).entries());
+
+    try {
+      const res = await fetch("/admin/add-branch", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData)
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        alert("✅ Branch added successfully!");
+        form.reset();
+        form.classList.remove("was-validated");
+        clearError();
+      } else {
+        if (data.errors?.name) {
+          showError(data.errors.name);
+        }
+      }
+    } catch (err) {
+      alert("❌ Server error. Please try again.");
+    }
+  });
+</script>
+
+          <!-- <script>
+
+            document.getElementById("name").addEventListener("blur", async function () {
+              const nameInput = this;
+              const name = nameInput.value.trim();
+              const errorDiv = document.getElementById("nameError");
+
+              // Case 1: Empty field
+              if (!name) {
+                nameInput.classList.add("is-invalid");
+                errorDiv.innerText = "Branch name is required.";
+                return;
+              }
+
+              try {
+                // Case 2: Check duplicate in DB
+                const res = await fetch(`/admin/check-branch?name=${encodeURIComponent(name)}`);
+                const data = await res.json();
+
+                if (data.exists) {
+                  nameInput.classList.add("is-invalid");
+                  errorDiv.innerText = "Branch name already exists.";
+                } else {
+                  nameInput.classList.remove("is-invalid");
+                  errorDiv.innerText = "";
+                }
+              } catch (err) {
+                console.error("Error checking branch:", err);
+              }
+            });            
+
+            document.getElementById("branchForm").addEventListener("submit", async function(e) {
+              e.preventDefault();
+              const form = e.target;
+
+              // Case: Empty before submit
+              if (!nameInput.value.trim()) {
+                nameInput.classList.add("is-invalid");
+                errorDiv.innerText = "Branch name is required.";
+                return;
+              }
+
+              // ✅ Client-side validation (Bootstrap)
+              if (!form.checkValidity()) {
+                form.classList.add("was-validated");
+                return;
+              }
+
+              const formData = Object.fromEntries(new FormData(form).entries());
+
+              try {
+                const res = await fetch("/admin/add-branch", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify(formData)
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                  alert("✅ Branch added successfully!");
+                  form.reset();
+                  form.classList.remove("was-validated");
+                } else {
+                  Object.keys(data.errors || {}).forEach(key => {
+                    const input = document.getElementById(key);
+                    if (input) {
+                      input.classList.add("is-invalid");
+                      input.nextElementSibling.innerText = data.errors[key];
+                    }
+                  });
+                }
+              } catch (err) {
+                alert("❌ Server error. Please try again.");
+              }
+            });
+          </script> -->
           <!-- content-wrapper ends -->
           <%-include("../admin/includes/footer")-%>

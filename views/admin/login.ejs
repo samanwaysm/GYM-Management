@@ -27,15 +27,11 @@
           <div class="card col-lg-4 mx-auto">
             <div class="card-body px-5 py-5">
               <h3 class="card-title text-left mb-3">Login</h3>
-              <form id="loginForm" method="POST" action="/admin/adminlogin" class="needs-validation" novalidate>
+              <form id="loginForm" class="needs-validation">
                 <div class="mb-3">
                   <label class="form-label text-white">Email</label>
-                  <input type="email" name="email" class="form-control" placeholder="Enter email">
-                  <% if (errors && errors.email) { %>
-                    <div class="text-danger small">
-                      <%= errors.email %>
-                    </div>
-                    <% } %>
+                  <input type="email" id="email" name="email" class="form-control" placeholder="Enter email">
+                  <div id="emailError" class="invalid-feedback"></div>
                 </div>
 
                 <div class="mb-3">
@@ -48,13 +44,8 @@
                         <i class="mdi mdi-eye-off"></i>
                       </span>
                     </div>
+                    <div id="passwordError" class="invalid-feedback"></div>
                   </div>
-                  <% if (errors && errors.password) { %>
-                    <div class="text-danger small">
-                      <%= errors.password %>
-                    </div>
-                    <% } %>
-                </div>
 
                 <!-- <div class="form-group mb-3">
                   <label for="password"> Password </label>
@@ -93,6 +84,7 @@
   </div>
   <!-- container-scroller -->
   <!-- plugins:js -->
+   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <script src="/admin/vendors/js/vendor.bundle.base.js"></script>
   <script>
     function togglePassword(inputId, el) {
@@ -109,6 +101,78 @@
         icon.classList.add("mdi-eye-off");
       }
     }
+
+    document.getElementById("loginForm").addEventListener("submit", async function(e) {
+      e.preventDefault();
+      const form = e.target;
+
+      // Reset previous errors
+      const emailInput = document.getElementById("email");
+      const passwordInput = document.getElementById("password");
+      const emailError = document.getElementById("emailError");
+      const passwordError = document.getElementById("passwordError");
+
+      emailInput.classList.remove("is-invalid");
+      passwordInput.classList.remove("is-invalid");
+      emailError.innerText = "";
+      passwordError.innerText = "";
+
+      let hasError = false;
+
+      // ✅ Frontend validation
+      if (!emailInput.value.trim()) {
+        emailError.innerText = "Email is required.";
+        emailInput.classList.add("is-invalid");
+        hasError = true;
+      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailInput.value.trim())) {
+        emailError.innerText = "Enter a valid email address.";
+        emailInput.classList.add("is-invalid");
+        hasError = true;
+      }
+
+      if (!passwordInput.value.trim()) {
+        passwordError.innerText = "Password is required.";
+        passwordInput.classList.add("is-invalid");
+        hasError = true;
+      } 
+
+      if (hasError) return; // stop here if frontend errors
+
+      // ✅ Submit via AJAX
+      const formData = {
+        email: emailInput.value.trim(),
+        password: passwordInput.value.trim()
+      };
+
+      try {
+        const res = await fetch("/admin/adminlogin", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json"
+          },
+          body: JSON.stringify(formData)
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+          window.location.href = data.redirect;
+        } else {
+          // Show server-side errors
+          if (data.errors.email) {
+            emailError.innerText = data.errors.email;
+            emailInput.classList.add("is-invalid");
+          }
+          if (data.errors.password) {
+            passwordError.innerText = data.errors.password;
+            passwordInput.classList.add("is-invalid");
+          }
+        }
+      } catch (err) {
+        console.error("Login request failed:", err);
+      }
+    });
   </script>
   <!-- endinject -->
   <!-- Plugin js for this page -->

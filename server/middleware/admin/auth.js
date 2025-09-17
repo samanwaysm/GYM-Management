@@ -84,6 +84,14 @@ function isAnyStaffNotAuthenticated(req, res, next) {
   next();
 }
 
+// ADMIN + TRAINER ONLY (no SuperAdmin)
+function isAdminOrTrainerAuthenticated(req, res, next) {
+  if (req.session.isAdminAuthenticated || req.session.isTrainerAuthenticated) {
+    return next();
+  }
+  res.redirect("/admin-login"); // or "/trainer-login" depending on your design
+}
+
 module.exports = {
   isSuperAdminAuthenticated,
   isSuperAdminNotAuthenticated,
@@ -94,5 +102,6 @@ module.exports = {
   isAnyAdminAuthenticated,
   isAnyAdminNotAuthenticated,
   isAnyStaffAuthenticated,
-  isAnyStaffNotAuthenticated
+  isAnyStaffNotAuthenticated,
+  isAdminOrTrainerAuthenticated
 };

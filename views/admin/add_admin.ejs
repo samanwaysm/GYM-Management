@@ -15,58 +15,53 @@
             <div class="col-12 grid-margin mt-5">
               <div class="card">
                 <div class="card-body mt-3">
-                  <!-- <h4 class="card-title">Horizontal Two column</h4> -->
-                  <form class="form-sample" id="admin_register" method="POST" action="/superadmin/add-admin">
-                    <!-- <p class="card-description"> Personal info </p> -->
+                  <form class="form-sample needs-validation" id="admin_register" novalidate>
                     <div class="row">
+                      <!-- Name -->
                       <div class="col-md-6">
                         <div class="form-group row">
-                          <label class="col-sm-3 col-form-label">Name : </label>
+                          <label class="col-sm-3 col-form-label">Name :</label>
                           <div class="col-sm-9">
-                            <input type="text" id="name" name="name" class="form-control text-white " />
-                            <% if (errors && errors.nameError) { %>
-                              <div class="text-danger small">
-                                <%= errors.nameError %>
-                              </div>
-                              <% } %>
+                            <input type="text" id="name" name="name" class="form-control text-white" required />
+                            <div class="invalid-feedback" id="nameError">Please enter a name.</div>
                           </div>
                         </div>
                       </div>
-                      <div class="col-md-6">
-                        <div class="form-group row">
-                          <label class="col-sm-3 col-form-label">Email : </label>
-                          <div class="col-sm-9">
-                            <input type="email" id="email" name="email" class="form-control text-white" />
-                            <% if (errors && errors.emailError) { %>
-                              <div class="text-danger small">
-                                <%= errors.emailError %>
-                              </div>
-                              <% } %>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="row">
-                      <div class="col-md-6">
-                        <div class="form-group row">
-                          <label class="col-sm-3 col-form-label">Phone Number : </label>
-                          <div class="col-sm-9 d-flex align-items-center">
-                            <!-- <span class="input-group-text">+91</span> -->
-                            <input type="tel" id="phone" name="phone" class="form-control text-white" maxlength="10"
-                              pattern="[0-9]{10}" oninput="this.value=this.value.replace(/[^0-9]/g,'')" required />
-                          </div>
-                          <% if (errors && errors.phoneError) { %>
-                            <div class="text-danger small mt-1">
-                              <%= errors.phoneError %>
-                            </div>
-                          <% } %>
-                        </div>
-                      </div>
-                      <div class="col-md-6">
 
+                      <!-- Email -->
+                      <div class="col-md-6">
+                        <div class="form-group row">
+                          <label class="col-sm-3 col-form-label">Email :</label>
+                          <div class="col-sm-9">
+                            <input type="email" id="email" name="email" class="form-control text-white" required />
+                            <div class="invalid-feedback" id="emailError">Please enter a valid email.</div>
+                          </div>
+                        </div>
                       </div>
                     </div>
-                    <div class="mt-2 text-right">
+
+                    <!-- Phone -->
+                    <div class="row">
+                      <div class="col-md-6">
+                        <div class="form-group row">
+                          <label class="col-sm-3 col-form-label">Phone Num :</label>
+                            <div class="col-sm-9">
+                              <div class="input-group">
+                                <span class="input-group-text">+91</span>
+                                <input type="tel" id="phone" name="phone" class="form-control text-white"
+                                      maxlength="10" pattern="[0-9]{10}" required
+                                      oninput="this.value=this.value.replace(/[^0-9]/g,'')" />
+                                      <div class="invalid-feedback" id="phoneError">
+                                Enter a valid 10-digit phone number.
+                              </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="mt-2 text-right mb-3">
                       <button type="submit" class="btn btn-success mr-2 text-dark">Submit</button>
                     </div>
                   </form>
@@ -75,5 +70,53 @@
             </div>
           </div>
         </div>
+        <script>
+          document.getElementById("admin_register").addEventListener("submit", async function (e) {
+          e.preventDefault();
+
+          // Clear previous errors
+          ["name", "email", "phone"].forEach(field => {
+            const input = document.getElementById(field);
+            const feedback = document.getElementById(field + "Error");
+            input.classList.remove("is-invalid");
+            if (feedback) feedback.textContent = "";
+          });
+
+          const formData = {
+            name: document.getElementById("name").value.trim(),
+            email: document.getElementById("email").value.trim(),
+            phone: document.getElementById("phone").value.trim()
+          };
+
+          try {
+            const res = await fetch("/superadmin/add-admin", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(formData)
+            });
+
+            const data = await res.json();
+
+            if (res.status === 400) {
+              // Show validation errors
+              Object.keys(data.errors).forEach(field => {
+                const input = document.getElementById(field);
+                const feedback = document.getElementById(field + "Error");
+                if (input && feedback) {
+                  input.classList.add("is-invalid");
+                  feedback.textContent = data.errors[field];
+                }
+              });
+            } else if (res.status === 200) {
+              alert(data.message);
+              window.location.href = "/superadmin-admin-list";
+            }
+          } catch (err) {
+            console.error("Error:", err);
+            alert("Something went wrong. Please try again.");
+          }
+        });
+        </script>
+
         <!-- content-wrapper ends -->
         <%-include("../admin/includes/footer")-%>

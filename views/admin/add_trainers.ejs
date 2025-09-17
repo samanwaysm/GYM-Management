@@ -16,42 +16,46 @@
               <div class="card">
                 <div class="card-body mt-3">
                   <!-- <h4 class="card-title">Horizontal Two column</h4> -->
-                  <form class="form-sample" id="admin_register" method="POST" action="/admin/add-trainers">
-                    <!-- <p class="card-description"> Personal info </p> -->
+                  <form class="form-sample needs-validation" id="admin_register" novalidate>
                     <div class="row">
+                      <!-- Name -->
                       <div class="col-md-6">
                         <div class="form-group row">
-                          <label class="col-sm-3 col-form-label">Name : </label>
+                          <label class="col-sm-3 col-form-label">Name :</label>
                           <div class="col-sm-9">
-                            <input type="text" id="name" name="name" class="form-control text-white" />
+                            <input type="text" id="name" name="name" class="form-control text-white" required />
+                            <div class="invalid-feedback" id="nameError">Name is required.</div>
                           </div>
                         </div>
                       </div>
+
+                      <!-- Phone -->
                       <div class="col-md-6">
                         <div class="form-group row">
-                          <label class="col-sm-3 col-form-label">Email : </label>
-                          <div class="col-sm-9">
-                            <input type="email" id="email" name="email" class="form-control text-white" />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="row">
-                      <div class="col-md-6">
-                        <div class="form-group row">
-                          <label class="col-sm-3 col-form-label">Phone Number : </label>
-                          <div class="col-sm-9 d-flex align-items-center">
-                            <!-- <span class="input-group-text">+91</span> -->
-                            <input type="tel" id="phone" name="phone" class="form-control text-white" maxlength="10"
-                              pattern="[0-9]{10}" oninput="this.value=this.value.replace(/[^0-9]/g,'')" required />
-                          </div>
-                          <% if (errors && errors.phoneError) { %>
-                            <div class="text-danger small mt-1">
-                              <%= errors.phoneError %>
+                          <label class="col-sm-3 col-form-label">Phone :</label>
+                            <div class="col-sm-9">
+                              <div class="input-group">
+                                <span class="input-group-text">+91</span>
+                                <input type="tel" id="phone" name="phone" class="form-control text-white"
+                                      maxlength="10" pattern="[0-9]{10}" required
+                                      oninput="this.value=this.value.replace(/[^0-9]/g,'')" />
+                                      <div class="invalid-feedback" id="phoneError">Enter a valid 10-digit phone number.</div>
+                              </div>
                             </div>
-                          <% } %>
                         </div>
                       </div>
+
+                      <!-- Email -->
+                      <div class="col-md-6">
+                        <div class="form-group row">
+                          <label class="col-sm-3 col-form-label">Email :</label>
+                          <div class="col-sm-9">
+                            <input type="email" id="email" name="email" class="form-control text-white" required />
+                            <div class="invalid-feedback" id="emailError">Please enter a valid email.</div>
+                          </div>
+                        </div>
+                      </div>
+
                       <div class="col-md-6">
                         <div class="form-group row">
                           <label class="col-sm-3 col-form-label">Branch : </label>
@@ -59,16 +63,16 @@
                             <select class="form-control text-white" name="branch" id="branch" required>
                               <option class="form-control text-white" value="">-- Select Branch --</option>
                             </select>
+                            <div class="invalid-feedback" id="branchError">Please select a branch.</div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                    <div class="row">
                     </div>
                     <div class="mt-2 text-right">
                       <button type="submit" class="btn btn-success mr-2 text-dark">Submit</button>
                     </div>
                   </form>
+
                 </div>
               </div>
             </div>
