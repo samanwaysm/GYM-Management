@@ -16,7 +16,7 @@
                             <div class="card">
                                 <div class="card-body mt-3">
                                     <!-- <h4 class="card-title">Horizontal Two column</h4> -->
-                                    <form class="form-sample" id="editAdminForm">
+                                    <form class="form-sample needs-validation" id="editAdminForm" novalidate>
                                         <!-- <p class="card-description"> Personal info </p> -->
                                         <div class="row">
                                             <div class="col-md-6">
@@ -24,11 +24,7 @@
                                                     <label class="col-sm-3 col-form-label">Name : </label>
                                                     <div class="col-sm-9">
                                                         <input type="text" id="name" name="name" class="form-control text-white" />
-                                                        <% if (errors && errors.nameError) { %>
-                                                            <div class="text-danger small">
-                                                                <%= errors.nameError %>
-                                                            </div>
-                                                            <% } %>
+                                                        <div class="invalid-feedback">Please enter a name</div>
                                                     </div>
                                                 </div>
                                             </div>
@@ -38,11 +34,7 @@
                                                     <div class="col-sm-9">
                                                         <input type="email" id="email" name="email"
                                                             class="form-control text-white" />
-                                                        <% if (errors && errors.emailError) { %>
-                                                            <div class="text-danger small">
-                                                                <%= errors.emailError %>
-                                                            </div>
-                                                            <% } %>
+                                                        <div class="invalid-feedback">Please enter a valid email</div>
                                                     </div>
                                                 </div>
                                             </div>
@@ -51,18 +43,15 @@
                                             <div class="col-md-6">
                                                 <div class="form-group row">
                                                     <label class="col-sm-3 col-form-label">Phone Number : </label>
-                                                    <div class="col-sm-9 d-flex align-items-center">
-                                                        <!-- <span class="input-group-text">+91</span> -->
-                                                        <input type="tel" id="phone" name="phone" class="form-control text-white"
-                                                            maxlength="10" pattern="[0-9]{10}"
-                                                            oninput="this.value=this.value.replace(/[^0-9]/g,'')"
-                                                            required />
-                                                    </div>
-                                                    <% if (errors && errors.phoneError) { %>
-                                                        <div class="text-danger small mt-1">
-                                                            <%= errors.phoneError %>
+                                                    <div class="col-sm-9">
+                                                        <div class="input-group">
+                                                            <span class="input-group-text">+91</span>
+                                                            <input type="tel" id="phone" name="phone" class="form-control text-white"
+                                                                maxlength="10" pattern="[0-9]{10}" required
+                                                                oninput="this.value=this.value.replace(/[^0-9]/g,'')" />
+                                                                <div class="invalid-feedback" id="phoneError">Enter a valid 10-digit phone number.</div>
                                                         </div>
-                                                        <% } %>
+                                                    </div>
                                                 </div>
                                             </div>
                                             <div class="col-md-6">

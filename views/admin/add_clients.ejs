@@ -16,14 +16,14 @@
               <div class="card">
                 <div class="card-body mt-3">
                   <!-- <h4 class="card-title">Horizontal Two column</h4> -->
-                  <form class="form-sample" id="admin_register" enctype="multipart/form-data">
+                  <form class="form-sample needs-validation" id="admin_register" enctype="multipart/form-data" novalidate>
                     <div class="row">
                       <div class="col-md-6">
                         <div class="form-group row">
                           <label class="col-sm-3 col-form-label">Name:</label>
                           <div class="col-sm-9">
                             <input type="text" id="name" name="name" class="form-control text-white"  />
-                            <small name="nameError" class="text-danger error-text"></small>
+                            <div class="invalid-feedback">Please enter a name.</div>
                           </div>
                         </div>
                       </div>
@@ -32,7 +32,7 @@
                           <label class="col-sm-3 col-form-label">Email:</label>
                           <div class="col-sm-9">
                             <input type="email" id="email" name="email" class="form-control text-white" />
-                            <small name="emailError" class="text-danger error-text"></small>
+                            <div class="invalid-feedback">Please enter a valid email.</div>
                           </div>
                         </div>
                       </div>
@@ -42,11 +42,13 @@
                       <div class="col-md-6">
                         <div class="form-group row">
                           <label class="col-sm-3 col-form-label">Phone:</label>
-                          <div class="col-sm-9">
-                            <input type="tel" id="phone" name="phone" class="form-control text-white" maxlength="10"
-                                  pattern="\d{10}" oninput="this.value=this.value.replace(/[^0-9]/g,'')"  />
-                            <small name="phoneError" class="text-danger error-text"></small>
-                          </div>
+                            <div class="col-sm-9">
+                              <div class="input-group">
+                                <span class="input-group-text">+91</span>
+                                <input type="tel" id="phone" name="phone" class="form-control text-white" maxlength="10" pattern="[0-9]{10}" oninput="this.value=this.value.replace(/[^0-9]/g,'')" />
+                              </div>
+                              <div class="invalid-feedback">Please enter a valid 10-digit phone number.</div>
+                            </div>
                         </div>
                       </div>
                       <div class="col-md-6">
@@ -71,7 +73,7 @@
                               <option value="Female">Female</option>
                               <option value="Other">Other</option>
                             </select>
-                            <small name="genderError" class="text-danger error-text"></small>
+                            <div class="invalid-feedback">Please select a gender.</div>
                           </div>
                         </div>
                       </div>
@@ -80,7 +82,7 @@
                           <label class="col-sm-3 col-form-label">DOB:</label>
                           <div class="col-sm-9">
                             <input type="date" id="dob" name="dob" class="form-control text-white"  />
-                            <small name="dobError" class="text-danger error-text"></small>
+                            <div class="invalid-feedback">Please select a valid date of birth.</div>
                           </div>
                         </div>
                       </div>
@@ -94,7 +96,7 @@
                             <select class="form-control text-white" name="branch" id="branch" >
                               <option value="">-- Select Branch --</option>
                             </select>
-                            <small name="branchError" class="text-danger error-text"></small>
+                            <div class="invalid-feedback">Please select a branch.</div>
                           </div>
                         </div>
                       </div>
@@ -105,7 +107,7 @@
                             <select class="form-control text-white" name="trainer" id="trainer" >
                               <option value="">-- Select Trainer --</option>
                             </select>
-                            <small name="trainerError" class="text-danger error-text"></small>
+                            <div class="invalid-feedback">Please select a trainer.</div>
                           </div>
                         </div>
                       </div>

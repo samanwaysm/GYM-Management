@@ -1,46 +1,81 @@
 document.addEventListener("DOMContentLoaded", function () {
-    const pathParts = window.location.pathname.split("/");
-    const adminId = pathParts[pathParts.length - 1]; // last part = id
+  const form = document.getElementById("editAdminForm");
+  const pathParts = window.location.pathname.split("/");
+  const adminId = pathParts[pathParts.length - 1];
 
-    // ✅ Load admin data
-    fetch(`/superadmin/get-admin/${adminId}`)
-        .then(res => res.json())
-        .then(data => {
-            if (data.success) {
-                document.getElementById("name").value = data.admin.name;
-                document.getElementById("email").value = data.admin.email;
-                document.getElementById("phone").value = data.admin.phone;
-            }
-        })
-        .catch(err => console.error("❌ Error fetching admin:", err));
-
-    // ✅ Handle form submit (AJAX)
-    document.getElementById("editAdminForm").addEventListener("submit", async function (e) {
-        e.preventDefault();
-
-        const updatedData = {
-            name: document.getElementById("name").value,
-            email: document.getElementById("email").value,
-            phone: document.getElementById("phone").value
-        };
-
-        try {
-            const res = await fetch(`/superadmin/update-admin/${adminId}`, {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(updatedData)
-            });
-
-            const result = await res.json();
-
-            if (result.success) {
-                // ✅ Redirect after success
-                window.location.href = "/superadmin-admin-list";
-            } else {
-                alert(result.error || "Failed to update admin");
-            }
-        } catch (err) {
-            console.error("❌ Error updating admin:", err);
-        }
+  // ✅ Load admin data
+  fetch(`/superadmin/get-admin/${adminId}`)
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        document.getElementById("name").value = data.admin.name || "";
+        document.getElementById("email").value = data.admin.email || "";
+        document.getElementById("phone").value = data.admin.phone || "";
+      }
     });
-}); F
+
+  // ✅ Handle submit
+  form.addEventListener("submit", async function (e) {
+    e.preventDefault();
+
+    // Reset validation states
+    form.querySelectorAll("input").forEach(input => {
+      input.classList.remove("is-invalid");
+    });
+
+    let hasError = false;
+
+    // ✅ Manual empty field validation
+    ["name", "email", "phone"].forEach(field => {
+      const input = document.getElementById(field);
+      const feedback = input.parentNode.querySelector(".invalid-feedback");
+
+      if (!input.value.trim()) {
+        feedback.innerText = `${field.charAt(0).toUpperCase() + field.slice(1)} is required`;
+        input.classList.add("is-invalid");
+        hasError = true;
+      }
+    });
+
+    if (hasError) return; // stop before API call
+
+    const updatedData = {
+      name: document.getElementById("name").value.trim(),
+      email: document.getElementById("email").value.trim(),
+      phone: document.getElementById("phone").value.trim()
+    };
+
+    try {
+      const res = await fetch(`/superadmin/update-admin/${adminId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updatedData)
+      });
+
+      const result = await res.json();
+
+      if (result.success) {
+        window.location.href = "/superadmin-admin-list";
+      } else if (result.errors) {
+        // ✅ Clear previous validation
+        form.querySelectorAll("input").forEach(input => {
+          input.classList.remove("is-invalid");
+        });
+
+        // ✅ Show server-side errors (email, phone uniqueness, etc.)
+        Object.keys(result.errors).forEach(field => {
+          const input = document.getElementById(field);
+          if (input) {
+            const feedback = input.parentNode.querySelector(".invalid-feedback");
+            if (feedback) {
+              feedback.innerText = result.errors[field];
+              input.classList.add("is-invalid");
+            }
+          }
+        });
+      }
+    } catch (err) {
+      console.error("❌ Error updating admin:", err);
+    }
+  });
+});

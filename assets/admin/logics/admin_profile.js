@@ -1,4 +1,80 @@
+function togglePassword(inputId, el) {
+    const input = document.getElementById(inputId);
+    const icon = el.querySelector("i");
 
+    if (input.type === "password") {
+      input.type = "text";
+      icon.classList.remove("mdi-eye-off");
+      icon.classList.add("mdi-eye");
+    } else {
+      input.type = "password";
+      icon.classList.remove("mdi-eye");
+      icon.classList.add("mdi-eye-off");
+    }
+  }
+
+  // Bootstrap validation
+   // Bootstrap validation
+  (function () {
+    "use strict";
+    window.addEventListener("load", function () {
+      const forms = document.getElementsByClassName("needs-validation");
+      Array.prototype.filter.call(forms, function (form) {
+        form.addEventListener("submit", function (event) {
+          let valid = true;
+
+          // checkValidity handles required/email/phone rules
+          if (form.checkValidity() === false) {
+            valid = false;
+          }
+
+          // Extra: Password validation
+          const password = document.getElementById("password");
+          const newPass = document.getElementById("new-password");
+          const confirmPass = document.getElementById("confirm-password");
+
+          if (!password.value.trim()) {
+            password.setCustomValidity("Please enter your current password");
+            valid = false;
+          } else {
+            password.setCustomValidity("");
+          }
+
+          if (!newPass.value.trim()) {
+            newPass.setCustomValidity("Please enter a new password");
+            valid = false;
+          } else if (newPass.value.length < 6) {
+            newPass.setCustomValidity("Password must be at least 6 characters");
+            valid = false;
+          } else {
+            newPass.setCustomValidity("");
+          }
+
+          if (!confirmPass.value.trim()) {
+            confirmPass.setCustomValidity("Please confirm your password");
+            valid = false;
+          } else if (newPass.value !== confirmPass.value) {
+            confirmPass.setCustomValidity("Passwords do not match");
+            valid = false;
+          } else {
+            confirmPass.setCustomValidity("");
+          }
+
+          if (!valid) {
+            event.preventDefault();
+            event.stopPropagation();
+          }
+
+          form.classList.add("was-validated");
+        }, false);
+      });
+    }, false);
+  })();
+
+  // ==============================
+  // Admin Profile + OTP Handling
+  // ==============================
+  
 let userType = null;
 
 document.addEventListener("DOMContentLoaded", function () {

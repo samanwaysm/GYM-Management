@@ -16,7 +16,7 @@
                 <div class="card">
                   <div class="card-body mt-3">
                     <!-- <h4 class="card-title">Horizontal Two column</h4> -->
-                    <form class="form-sample" id="editBranchForm">
+                    <form class="form-sample" id="editBranchForm" novalidate>
                       <!-- <p class="card-description"> Personal info </p> -->
                       <div class="row">
                         <div class="col-md-6">
@@ -24,17 +24,20 @@
                             <label class="col-sm-3 col-form-label">Branch Name : </label>
                             <div class="col-sm-9">
                               <input type="text" id="name" name="name" class="form-control text-white" />
+                              <div class="invalid-feedback">Please enter a branch name</div>
                             </div>
                           </div>
                         </div>
                         <div class="col-md-6">
                           <div class="form-group row">
                             <label class="col-sm-3 col-form-label">Phone : </label>
-                            <div class="col-sm-9 d-flex align-items-center">
-                            <!-- <span class="input-group-text">+91</span> -->
-                            <input type="tel" id="phone" name="phone" class="form-control text-white" maxlength="10"
-                              pattern="[0-9]{10}" oninput="this.value=this.value.replace(/[^0-9]/g,'')" required />
-                          </div>
+                            <div class="col-sm-9">
+                                  <div class="input-group">
+                                    <span class="input-group-text">+91</span>
+                                  <input type="tel" id="phone" name="phone" class="form-control text-white" maxlength="10" pattern="[0-9]{10}" oninput="this.value=this.value.replace(/[^0-9]/g,'')" />
+                                <div class="invalid-feedback" id="phoneError">Enter a valid 10-digit phone number.</div>
+                              </div>
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -44,6 +47,7 @@
                             <label class="col-sm-3 col-form-label"> Address : </label>
                             <div class="col-sm-9">
                               <input type="text" id="address" name="address" class="form-control text-white" />
+                              <div class="invalid-feedback">Please enter an address</div>
                             </div>
                           </div>
                         </div>
@@ -52,6 +56,7 @@
                             <label class="col-sm-3 col-form-label">City : </label>
                             <div class="col-sm-9">
                               <input type="text" id="city" name="city" class="form-control text-white" />
+                              <div class="invalid-feedback">Please enter a city</div>
                             </div>
                           </div>
                         </div>
@@ -62,6 +67,7 @@
                             <label class="col-sm-3 col-form-label">State : </label>
                             <div class="col-sm-9">
                               <input type="text" id="state" name="state" class="form-control text-white" />
+                              <div class="invalid-feedback">Please enter a state</div>
                             </div>
                           </div>
                         </div>
@@ -70,6 +76,7 @@
                             <label class="col-sm-3 col-form-label">Pincode : </label>
                             <div class="col-sm-9">
                               <input type="number" id="pincode" name="pincode" class="form-control text-white" />
+                              <div class="invalid-feedback">Please enter a pincode</div>
                             </div>
                           </div>
                         </div>

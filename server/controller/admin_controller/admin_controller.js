@@ -540,6 +540,30 @@ exports.updateAdmin = async (req, res) => {
     const { id } = req.params;
     const { name, email, phone } = req.body;
 
+    let errors = {};
+
+    // 🔎 Check if email already exists for another admin
+    if (email) {
+      const existingEmail = await User.findOne({ email, _id: { $ne: id } });
+      if (existingEmail) {
+        errors.email = "This email is already taken";
+      }
+    }
+
+    // 🔎 Check if phone already exists for another admin
+    if (phone) {
+      const existingPhone = await User.findOne({ phone, _id: { $ne: id } });
+      if (existingPhone) {
+        errors.phone = "This phone number is already registered";
+      }
+    }
+
+    // ❌ If any validation errors found → send them together
+    if (Object.keys(errors).length > 0) {
+      return res.status(400).json({ success: false, errors });
+    }
+
+    // ✅ Update admin
     const updatedAdmin = await User.findByIdAndUpdate(
       id,
       { name, email, phone },
@@ -1000,27 +1024,42 @@ exports.getBranchDetails = async (req, res) => {
   }
 }
 
-// ✅ Update Branch Controller
 exports.updateBranch = async (req, res) => {
   try {
     const { id } = req.params;
     const { name, phone, address, city, state, pincode, lat, lng } = req.body;
 
+    let errors = {};
+
+    // 🔎 Check if another branch already has this name
+    if (name) {
+      const existingBranch = await Branch.findOne({ name, _id: { $ne: id } });
+      if (existingBranch) {
+        errors.name = "This branch name is already taken";
+      }
+    }
+
+    // 🔎 Check if phone is already used
+    // if (phone) {
+    //   const existingPhone = await Branch.findOne({ phone, _id: { $ne: id } });
+    //   if (existingPhone) {
+    //     errors.phone = "This phone number is already registered";
+    //   }
+    // }
+
+    // ❌ If errors exist, stop here
+    if (Object.keys(errors).length > 0) {
+      return res.status(400).json({ success: false, errors });
+    }
+
+    // ✅ Update branch
     const updatedBranch = await Branch.findByIdAndUpdate(
       id,
       {
         name,
         phone,
-        location: {
-          address,
-          city,
-          state,
-          pincode,
-        },
-        geo: {
-          lat,
-          lng,
-        },
+        location: { address, city, state, pincode },
+        geo: { lat, lng },
       },
       {
         new: true,
@@ -1039,7 +1078,6 @@ exports.updateBranch = async (req, res) => {
     res.status(500).json({ success: false, error: "Server error" });
   }
 };
-
 
 exports.deleteBranch = async (req, res) => {
   try {
@@ -1423,16 +1461,82 @@ exports.getTrainersDetails = async (req, res) => {
   }
 };
 
+// exports.updateTrainers = async (req, res) => {
+//   try {
+//     const trainerId = req.params.id; //
+//     const { name, email, phone, branch } = req.body;
+
+//     if (!mongoose.Types.ObjectId.isValid(trainerId)) {
+//       return res.status(400).json({ success: false, error: "Invalid Trainer ID" });
+//     }
+
+//     // ✅ Step 1: Update User info
+//     const updatedUser = await User.findByIdAndUpdate(
+//       trainerId,
+//       { name, email, phone },
+//       { new: true, runValidators: true }
+//     );
+
+//     if (!updatedUser) {
+//       return res.status(404).json({ success: false, error: "Trainer (User) not found" });
+//     }
+
+//     // ✅ Step 2: Update branch in TrainerDetails if provided
+//     let updatedTrainerDetails = null;
+//     if (branch && mongoose.Types.ObjectId.isValid(branch)) {
+//       updatedTrainerDetails = await TrainerDetails.findOneAndUpdate(
+//         { trainerId: new mongoose.Types.ObjectId(trainerId) }, // ensure ObjectId
+//         { branch },
+//         { new: true, upsert: false }
+//       ).populate("branch", "name");
+//     }
+
+//     res.json({
+//       success: true,
+//       message: "Trainer updated successfully",
+//       trainer: {
+//         _id: updatedUser._id,
+//         name: updatedUser.name,
+//         email: updatedUser.email,
+//         phone: updatedUser.phone,
+//         branch: updatedTrainerDetails ? updatedTrainerDetails.branch : null
+//       }
+//     });
+
+//   } catch (err) {
+//     console.error("❌ Error updating trainer:", err);
+//     res.status(500).json({ success: false, error: "Server error while updating trainer" });
+//   }
+// };
+
 exports.updateTrainers = async (req, res) => {
   try {
-    const trainerId = req.params.id; //
+    const trainerId = req.params.id;
     const { name, email, phone, branch } = req.body;
 
     if (!mongoose.Types.ObjectId.isValid(trainerId)) {
-      return res.status(400).json({ success: false, error: "Invalid Trainer ID" });
+      return res.status(400).json({ success: false, errors: { general: "Invalid Trainer ID" } });
     }
 
-    // ✅ Step 1: Update User info
+    let errors = {};
+
+    // 🔎 Check email duplicate
+    if (email) {
+      const existingEmail = await User.findOne({ email, _id: { $ne: trainerId } });
+      if (existingEmail) errors.email = "This email is already taken";
+    }
+
+    // 🔎 Check phone duplicate
+    if (phone) {
+      const existingPhone = await User.findOne({ phone, _id: { $ne: trainerId } });
+      if (existingPhone) errors.phone = "This phone number is already registered";
+    }
+
+    if (Object.keys(errors).length > 0) {
+      return res.status(400).json({ success: false, errors });
+    }
+
+    // ✅ Update User
     const updatedUser = await User.findByIdAndUpdate(
       trainerId,
       { name, email, phone },
@@ -1440,14 +1544,14 @@ exports.updateTrainers = async (req, res) => {
     );
 
     if (!updatedUser) {
-      return res.status(404).json({ success: false, error: "Trainer (User) not found" });
+      return res.status(404).json({ success: false, errors: { general: "Trainer not found" } });
     }
 
-    // ✅ Step 2: Update branch in TrainerDetails if provided
+    // ✅ Update TrainerDetails
     let updatedTrainerDetails = null;
     if (branch && mongoose.Types.ObjectId.isValid(branch)) {
       updatedTrainerDetails = await TrainerDetails.findOneAndUpdate(
-        { trainerId: new mongoose.Types.ObjectId(trainerId) }, // ensure ObjectId
+        { trainerId: new mongoose.Types.ObjectId(trainerId) },
         { branch },
         { new: true, upsert: false }
       ).populate("branch", "name");
@@ -1467,10 +1571,9 @@ exports.updateTrainers = async (req, res) => {
 
   } catch (err) {
     console.error("❌ Error updating trainer:", err);
-    res.status(500).json({ success: false, error: "Server error while updating trainer" });
+    res.status(500).json({ success: false, errors: { general: "Server error while updating trainer" } });
   }
 };
-
 
 exports.deleteTrainers = async (req, res) => {
   try {
@@ -2087,12 +2190,31 @@ exports.getClientsDetails = async (req, res) => {
 
 exports.updateClientDetails = async (req, res) => {
   try {
+    console.log(req.params, req.body);
+    
     const clientId = req.params.id;
 
     const {
       name, email, phone, altphone, gender, dob, branch, trainer, height, weight
     } = req.body;
 
+    let errors = {};
+
+    // ✅ Check unique email
+    if (email) {
+      const existingEmail = await User.findOne({ email, _id: { $ne: clientId } });
+      if (existingEmail) errors.email = "This email is already in use";
+    }
+
+    // ✅ Check unique phone
+    if (phone) {
+      const existingPhone = await User.findOne({ phone, _id: { $ne: clientId } });
+      if (existingPhone) errors.phone = "This phone number is already registered";
+    }
+
+    if (Object.keys(errors).length > 0) {
+      return res.status(400).json({ success: false, errors });
+    }
 
     // Update User
     await User.findByIdAndUpdate(clientId, { name, email, phone });
@@ -2109,9 +2231,6 @@ exports.updateClientDetails = async (req, res) => {
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
-
-
-// ✅ Update membership route
 
 // ✅ Update membership route
 exports.updateMembership = async (req, res) => {

@@ -55,7 +55,7 @@
                                     <hr>
 
                                     <!-- ================= DETAILS FORM ================= -->
-                                    <form id="detailsForm" class="form-sample">
+                                    <form class="form-sample needs-validation" id="detailsForm" enctype="multipart/form-data" novalidate>
                                         <h4 class="card-title">Client Details</h4>
                                         <div class="row">
                                             <div class="col-md-6">
@@ -63,6 +63,7 @@
                                                     <label class="col-sm-3 col-form-label">Name :</label>
                                                     <div class="col-sm-9">
                                                         <input type="text" id="name" name="name" class="form-control text-white" />
+                                                        <div class="invalid-feedback">Please enter a name.</div>
                                                     </div>
                                                 </div>
                                             </div>
@@ -72,6 +73,7 @@
                                                     <div class="col-sm-9">
                                                         <input type="email" id="email" name="email"
                                                             class="form-control text-white" />
+                                                        <div class="invalid-feedback">Please enter a valid email.</div>
                                                     </div>
                                                 </div>
                                             </div>
@@ -82,8 +84,11 @@
                                                 <div class="form-group row">
                                                     <label class="col-sm-3 col-form-label">Phone :</label>
                                                     <div class="col-sm-9">
-                                                        <input type="tel" id="phone" name="phone" class="form-control text-white"
-                                                            maxlength="10" />
+                                                        <div class="input-group">
+                                                            <span class="input-group-text">+91</span>
+                                                            <input type="tel" id="phone" name="phone" class="form-control text-white" maxlength="10" pattern="[0-9]{10}" oninput="this.value=this.value.replace(/[^0-9]/g,'')" />
+                                                            <div class="invalid-feedback">Please enter a valid 10-digit phone number.</div>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
@@ -109,6 +114,7 @@
                                                             <option value="Female">Female</option>
                                                             <option value="Other">Other</option>
                                                         </select>
+                                                        <div class="invalid-feedback">Please select a gender.</div>
                                                     </div>
                                                 </div>
                                             </div>
@@ -117,6 +123,7 @@
                                                 <label class="col-sm-3 col-form-label">DOB :</label>
                                                 <div class="col-sm-9">
                                                     <input type="date" id="dob" name="dob" class="form-control text-white" />
+                                                    <div class="invalid-feedback">Please select a valid date of birth.</div>
                                                 </div>
                                                 </div>
                                             </div>
@@ -130,6 +137,7 @@
                                                         <select class="form-control text-white" name="branch" id="branch">
                                                             <option value="">-- Select Branch --</option>
                                                         </select>
+                                                        <div class="invalid-feedback">Please select a branch.</div>
                                                     </div>
                                                 </div>
                                             </div>
@@ -140,6 +148,7 @@
                                                         <select class="form-control text-white" name="trainer" id="trainer">
                                                             <option value="">-- Select Trainer --</option>
                                                         </select>
+                                                        <div class="invalid-feedback">Please select a trainer.</div>
                                                     </div>
                                                 </div>
                                             </div>

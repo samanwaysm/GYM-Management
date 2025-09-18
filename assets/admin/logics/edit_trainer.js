@@ -51,17 +51,54 @@ $(document).ready(function () {
         });
     }
 
-    // ✅ Step 3: Handle Edit Submit
     $("#editTrainerForm").on("submit", function (e) {
         e.preventDefault();
 
-        const updatedTrainer = {
-            name: $("#name").val(),
-            email: $("#email").val(),
-            phone: $("#phone").val(),
-            branch: $("#branch").val()
-        };
+        const form = this;
+        let isValid = true;
 
+        // Reset validation states
+        $(form).find("input, select").removeClass("is-invalid");
+
+        // ✅ Manual empty field validation
+        const name = $("#name").val().trim();
+        const email = $("#email").val().trim();
+        const phone = $("#phone").val().trim();
+        const branch = $("#branch").val();
+
+        if (!name) {
+            $("#name").addClass("is-invalid");
+            $("#name").siblings(".invalid-feedback").text("Name is required.");
+            isValid = false;
+        }
+
+        if (!email) {
+            $("#email").addClass("is-invalid");
+            $("#email").siblings(".invalid-feedback").text("Email is required.");
+            isValid = false;
+        }
+
+        if (!phone) {
+            $("#phone").addClass("is-invalid");
+            $("#phone").siblings(".invalid-feedback").text("Phone number is required.");
+            isValid = false;
+        } else if (!/^\d{10}$/.test(phone)) {
+            $("#phone").addClass("is-invalid");
+            $("#phone").siblings(".invalid-feedback").text("Enter a valid 10-digit phone number.");
+            isValid = false;
+        }
+
+        if (!branch) {
+            $("#branch").addClass("is-invalid");
+            $("#branch").siblings(".invalid-feedback").text("Branch is required.");
+            isValid = false;
+        }
+
+        if (!isValid) return; // ❌ Stop if any client-side errors
+
+        const updatedTrainer = { name, email, phone, branch };
+
+        // ✅ Submit via AJAX
         $.ajax({
             url: `/admin/update-trainers/${trainerId}`,
             type: "PUT",
@@ -69,15 +106,52 @@ $(document).ready(function () {
             data: JSON.stringify(updatedTrainer),
             success: function (result) {
                 if (result.success) {
-                    alert("✅ Trainer updated successfully!");
                     window.location.href = "/admin-trainers-list";
-                } else {
-                    alert("❌ " + (result.error || "Failed to update trainer"));
                 }
             },
-            error: function () {
-                alert("⚠️ Server error while updating trainer");
+            error: function (xhr) {
+                const response = xhr.responseJSON;
+                if (response && response.errors) {
+                    Object.keys(response.errors).forEach(field => {
+                        const input = $(`#${field}`);
+                        if (input.length) {
+                            input.addClass("is-invalid");
+                            input.siblings(".invalid-feedback").text(response.errors[field]);
+                        }
+                    });
+                }
             }
         });
     });
+
+
+    // ✅ Step 3: Handle Edit Submit
+    // $("#editTrainerForm").on("submit", function (e) {
+    //     e.preventDefault();
+
+    //     const updatedTrainer = {
+    //         name: $("#name").val(),
+    //         email: $("#email").val(),
+    //         phone: $("#phone").val(),
+    //         branch: $("#branch").val()
+    //     };
+
+    //     $.ajax({
+    //         url: `/admin/update-trainers/${trainerId}`,
+    //         type: "PUT",
+    //         contentType: "application/json",
+    //         data: JSON.stringify(updatedTrainer),
+    //         success: function (result) {
+    //             if (result.success) {
+    //                 alert("✅ Trainer updated successfully!");
+    //                 window.location.href = "/admin-trainers-list";
+    //             } else {
+    //                 alert("❌ " + (result.error || "Failed to update trainer"));
+    //             }
+    //         },
+    //         error: function () {
+    //             alert("⚠️ Server error while updating trainer");
+    //         }
+    //     });
+    // });
 });

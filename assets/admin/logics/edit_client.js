@@ -95,12 +95,14 @@ $(document).ready(function () {
             success: function (data) {
                 if (data.success) {
                     const client = data.data;
+                    const date = new Date(client.dob);
+                    const formattedDate = date.toISOString().split("T")[0]; // "YYYY-MM-DD"
                     $("#name").val(client.userInfo.name);
                     $("#email").val(client.userInfo.email);
                     $("#phone").val(client.userInfo.phone);
                     $("#altphone").val(client.altphone || "");
                     $("#gender").val(client.gender || "");
-                    $("#dob").val(client.dob || "");
+                    $("#dob").val(formattedDate || "");
                     $("#branch").val(client.branchInfo?._id || "");
                     $("#trainer").val(client.trainerInfo?._id || "");
                     $("#height").val(client.height || "");
@@ -185,35 +187,133 @@ $(document).ready(function () {
     });
 
     // --- Details form submit ---
+    // $("#detailsForm").on("submit", function (e) {
+    //     e.preventDefault();
+
+    //     const data = {
+    //         name: $("#name").val(),
+    //         email: $("#email").val(),
+    //         phone: $("#phone").val(),
+    //         altphone: $("#altphone").val(),
+    //         gender: $("#gender").val(),
+    //         dob: $("#dob").val(),
+    //         branch: $("#branch").val(),
+    //         trainer: $("#trainer").val(),
+    //         height: $("#height").val(),
+    //         weight: $("#weight").val()
+    //     };
+
+    //     $.ajax({
+    //         url: `/admin/update-client-details/${clientId}`,
+    //         type: "PATCH",
+    //         contentType: "application/json",
+    //         data: JSON.stringify(data),
+    //         success: function (res) {
+    //             if (res.success) {
+    //                 window.location.href = "/admin-clients-list";
+    //             }
+    //             else alert(res.message || "Failed");
+    //         }
+    //     });
+    // });
+
     $("#detailsForm").on("submit", function (e) {
-        e.preventDefault();
+    e.preventDefault();
 
-        const data = {
-            name: $("#name").val(),
-            email: $("#email").val(),
-            phone: $("#phone").val(),
-            altphone: $("#altphone").val(),
-            gender: $("#gender").val(),
-            dob: $("#dob").val(),
-            branch: $("#branch").val(),
-            trainer: $("#trainer").val(),
-            height: $("#height").val(),
-            weight: $("#weight").val()
-        };
+    const form = this;
+    let isValid = true;
 
-        $.ajax({
-            url: `/admin/update-client-details/${clientId}`,
-            type: "PATCH",
-            contentType: "application/json",
-            data: JSON.stringify(data),
-            success: function (res) {
-                if (res.success) {
-                    window.location.href = "/admin-clients-list";
-                }
-                else alert(res.message || "Failed");
+    // Reset previous errors
+    $(form).find("input, select").removeClass("is-invalid");
+    $(form).find(".invalid-feedback").text("");
+
+    // Collect values
+    const data = {
+        name: $("#name").val().trim(),
+        email: $("#email").val().trim(),
+        phone: $("#phone").val().trim(),
+        altphone: $("#altphone").val().trim(),
+        gender: $("#gender").val(),
+        dob: $("#dob").val(),
+        branch: $("#branch").val(),
+        trainer: $("#trainer").val(),
+        height: $("#height").val().trim(),
+        weight: $("#weight").val().trim()
+    };
+
+    // --- Frontend Validations ---
+    if (!data.name) {
+        $("#name").addClass("is-invalid").siblings(".invalid-feedback").text("Name is required.");
+        isValid = false;
+    }
+    if (!data.email) {
+        $("#email").addClass("is-invalid").siblings(".invalid-feedback").text("Email is required.");
+        isValid = false;
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
+        $("#email").addClass("is-invalid").siblings(".invalid-feedback").text("Enter a valid email.");
+        isValid = false;
+    }
+    if (!data.phone) {
+        $("#phone").addClass("is-invalid").siblings(".invalid-feedback").text("Phone is required.");
+        isValid = false;
+    } else if (!/^\d{10}$/.test(data.phone)) {
+        $("#phone").addClass("is-invalid").siblings(".invalid-feedback").text("Enter a valid 10-digit phone number.");
+        isValid = false;
+    }
+    if (data.altphone && !/^\d{10}$/.test(data.altphone)) {
+        $("#altphone").addClass("is-invalid").siblings(".invalid-feedback").text("Enter a valid 10-digit alternate phone.");
+        isValid = false;
+    }
+    if (!data.gender) {
+        $("#gender").addClass("is-invalid").siblings(".invalid-feedback").text("Gender is required.");
+        isValid = false;
+    }
+    if (!data.dob) {
+        $("#dob").addClass("is-invalid").siblings(".invalid-feedback").text("DOB is required.");
+        isValid = false;
+    }
+    if (!data.branch) {
+        $("#branch").addClass("is-invalid").siblings(".invalid-feedback").text("Branch is required.");
+        isValid = false;
+    }
+    if (!data.trainer) {
+        $("#trainer").addClass("is-invalid").siblings(".invalid-feedback").text("Trainer is required.");
+        isValid = false;
+    }
+
+    if (!isValid) return;
+
+    // --- AJAX POST to server ---
+    $.ajax({
+        url: `/admin/update-client-details/${clientId}`,
+        type: "PATCH",
+        contentType: "application/json",
+        data: JSON.stringify(data),
+        success: function (res) {
+            if (res.success) {
+                window.location.href = "/admin-clients-list";
+            } else {
+                alert(res.message || "Failed");
             }
-        });
+        },
+        error: function (xhr) {
+            const response = xhr.responseJSON;
+            if (response && response.errors) {
+                Object.keys(response.errors).forEach(field => {
+                    const $input = $(`#${field}`);
+                    if ($input.length) {
+                        $input.addClass("is-invalid");
+                        $input.siblings(".invalid-feedback").text(response.errors[field]);
+                    }
+                });
+            } else {
+                alert("Server error");
+            }
+        }
     });
+});
+
+
 
     // ✅ Initial Loads
     fetchPackagesForSelect();
