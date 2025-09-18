@@ -183,11 +183,11 @@ function updatePackage() {
     .catch(err => console.error(err));
 }
 
-// Delete package (keep as is, optional SweetAlert can be removed)
+// Confirm before deleting package
 function confirmDelete(id) {
     Swal.fire({
-        title: 'Are you sure?',
-        text: "This package will be permanently deleted!",
+        title: '⚠️ Delete Package',
+        text: "This package will be permanently removed. Are you sure?",
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#d33',
@@ -204,42 +204,37 @@ function confirmDelete(id) {
     });
 }
 
+// Delete package function
 function deletePackage(id) {
     fetch(`/admin/delete-package/${id}`, { method: "DELETE" })
         .then(res => res.json())
         .then(data => {
             if (data.success) {
                 Swal.fire({
-                    title: 'Deleted!',
-                    text: 'The package has been deleted.',
+                    title: '✅ Deleted!',
+                    text: 'The package has been successfully removed.',
                     icon: 'success',
-                    timer: 1000,
+                    timer: 1500,
                     showConfirmButton: false,
                     background: "#1e1e2f",
                     color: "#ffffff",
                     iconColor: "#00d97e"
+                }).then(() => {
+                    fetchPackages(); // reload the package list
                 });
-                fetchPackages();
             } else {
                 Swal.fire({
-                    title: 'Error!',
-                    text: data.message || 'Failed to delete package.',
+                    title: '❌ Error!',
+                    text: data.message || 'Failed to delete the package.',
                     icon: 'error',
                     background: "#1e1e2f",
                     color: "#ffffff",
                     iconColor: "#ff6b6b"
-            });
+                });
             }
         })
         .catch(err => {
             console.error(err);
-            Swal.fire({
-                title: 'Error!',
-                text: 'Something went wrong. Please try again later.',
-                icon: 'error',
-                background: "#1e1e2f",
-                color: "#ffffff",
-                iconColor: "#ff6b6b"
-            });
         });
 }
+

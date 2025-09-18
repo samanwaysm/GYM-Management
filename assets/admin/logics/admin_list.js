@@ -39,22 +39,6 @@ function loadAdmins(query = "") {
     });
 }
 
-function confirmUnlist(adminId) {
-    if (confirm("Are you sure you want to unlist this admin?")) {
-        $.ajax({
-            url: "/superadmin/unlist-admin/" + adminId,
-            type: "POST",
-            success: function (res) {
-                alert(res.message || "Admin unlisted successfully!");
-                loadAdmins(); // reload list
-            },
-            error: function () {
-                alert("Error unlisting admin.");
-            }
-        });
-    }
-}
-
 
 // Load all admins on page load
 $(document).ready(function () {
@@ -68,7 +52,21 @@ $(document).ready(function () {
 });
 
 async function confirmDelete(adminId) {
-    if (!confirm("⚠️ Are you sure you want to permanently delete this admin?")) return;
+    const { isConfirmed } = await Swal.fire({
+        title: '⚠️ Delete Admin',
+        text: "Are you sure you want to permanently delete this admin?",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Yes, delete!',
+        cancelButtonText: 'Cancel',
+        background: "#1e1e2f",
+        color: "#ffffff",
+        iconColor: "#ffc107"
+    });
+
+    if (!isConfirmed) return;
 
     try {
         const res = await fetch(`/superadmin/delete-admin/${adminId}`, {
@@ -79,14 +77,29 @@ async function confirmDelete(adminId) {
         const result = await res.json();
 
         if (result.success) {
-            alert("✅ Admin deleted successfully!");
-            // Reload or remove the row dynamically
-            window.location.reload();
+            Swal.fire({
+                title: '✅ Deleted!',
+                text: "Admin has been successfully deleted.",
+                icon: 'success',
+                timer: 1500,
+                showConfirmButton: false,
+                background: "#1e1e2f",
+                color: "#ffffff",
+                iconColor: "#00d97e"
+            }).then(() => {
+                window.location.reload(); // reload page or update dynamically
+            });
         } else {
-            alert("❌ " + (result.error || "Failed to delete admin"));
+            Swal.fire({
+                title: '❌ Error!',
+                text: result.error || "Failed to delete admin.",
+                icon: 'error',
+                background: "#1e1e2f",
+                color: "#ffffff",
+                iconColor: "#ff6b6b"
+            });
         }
     } catch (err) {
         console.error("❌ Error deleting admin:", err);
-        alert("⚠️ Server error, please try again later");
     }
 }

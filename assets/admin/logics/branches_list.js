@@ -62,26 +62,55 @@
             });
         });
 
-        async function confirmDelete(branchId) {
-            if (!confirm("⚠️ Are you sure you want to permanently delete this Branch?")) return;
+async function confirmDelete(branchId) {
+    const { isConfirmed } = await Swal.fire({
+        title: '⚠️ Delete Branch',
+        text: "Are you sure you want to permanently delete this branch?",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Yes, delete!',
+        cancelButtonText: 'Cancel',
+        background: "#1e1e2f",
+        color: "#ffffff",
+        iconColor: "#ffc107"
+    });
 
-            try {
-                const res = await fetch(`/admin/delete-branch/${branchId}`, {
-                    method: "DELETE",
-                    headers: { "Content-Type": "application/json" }
-                });
+    if (!isConfirmed) return;
 
-                const result = await res.json();
+    try {
+        const res = await fetch(`/admin/delete-branch/${branchId}`, {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" }
+        });
 
-                if (result.success) {
-                    alert("✅ Branch deleted successfully!");
-                    // Reload or remove the row dynamically
-                    window.location.reload();
-                } else {
-                    alert("❌ " + (result.error || "Failed to delete branch"));
-                }
-            } catch (err) {
-                console.error("❌ Error deleting admin:", err);
-                alert("⚠️ Server error, please try again later");
-            }
+        const result = await res.json();
+
+        if (result.success) {
+            Swal.fire({
+                title: '✅ Deleted!',
+                text: "Branch has been successfully deleted.",
+                icon: 'success',
+                timer: 1500,
+                showConfirmButton: false,
+                background: "#1e1e2f",
+                color: "#ffffff",
+                iconColor: "#00d97e"
+            }).then(() => {
+                window.location.reload(); // reload page or remove row dynamically
+            });
+        } else {
+            Swal.fire({
+                title: '❌ Error!',
+                text: result.error || "Failed to delete branch.",
+                icon: 'error',
+                background: "#1e1e2f",
+                color: "#ffffff",
+                iconColor: "#ff6b6b"
+            });
         }
+    } catch (err) {
+        console.error("❌ Error deleting branch:", err);
+    }
+}

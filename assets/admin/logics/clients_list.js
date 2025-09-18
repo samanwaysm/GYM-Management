@@ -100,7 +100,20 @@ $(document).ready(function () {
 });
 
 async function confirmDelete(clientId) {
-    if (!confirm("⚠️ Are you sure you want to permanently delete this Trainer?")) return;
+    const confirmResult = await Swal.fire({
+        title: '⚠️ Confirm Deletion',
+        text: "Are you sure you want to permanently remove this client?",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, delete client!',
+        cancelButtonText: 'Cancel',
+        background: "#1e1e2f",
+        color: "#ffffff",
+    });
+
+    if (!confirmResult.isConfirmed) return;
 
     try {
         const res = await fetch(`/admin/delete-clients/${clientId}`, {
@@ -111,14 +124,21 @@ async function confirmDelete(clientId) {
         const result = await res.json();
 
         if (result.success) {
-            alert("✅ Client deleted successfully!");
-            // Reload or remove the row dynamically
-            window.location.reload();
-        } else {
-            alert("❌ " + (result.error || "Failed to delete client"));
+            Swal.fire({
+                title: '✅ Deleted!',
+                text: 'The client has been successfully removed.',
+                icon: 'success',
+                timer: 1500,
+                showConfirmButton: false,
+                background: "#1e1e2f",
+                color: "#ffffff",
+                iconColor: "#00d97e"
+            }).then(() => {
+                window.location.reload(); // reload after deletion
+            });
         }
     } catch (err) {
-        console.error("❌ Error deleting admin:", err);
-        alert("⚠️ Server error, please try again later");
+        console.error("❌ Error deleting client:", err);
     }
 }
+

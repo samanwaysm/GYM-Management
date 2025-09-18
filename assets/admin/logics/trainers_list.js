@@ -88,7 +88,21 @@ $(document).ready(function () {
 });
 
 async function confirmDelete(trainerId) {
-    if (!confirm("⚠️ Are you sure you want to permanently delete this Trainer?")) return;
+    const { isConfirmed } = await Swal.fire({
+        title: '⚠️ Delete Trainer',
+        text: "Are you sure you want to permanently delete this trainer?",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Yes, delete!',
+        cancelButtonText: 'Cancel',
+        background: "#1e1e2f",
+        color: "#ffffff",
+        iconColor: "#ffc107"
+    });
+
+    if (!isConfirmed) return;
 
     try {
         const res = await fetch(`/admin/delete-trainers/${trainerId}`, {
@@ -99,14 +113,29 @@ async function confirmDelete(trainerId) {
         const result = await res.json();
 
         if (result.success) {
-            alert("✅ Trainer deleted successfully!");
-            // Reload or remove the row dynamically
-            window.location.reload();
+            Swal.fire({
+                title: '✅ Deleted!',
+                text: "Trainer has been successfully deleted.",
+                icon: 'success',
+                timer: 1500,
+                showConfirmButton: false,
+                background: "#1e1e2f",
+                color: "#ffffff",
+                iconColor: "#00d97e"
+            }).then(() => {
+                window.location.reload(); // reload page or remove row dynamically
+            });
         } else {
-            alert("❌ " + (result.error || "Failed to delete trainer"));
+            Swal.fire({
+                title: '❌ Error!',
+                text: result.error || "Failed to delete trainer.",
+                icon: 'error',
+                background: "#1e1e2f",
+                color: "#ffffff",
+                iconColor: "#ff6b6b"
+            });
         }
     } catch (err) {
-        console.error("❌ Error deleting admin:", err);
-        alert("⚠️ Server error, please try again later");
+        console.error("❌ Error deleting trainer:", err);
     }
 }
