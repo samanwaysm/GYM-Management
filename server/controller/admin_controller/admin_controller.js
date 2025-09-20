@@ -1763,25 +1763,21 @@ exports.addClients = async (req, res) => {
     } = req.body;
     
     const errors = {};
-    if (!name) errors.name = "Name is required.";
-    if (!email) errors.email = "Email is required.";
-    if (!phone) errors.phone = "Phone number is required.";
-    if (!dob) errors.dob = "dob is required.";
-    if (!gender) errors.gender = "Gender is required.";
-    if (!branch) errors.branch = "Branch is required.";
-    if (!trainer) errors.trainer = "Trainer is required.";
-    if (!packageId) errors.package = "Package is required.";
-    if (!paymentMethod) errors.paymentMethod = "Payment Method is required.";
 
-    if (Object.keys(errors).length > 0) {
-      req.session.errors = errors;
-      return res.redirect("/admin-add-clients");
+    // ✅ Email check
+    const emailExists = await User.findOne({ email, userType: "client" });
+    if (emailExists) {
+      errors.email = "Email is already registered.";
     }
 
-    // Ensure unique email
-    if (await User.findOne({ email, userType: "client" })) {
-      req.session.errors = { email: "Email is already registered." };
-      return res.redirect("/admin-add-clients");
+    // ✅ Phone check
+    const phoneExists = await User.findOne({ phone, userType: "client" });
+    if (phoneExists) {
+      errors.phone = "Phone number is already registered.";
+    }
+
+    if (Object.keys(errors).length > 0) {
+      return res.json({ success: false, errors });
     }
 
     // Ensure valid branch & package
@@ -1791,19 +1787,6 @@ exports.addClients = async (req, res) => {
       Package.findById(packageId),
       User.findById(trainer) // 👈 fetch trainer details
     ]);
-
-    if (!branchExists) {
-      req.session.errors = { branch: "Selected branch does not exist." };
-      return res.redirect("/admin-add-clients");
-    }
-    if (!packageExists) {
-      req.session.errors = { package: "Selected package does not exist." };
-      return res.redirect("/admin-add-clients");
-    }
-    if (!trainerExists || trainerExists.userType !== "trainer") {
-      req.session.errors = { trainer: "Selected trainer does not exist." };
-      return res.redirect("/admin-add-clients");
-    }    
 
     // Generate default password: first 4 letters of name + last 4 digits of phone
     const rawPassword = `${name.substring(0, 4)}${phone.slice(-4)}`;
