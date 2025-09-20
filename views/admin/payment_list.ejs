@@ -19,26 +19,142 @@
                             <!-- Search box -->
                             <div class="mb-3">
                                 <input type="text" id="searchBox" class="form-control text-white"
-                                    placeholder="Search by name, email, phone...">
+                                    placeholder="Search by name, phone...">
                             </div>
                             <div class="table-responsive">
                                 <table class="table table-hover">
                                     <thead>
                                         <tr>
                                             <th>User</th>
-                                            <th>Email</th>
                                             <th>Phone</th>
-                                            <th>Action</th>
+                                            <th>Amound</th>
+                                            <th>Method</th>
+                                            <th>Status</th>
+                                            <th>Payment Id</th>
                                         </tr>
                                     </thead>
 
-                                    <tbody id="adminsTableBody">
+                                    <tbody id="paymentTableBody">
 
                                     </tbody>
                                 </table>
                             </div>
                         </div>
                     </div>
+                    <!-- Pagination -->
+                    <nav class="d-flex justify-content-center mt-3">
+                        <ul class="pagination" id="pagination">
+                            <!-- Pages inserted by AJAX -->
+                        </ul>
+                    </nav>
                 </div>
                 <!-- content-wrapper ends -->
+                <!-- <script>
+                    document.addEventListener("DOMContentLoaded", function () {
+                        fetch("/admin/payments-list")
+                            .then(res => res.json())
+                            .then(result => {
+                                if (result.success) {
+                                    const tbody = document.getElementById("paymentTableBody");
+                                    tbody.innerHTML = "";
+
+                                    result.data.forEach(payment => {
+                                        const row = `
+                                            <tr>
+                                                <td>${payment.user}</td>
+                                                <td>${payment.phone}</td>
+                                                <td>₹${payment.amount}</td>
+                                                <td>${payment.method}</td>
+                                                <td>
+                                                    <span class="badge ${
+                                                    payment.status === "Completed"
+                                                        ? "badge-success"
+                                                        : payment.status === "Pending"
+                                                        ? "badge-warning"
+                                                        : "badge-danger"
+                                                    }">${payment.status}</span>
+                                                </td>
+                                                <td>${payment.paymentId ? payment.paymentId : "Cash Payment"}</td>
+                                            </tr>
+                                        `;
+                                        tbody.insertAdjacentHTML("beforeend", row);
+                                    });
+                                } else {
+                                    alert("❌ Failed to load payment details");
+                                }
+                            })
+                            .catch(err => {
+                                console.error("Error:", err);
+                            });
+                    });
+                </script> -->
+
+                <script>
+                    let currentPage = 1;
+
+                    function loadPayments(page = 1, search = "") {
+                        fetch(`/admin/payments-list?page=${page}&search=${encodeURIComponent(search)}`)
+                            .then(res => res.json())
+                            .then(result => {
+                                if (result.success) {
+                                    const tbody = document.getElementById("paymentTableBody");
+                                    const pagination = document.getElementById("pagination");
+                                    tbody.innerHTML = "";
+
+                                    // Render rows
+                                    result.data.forEach(payment => {
+                                        const row = `
+                                            <tr>
+                                                <td>${payment.user || "N/A"}</td>
+                                                <td>${payment.phone || "N/A"}</td>
+                                                <td>₹${payment.amount}</td>
+                                                <td>${payment.method}</td>
+                                                <td>
+                                                    <span class="badge ${
+                                                    payment.status === "Completed"
+                                                        ? "badge-success"
+                                                        : payment.status === "Pending"
+                                                        ? "badge-warning"
+                                                        : "badge-danger"
+                                                    }">${payment.status}</span>
+                                                </td>
+                                                <td>${payment.paymentId}</td>
+                                            </tr>
+                                        `;
+                                        tbody.insertAdjacentHTML("beforeend", row);
+                                    });
+
+                                    // Render pagination
+                                    pagination.innerHTML = "";
+                                    for (let i = 1; i <= result.pagination.totalPages; i++) {
+                                        pagination.innerHTML += `
+                                            <li class="page-item ${i === result.pagination.page ? "active" : ""}">
+                                                <a class="page-link" href="javascript:void(0)" onclick="changePage(${i})">${i}</a>
+                                            </li>
+                                        `;
+                                    }
+                                }
+                            })
+                            .catch(err => console.error("Error:", err));
+                    }
+
+                    function changePage(page) {
+                        currentPage = page;
+                        const search = document.getElementById("searchBox").value;
+                        loadPayments(currentPage, search);
+                    }
+
+                    // Search live filter
+                    document.getElementById("searchBox").addEventListener("input", function () {
+                        currentPage = 1; // reset to first page on search
+                        loadPayments(currentPage, this.value);
+                    });
+
+                    // Initial load
+                    document.addEventListener("DOMContentLoaded", function () {
+                        loadPayments();
+                    });
+                    </script>
+
+
 <%-include("../admin/includes/footer")-%>

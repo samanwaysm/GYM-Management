@@ -122,5 +122,6 @@ route.put("/admin/update-package/:id", controller.updatePackage);
 route.delete("/admin/delete-package/:id", controller.deletePackage);
 route.get("/admin/package-list", controller.getPackageList);
 
+route.get("/admin/payments-list", controller.getPaymentList);
 
 module.exports = route;
