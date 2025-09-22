@@ -517,6 +517,54 @@ $(document).ready(function () {
   const confirmSave = document.getElementById("confirmSave");
   const paymentMethodSelect = document.getElementById("paymentMethod");
 
+  // ================= Duplicate check helpers =================
+  function showError(field, msg) {
+    field.classList.add("is-invalid");
+    $(field).siblings(".invalid-feedback").text(msg);
+  }
+  function clearError(field) {
+    field.classList.remove("is-invalid");
+    $(field).siblings(".invalid-feedback").text("");
+  }
+
+   // 🔹 Email duplicate check
+  const emailInput = document.getElementById("email");
+  emailInput.addEventListener("blur", async function () {
+    const email = emailInput.value.trim();
+    clearError(emailInput);
+
+    if (!email) return;
+
+    try {
+      const res = await fetch(`/admin/check-email-add?email=${encodeURIComponent(email)}`);
+      const data = await res.json();
+      if (data.exists) {
+        showError(emailInput, "Email already exists.");
+      }
+    } catch (err) {
+      console.error("Error checking email:", err);
+    }
+  });
+
+  // 🔹 Phone duplicate check
+  const phoneInput = document.getElementById("phone");
+  phoneInput.addEventListener("blur", async function () {
+    const phone = phoneInput.value.trim();
+    clearError(phoneInput);
+
+    if (!phone) return;
+
+    try {
+      const res = await fetch(`/admin/check-phone-add?phone=${encodeURIComponent(phone)}`);
+      const data = await res.json();
+      if (data.exists) {
+        showError(phoneInput, "Phone number already exists.");
+      }
+    } catch (err) {
+      console.error("Error checking phone:", err);
+    }
+  });
+
   // 🔹 Load branches
   $.ajax({
     url: "/admin/get-branches-name",

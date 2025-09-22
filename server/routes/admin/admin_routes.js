@@ -114,7 +114,10 @@ route.patch("/admin/update-membership/:id", controller.updateMembership);
 route.delete("/admin/delete-clients/:id", controller.deleteClients);
 route.get("/admin/clients-list", controller.clientsList);
 route.get("/admin/get-client-details/:id", controller.getClientDetails);
+route.get("/admin/check-email-add", controller.checkEmail);
+route.get("/admin/check-phone-add", controller.checkPhone);
 route.get("/admin/check-phone", controller.checkClientPhone);
+
 // Package APIs
 route.post("/admin/add-packages", controller.addPackages);
 route.get("/admin/get-package-details/:id", controller.getPackageDetails);

@@ -70,6 +70,7 @@
             </div>
           </div>
         </div>
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
         <script>
           document.getElementById("admin_register").addEventListener("submit", async function (e) {
           e.preventDefault();
@@ -108,9 +109,19 @@
                 }
               });
             } else if (res.status === 200) {
-              alert(data.message);
-              window.location.href = "/superadmin-admin-list";
-            }
+              Swal.fire({
+                title: "Success!",
+                text: data.message,
+                icon: "success",
+                timer: 1000,
+                showConfirmButton: false,
+                background: "#1e1e2f",     // dark background
+                color: "#ffffff",          // white text
+                iconColor: "#00d97e"       // success green for dark theme
+              }).then(() => {
+                window.location.href = "/superadmin-admin-list";
+              });
+                          }
           } catch (err) {
             console.error("Error:", err);
             alert("Something went wrong. Please try again.");

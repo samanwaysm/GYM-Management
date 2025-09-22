@@ -750,122 +750,6 @@ exports.verifyAdminOTP = async (req, res) => {
 };
 
 
-// exports.addBranch = async (req, res) => {
-//   try {
-//     const {
-//       name, // branch name
-//       phone,
-//       address,
-//       city,
-//       state,
-//       pincode,
-//       lat,
-//       lng
-//     } = req.body;
-
-
-//     // Create branch object
-//     const newBranch = new Branch({
-//       name: name,
-//       location: {
-//         address,
-//         city,
-//         state,
-//         pincode,
-//         geo: {
-//           lat: lat || null,
-//           lng: lng || null
-//         }
-//       },
-//       phone
-//     });
-
-//     await newBranch.save();
-
-//     return res.redirect('/admin-branches-list'); // adjust this redirect path as needed
-//   } catch (error) {
-//     console.error('Error creating branch:', error);
-//     res.status(500).send('Server error while adding branch.');
-//   }
-// };
-
-// exports.addBranch = async (req, res) => {
-//   try {
-//     const {
-//       name,
-//       phone,
-//       address,
-//       city,
-//       state,
-//       pincode,
-//       lat,
-//       lng
-//     } = req.body;
-
-//     let errors = {};
-
-//     // ✅ Field-wise validation
-//     if (!name || name.trim() === '') {
-//       errors.name = "Branch name is required";
-//     }
-
-//     if (!phone || phone.trim() === '') {
-//       errors.phone = "Phone number is required";
-//     } else if (!/^\d{10}$/.test(phone)) {
-//       errors.phone = "Phone number must be 10 digits";
-//     }
-
-//     if (!address || address.trim() === '') {
-//       errors.address = "Address is required";
-//     }
-
-//     if (!city || city.trim() === '') {
-//       errors.city = "City is required";
-//     }
-
-//     if (!state || state.trim() === '') {
-//       errors.state = "State is required";
-//     }
-
-//     if (!pincode || !/^\d{6}$/.test(pincode)) {
-//       errors.pincode = "Valid 6-digit pincode is required";
-//     }
-
-//     // ✅ If errors exist → save in session and redirect back
-//     if (Object.keys(errors).length > 0) {
-//       req.session.errors = errors;
-//       req.session.formData = req.body; // store input so form can be refilled
-//       return res.redirect('/admin-add-branch');
-//     }
-
-//     // ✅ Save new branch if valid
-//     const newBranch = new Branch({
-//       name,
-//       location: {
-//         address,
-//         city,
-//         state,
-//         pincode,
-//         geo: {
-//           lat: lat || null,
-//           lng: lng || null
-//         }
-//       },
-//       phone
-//     });
-
-//     await newBranch.save();
-
-//     req.session.success = "Branch added successfully!";
-//     return res.redirect('/admin-branches-list');
-
-//   } catch (error) {
-//     console.error('Error creating branch:', error);
-//     req.session.errors = { server: "Server error while adding branch." };
-//     return res.redirect('/admin-add-branch');
-//   }
-// };
-
 exports.addBranch = async (req, res) => {
   try {
     const { name, phone, address, city, state, pincode, lat, lng } = req.body;
@@ -1752,6 +1636,39 @@ exports.checkClientPhone = async (req, res) => {
     return res.json({ success: false, message: "Server error" });
   }
 }
+
+// ✅ Check Email
+exports.checkEmail = async (req, res) => {
+  try {
+    const { email } = req.query;
+    if (!email || !email.trim()) {
+      return res.json({ exists: false });
+    }
+
+    const emailExists = await User.findOne({ email: email.trim() }); // use your Client/User model
+    return res.json({ exists: !!emailExists });
+  } catch (err) {
+    console.error("Error checking email:", err);
+    return res.status(500).json({ exists: false });
+  }
+};
+
+// ✅ Check Phone
+exports.checkPhone = async (req, res) => {
+  try {
+    const { phone } = req.query;
+    if (!phone || !phone.trim()) {
+      return res.json({ exists: false });
+    }
+
+    const phoneExists = await User.findOne({ phone: phone.trim() }); // use your Client/User model
+    return res.json({ exists: !!phoneExists });
+  } catch (err) {
+    console.error("Error checking phone:", err);
+    return res.status(500).json({ exists: false });
+  }
+};
+
 
 // 🔹 Add new client + membership
 exports.addClients = async (req, res) => {
