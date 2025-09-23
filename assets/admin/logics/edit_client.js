@@ -160,8 +160,21 @@ $(document).ready(function () {
 
         // Handle confirmation based on payment method
         if (data.paymentMethod === "Cash") {
-            if (!confirm("Are you sure you want to confirm Cash Payment?")) return;
-            data.confirmedPayment = true;
+            Swal.fire({
+                title: "Confirm Cash Payment?",
+                text: "Are you sure you want to confirm this Cash Payment?",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonText: "Yes, confirm it!",
+                cancelButtonText: "Cancel",
+                background: "#1e1e2f",
+                color: "#ffffff",
+                iconColor: "#00d97e"
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    data.confirmedPayment = true;
+                }
+            });
         } else if (data.paymentMethod === "Online") {
             data.confirmedPayment = false; // backend will handle Online flow
         }

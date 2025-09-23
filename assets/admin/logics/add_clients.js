@@ -689,27 +689,28 @@ $(document).ready(function () {
 
   // 🔹 Confirm save → AJAX submit
   confirmSave.addEventListener("click", function () {
-    const pkg = $("#package").val();
-    const paymentMethod = $("#paymentMethod").val();
+  const pkg = $("#package").val();
+  const paymentMethod = $("#paymentMethod").val();
 
-    let isValid = true;
+  let isValid = true;
 
-    if (!pkg) {
-      $("#package").addClass("is-invalid");
-      isValid = false;
-    } else {
-      $("#package").removeClass("is-invalid").addClass("is-valid");
-    }
+  if (!pkg) {
+    $("#package").addClass("is-invalid");
+    isValid = false;
+  } else {
+    $("#package").removeClass("is-invalid").addClass("is-valid");
+  }
 
-    if (!paymentMethod) {
-      $("#paymentMethod").addClass("is-invalid");
-      isValid = false;
-    } else {
-      $("#paymentMethod").removeClass("is-invalid").addClass("is-valid");
-    }
+  if (!paymentMethod) {
+    $("#paymentMethod").addClass("is-invalid");
+    isValid = false;
+  } else {
+    $("#paymentMethod").removeClass("is-invalid").addClass("is-valid");
+  }
 
-    if (!isValid) return;
+  if (!isValid) return;
 
+  const proceedWithSubmit = () => {
     $("#hiddenPackage").val(pkg);
     $("#hiddenPaymentMethod").val(paymentMethod);
     $("#hiddenConfirmedPayment").val(paymentMethod === "Cash" ? true : false);
@@ -726,19 +727,18 @@ $(document).ready(function () {
       success: function (res) {
         if (res.success) {
           Swal.fire({
-          title: "Success!",
-          text: res.message,
-          icon: "success",
-          timer: 1200,
-          showConfirmButton: false,
-          background: "#1e1e2f",
-          color: "#ffffff",
-          iconColor: "#00d97e"
-        }).then(() => {
-          window.location.href = "/admin-clients-list";
-        });
+            title: "Success!",
+            text: res.message,
+            icon: "success",
+            timer: 1200,
+            showConfirmButton: false,
+            background: "#1e1e2f",
+            color: "#ffffff",
+            iconColor: "#00d97e"
+          }).then(() => {
+            window.location.href = "/admin-clients-list";
+          });
         } else if (res.errors) {
-          // Backend error → mark invalid
           Object.keys(res.errors).forEach(f => {
             const field = $(`#${f}`)[0];
             if (field) {
@@ -752,5 +752,93 @@ $(document).ready(function () {
         alert("❌ Server error");
       }
     });
-  });
+  };
+
+  // ✅ Cash confirmation SweetAlert
+  if (paymentMethod === "Cash") {
+    Swal.fire({
+      title: "Confirm Cash Payment?",
+      text: "Are you sure you want to confirm this Cash Payment?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Yes, confirm it!",
+      cancelButtonText: "Cancel",
+      background: "#1e1e2f",
+      color: "#ffffff",
+      iconColor: "#00d97e"
+    }).then((result) => {
+      if (result.isConfirmed) {
+        proceedWithSubmit();
+      }
+    });
+  } else {
+    // Online or other payment → submit directly
+    proceedWithSubmit();
+  }
+});
+  // confirmSave.addEventListener("click", function () {
+  //   const pkg = $("#package").val();
+  //   const paymentMethod = $("#paymentMethod").val();
+
+  //   let isValid = true;
+
+  //   if (!pkg) {
+  //     $("#package").addClass("is-invalid");
+  //     isValid = false;
+  //   } else {
+  //     $("#package").removeClass("is-invalid").addClass("is-valid");
+  //   }
+
+  //   if (!paymentMethod) {
+  //     $("#paymentMethod").addClass("is-invalid");
+  //     isValid = false;
+  //   } else {
+  //     $("#paymentMethod").removeClass("is-invalid").addClass("is-valid");
+  //   }
+
+  //   if (!isValid) return;
+
+  //   $("#hiddenPackage").val(pkg);
+  //   $("#hiddenPaymentMethod").val(paymentMethod);
+  //   $("#hiddenConfirmedPayment").val(paymentMethod === "Cash" ? true : false);
+
+  //   membershipModal.hide();
+
+  //   const formData = new FormData(form);
+  //   $.ajax({
+  //     url: "/admin/add-clients",
+  //     type: "POST",
+  //     data: formData,
+  //     processData: false,
+  //     contentType: false,
+  //     success: function (res) {
+  //       if (res.success) {
+  //         Swal.fire({
+  //         title: "Success!",
+  //         text: res.message,
+  //         icon: "success",
+  //         timer: 1200,
+  //         showConfirmButton: false,
+  //         background: "#1e1e2f",
+  //         color: "#ffffff",
+  //         iconColor: "#00d97e"
+  //       }).then(() => {
+  //         window.location.href = "/admin-clients-list";
+  //       });
+  //       } else if (res.errors) {
+  //         // Backend error → mark invalid
+  //         Object.keys(res.errors).forEach(f => {
+  //           const field = $(`#${f}`)[0];
+  //           if (field) {
+  //             field.setCustomValidity(res.errors[f]);
+  //             $(field).addClass("is-invalid");
+  //           }
+  //         });
+  //       }
+  //     },
+  //     error: function () {
+  //       alert("❌ Server error");
+  //     }
+  //   });
+  // });
 });

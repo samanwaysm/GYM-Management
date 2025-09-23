@@ -17,7 +17,7 @@ const razorpay = new Razorpay({
 // 🔹 Step 1: Create Razorpay Payment Link
 exports.createOrder = async (req, res) => {
   try {
-    const { clientId, packageId } = req.query;
+    const { clientId, packageId, paymentId } = req.query;
     
     const membership = await Membership.findOne({ clientId }).populate("clientId");
     if (!membership) return res.status(404).json({ success: false, error: "Membership not found" });
@@ -38,22 +38,18 @@ exports.createOrder = async (req, res) => {
       notes: {
         clientId: clientId,
         packageId: packageId,
-        membershipId: membership._id.toString()
+        membershipId: membership._id.toString(),
+        paymentId 
       }
     });
 
-    // 🔹 Update only razorpayOrderId
-    await Payment.findOneAndUpdate(
-      { clientId },
-      { razorpayOrderId: paymentLink.id },
-      { new: true }
-    );    
-
-    console.log(paymentLink.short_url);
+    await Payment.findByIdAndUpdate(paymentId, { razorpayOrderId: paymentLink.id }, { new: true });  
     
-    // ✅ Send response FIRST
-    // req.session.success = "Payment link created & sent to client.";
-    // res.redirect("/admin-clients-list");
+ // 🔹 Send WhatsApp message in background
+    sendWhatsAppMessage(
+      membership.clientId.phone,
+      `Hi ${membership.clientId.name}, please complete your gym membership payment using this link: ${paymentLink.short_url}`
+    );
 
     // ✅ Send response to frontend with redirect URL
     res.status(200).json({
@@ -62,11 +58,7 @@ exports.createOrder = async (req, res) => {
       redirectUrl: "/admin-clients-list"
     });
 
-    // 🔹 Send WhatsApp message in background
-    sendWhatsAppMessage(
-      membership.clientId.phone,
-      `Hi ${membership.clientId.name}, please complete your gym membership payment using this link: ${paymentLink.short_url}`
-    );
+   
 
     // // Send WhatsApp link via Twilio
     // await clientTwilio.messages.create({
@@ -99,6 +91,7 @@ exports.handleWebhook = async (req, res) => {
         const paymentData = req.body.payload.payment.entity;
         const paymentLink = req.body.payload.payment_link.entity;
         const notes = paymentLink.notes;
+        const paymentId = notes.paymentId;
 
         const package = await Package.findById({ _id: notes.packageId });
         const membership = await Membership.findById(notes.membershipId).populate("clientId");
@@ -108,15 +101,12 @@ exports.handleWebhook = async (req, res) => {
         expiredDate.setDate(paidDate.getDate() + package.durationInDays);
 
         // Update Payment record
-        await Payment.findOneAndUpdate(
-          { razorpayOrderId: paymentLink.id },
-          {
-            razorpayPaymentId: paymentData.id,
-            status: "Completed",
-            confirmedPayment: true,
-            paidAt: new Date()
-          }
-        );
+        await Payment.findByIdAndUpdate(paymentId, {
+          razorpayPaymentId: paymentData.id,
+          status: "Completed",
+          confirmedPayment: true,
+          paidAt: new Date()
+        });
 
         // Update Membership record
         await Membership.findOneAndUpdate(
