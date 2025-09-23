@@ -52,6 +52,12 @@ exports.user_login = async (req, res) => {
 
     // ✅ Save session (no JWT)
     req.session.userId = user._id;
+    req.session.userType = user.userType; // save userType
+    req.session.user = {
+      name: user.name,
+      email: user.email,
+      phone: user.phone
+    };
 
     // ✅ Redirect to home/dashboard
     return res.redirect("/");
