@@ -2193,11 +2193,9 @@ exports.updateMembership = async (req, res) => {
         const phone = membership.clientId.phone;
         const name = membership.clientId.name;
 
-        await clientTwilio.messages.create({
-          from: "whatsapp:+14155238886",
-          to: `whatsapp:+91${phone}`,
-          body: `✅ Payment Successful!\n\nHi ${name}, we’ve received your CASH payment for the package: ${packageExists.packageType}.\n\nYour membership is active until: ${expiredDate.toDateString()}.\n\nStay consistent and crush your fitness journey! 🔥`
-        });
+        await sendWhatsAppMessage(phone,
+        `✅ Payment Successful!\nHi ${name}, we’ve received your CASH payment for the package: ${packageExists.packageType}.\nStart Date: ${paidDate.toDateString()}\nExpiry Date: ${expiredDate.toDateString()}`
+        );
       } catch (whatsErr) {
         console.error("❌ WhatsApp send error:", whatsErr);
       }
@@ -2567,61 +2565,42 @@ exports.getPaymentList = async (req, res) => {
     page = parseInt(page);
     limit = parseInt(limit);
 
-    // Base pipeline
-    const basePipeline = [
-      {
-        $lookup: {
-          from: "users",
-          localField: "clientId",
-          foreignField: "_id",
-          as: "client"
-        }
-      },
-      { $unwind: { path: "$client", preserveNullAndEmptyArrays: true } },
-      {
-        $project: {
-          user: "$client.name",
-          phone: "$client.phone",
-          amount: 1,
-          method: "$paymentMethod",
-          status: 1,
-          paymentId: { $ifNull: ["$razorpayPaymentId", "Cash Payment"] },
-          createdAt: 1
-        }
-      }
-    ];
-
-    // Add search filtering AFTER lookup/unwind
+    // Base filter for search
+    const matchStage = {};
     if (search) {
-      basePipeline.push({
-        $match: {
-          $or: [
-            { user: { $regex: search, $options: "i" } },
-            { phone: { $regex: search, $options: "i" } }
-          ]
-        }
-      });
+      matchStage.$or = [
+        { name: { $regex: search, $options: "i" } },
+        { phone: { $regex: search, $options: "i" } }
+      ];
     }
 
-    // Count total
-    const countResult = await Payment.aggregate([
-      ...basePipeline,
-      { $count: "total" }
-    ]);
-    const total = countResult.length > 0 ? countResult[0].total : 0;
+    // Count total matching documents
+    const total = await Payment.countDocuments(matchStage);
     const totalPages = Math.ceil(total / limit);
 
-    // Paginate
-    const payments = await Payment.aggregate([
-      ...basePipeline,
-      { $sort: { createdAt: -1 } },
-      { $skip: (page - 1) * limit },
-      { $limit: limit }
-    ]);
+    // Fetch paginated data
+    const payments = await Payment.find(matchStage)
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .select("name phone amount paymentMethod status razorpayPaymentId createdAt");
+
+    // Map the response to your frontend format
+    const formattedPayments = payments.map(p => ({
+      user: p.name,
+      phone: p.phone,
+      amount: p.amount,
+      method: p.paymentMethod,
+      status: p.status,
+      paymentId: p.razorpayPaymentId 
+        ? p.razorpayPaymentId 
+        : (p.paymentMethod === "Cash" ? "Cash Payment" : "-"),
+      createdAt: p.createdAt
+    }));
 
     res.json({
       success: true,
-      data: payments,
+      data: formattedPayments,
       pagination: {
         total,
         page,
@@ -2636,113 +2615,7 @@ exports.getPaymentList = async (req, res) => {
       message: "Server error while fetching payment details"
     });
   }
-  // try {
-  //   let { page = 1, limit = 1, search = "" } = req.query;
-  //   page = parseInt(page);
-  //   limit = parseInt(limit);
-
-  //   const matchStage = {};
-  //   if (search) {
-  //     matchStage.$or = [
-  //       { "client.name": { $regex: search, $options: "i" } },
-  //       { "client.phone": { $regex: search, $options: "i" } }
-  //     ];
-  //   }
-
-  //   const aggregatePipeline = [
-  //     {
-  //       $lookup: {
-  //         from: "users",
-  //         localField: "clientId",
-  //         foreignField: "_id",
-  //         as: "client"
-  //       }
-  //     },
-  //     { $unwind: { path: "$client", preserveNullAndEmptyArrays: true } },
-  //     {
-  //       $project: {
-  //         user: "$client.name",
-  //         phone: "$client.phone",
-  //         amount: 1,
-  //         method: "$paymentMethod",
-  //         status: 1,
-  //         paymentId: { $ifNull: ["$razorpayPaymentId", "Cash Payment"] }
-  //       }
-  //     },
-  //     { $match: matchStage }
-  //   ];
-
-  //   // Count total
-  //   const countResult = await Payment.aggregate([
-  //     ...aggregatePipeline,
-  //     { $count: "total" }
-  //   ]);
-  //   const total = countResult.length > 0 ? countResult[0].total : 0;
-  //   const totalPages = Math.ceil(total / limit);
-
-  //   // Paginate
-  //   const payments = await Payment.aggregate([
-  //     ...aggregatePipeline,
-  //     { $sort: { createdAt: -1 } },
-  //     { $skip: (page - 1) * limit },
-  //     { $limit: limit }
-  //   ]);
-
-  //   res.json({
-  //     success: true,
-  //     data: payments,
-  //     pagination: {
-  //       total,
-  //       page,
-  //       limit,
-  //       totalPages
-  //     }
-  //   });
-  // } catch (error) {
-  //   console.error("Error fetching payment details:", error);
-  //   res.status(500).json({
-  //     success: false,
-  //     message: "Server error while fetching payment details"
-  //   });
-  // }
-  // try {
-  //   const payments = await Payment.aggregate([
-  //     {
-  //       $lookup: {
-  //         from: "users",                // collection name in MongoDB
-  //         localField: "clientId",       // field in Payment
-  //         foreignField: "_id",          // field in User
-  //         as: "client"
-  //       }
-  //     },
-  //     { $unwind: { path: "$client", preserveNullAndEmptyArrays: true } },
-  //     { $sort: { createdAt: -1 } },
-  //     {
-  //       $project: {
-  //         user: "$client.name",
-  //         phone: "$client.phone",
-  //         amount: 1,
-  //         method: "$paymentMethod",
-  //         status: 1,
-  //         paymentId: "$razorpayPaymentId" || "-"
-  //       }
-  //     }
-  //   ]);
-
-  //   res.json({
-  //     success: true,
-  //     data: payments
-  //   });
-  // } catch (error) {
-  //   console.error("Error fetching payment details:", error);
-  //   res.status(500).json({
-  //     success: false,
-  //     message: "Server error while fetching payment details"
-  //   });
-  // }
-}
-
-
+};
 
 // Helper function to send WhatsApp message
 async function sendWhatsAppMessage(phone, message) {

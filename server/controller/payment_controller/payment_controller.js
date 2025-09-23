@@ -62,18 +62,11 @@ exports.createOrder = async (req, res) => {
       redirectUrl: "/admin-clients-list"
     });
 
-    // 🔹 WhatsApp message in BACKGROUND
-    (async () => {
-      try {
-        await clientTwilio.messages.create({
-          from: "whatsapp:+14155238886", // Twilio sandbox
-          to: `whatsapp:+91${membership.clientId.phone}`,
-          body: `Hi ${membership.clientId.name}, please complete your gym membership payment using this link: ${paymentLink.short_url}`
-        });
-      } catch (err) {
-        console.error("⚠️ WhatsApp sending failed:", err.message);
-      }
-    })();
+    // 🔹 Send WhatsApp message in background
+    sendWhatsAppMessage(
+      membership.clientId.phone,
+      `Hi ${membership.clientId.name}, please complete your gym membership payment using this link: ${paymentLink.short_url}`
+    );
 
     // // Send WhatsApp link via Twilio
     // await clientTwilio.messages.create({
@@ -137,20 +130,16 @@ exports.handleWebhook = async (req, res) => {
           }
         );
 
-        // 🔹 Send WhatsApp confirmation
-        await clientTwilio.messages.create({
-          from: "whatsapp:+14155238886", // Twilio sandbox number
-          to: `whatsapp:+91${membership.clientId.phone}`,
-          body: `Hi ${membership.clientId.name},  
+        await sendWhatsAppMessage(
+        membership.clientId.phone,
+        `Hi ${membership.clientId.name},  
 
 ✅ Your payment for the Gym Membership package (${package.packageType}) has been received successfully.  
 📅 Start Date: ${paidDate.toDateString()}  
 📅 Expiry Date: ${expiredDate.toDateString()}  
 
 We’re excited to have you onboard. 💪`
-        });
-
-        console.log("✅ Payment confirmed & WhatsApp sent");
+      );
       } catch (err) {
         console.error("❌ Error in webhook handling:", err);
       }
@@ -333,12 +322,9 @@ exports.verifyPayment = async (req, res) => {
     ).populate("clientId");
 
     // ✅ Send WhatsApp Confirmation
-    if (membership && membership.clientId) {
-      await clientTwilio.messages.create({
-        from: "whatsapp:+14155238886", // Twilio sandbox number
-        to: `whatsapp:+91${membership.clientId.phone}`,
-        body: `🎉 Welcome ${membership.clientId.name}!\n\n✅ Your payment for the Gym Membership package (${packageData.packageType}) has been received successfully.\n📅 Start Date: ${paidDate.toDateString()}\n📅 Expiry Date: ${expiredDate.toDateString()}\n\nWe’re excited to have you onboard. 💪`
-      });
+    if (membership?.clientId) {
+      const msg = `🎉 Welcome ${membership.clientId.name}!\n\n✅ Your payment for the Gym Membership package (${packageData.packageType}) has been received successfully.\n📅 Start Date: ${paidDate.toDateString()}\n📅 Expiry Date: ${expiredDate.toDateString()}\n\nWe’re excited to have you onboard. 💪`;
+      sendWhatsAppMessage(membership.clientId.phone, msg);
     }
 
     res.json({ success: true, message: "Payment verified, membership updated & WhatsApp confirmation sent" });
@@ -350,67 +336,15 @@ exports.verifyPayment = async (req, res) => {
 };
 
 
-// 🔹 Step 2: Verify Payment
-// exports.verifyPayment = async (req, res) => {
-//   try {
-//     const { razorpay_order_id, razorpay_payment_id, razorpay_signature, membershipId, packageId } = req.body;
-
-//     // ✅ Check Package
-//     const packageData = await Package.findById(packageId);
-//     if (!packageData) {
-//       return res.status(404).json({ success: false, message: "Package not found" });
-//     }
-
-//     // ✅ Verify Signature
-//     const generatedSignature = crypto
-//       .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
-//       .update(razorpay_order_id + "|" + razorpay_payment_id)
-//       .digest("hex");
-
-//     if (generatedSignature !== razorpay_signature) {
-//       return res.status(400).json({ success: false, message: "Invalid payment signature" });
-//     }
-
-//     // ✅ Calculate Dates
-//     const paidDate = new Date();
-//     const expiredDate = new Date(paidDate);
-//     expiredDate.setDate(paidDate.getDate() + packageData.durationInDays);
-
-//     // ✅ Update Payment
-//     const payment = await Payment.findOneAndUpdate(
-//       { razorpayOrderId: razorpay_order_id },
-//       {
-//         razorpayPaymentId: razorpay_payment_id,
-//         status: "Success",
-//         confirmedPayment: true,
-//         paidAt: paidDate
-//       },
-//       { new: true }
-//     );
-
-//     if (!payment) {
-//       return res.status(404).json({ success: false, message: "Payment record not found" });
-//     }
-
-//     // ✅ Update Membership
-//     await Membership.findByIdAndUpdate(
-//       { _id: membershipId },
-//       {
-//         paymentMethod: "UPI",
-//         paymentStatus: "Completed",
-//         confirmedPayment: true,
-//         paidDate,
-//         expiredDate,
-//         status: "Active"
-//       },
-//       { new: true }
-//     );
-
-//     res.json({ success: true, message: "Payment verified & membership updated" });
-
-//   } catch (err) {
-//     console.error("❌ Verify Payment Error:", err);
-//     res.status(500).json({ success: false, message: "Server Error" });
-//   }
-// };
-
+// Helper to send WhatsApp messages
+async function sendWhatsAppMessage(phone, message) {
+  try {
+    await clientTwilio.messages.create({
+      from: "whatsapp:+14155238886",
+      to: `whatsapp:+91${phone}`,
+      body: message
+    });
+  } catch (err) {
+    console.error("❌ WhatsApp sending failed:", err.message);
+  }
+}
