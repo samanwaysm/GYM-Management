@@ -1764,6 +1764,8 @@ exports.addClients = async (req, res) => {
 
     await Payment.create({
       clientId: newUser._id,
+      name: newUser.name,       // add client name
+      phone: newUser.phone,     // add client phone
       amount: packageExists.price,
       currency: "INR",
       paymentMethod,
@@ -1772,63 +1774,63 @@ exports.addClients = async (req, res) => {
       paymentDate: paidDate
     });
 
-    // 🔹 Success response FIRST
-    req.session.success = "Client & Membership added successfully.";
-
-    if (paymentMethod.toLowerCase() === "online") {
-      return res.redirect(
-        `/payment/create-order?clientId=${newUser._id}&packageId=${packageExists._id}`
+    // Inside addClients
+    if (paymentMethod.toLowerCase() === "cash" && isConfirmed) {
+      // First, send welcome message
+      await sendWhatsAppMessage(phone, 
+        `🎉 Welcome to our Gym, ${name}!\n\nWe’re excited to have you onboard. 💪\nYour selected package: ${packageExists.packageType}\nTrainer: ${trainerExists.name}\nBranch: ${branchExists.name}\nLet's achieve your fitness goals together! 🏋️‍♂️🔥`
       );
-    } else {
+
+      // Then, send cash payment confirmation
+      await sendWhatsAppMessage(phone,
+        `✅ Payment Successful!\n\nHi ${name}, we’ve received your CASH payment for the package: ${packageExists.packageType}.\n📅 Start Date: ${paidDate.toDateString()}\n📅 Expiry Date: ${expiredDate.toDateString()}\nStay consistent and crush your fitness journey! 🔥`
+      );
+
       return res.status(200).json({
         success: true,
-        message: "Client & Membership added successfully."
+        message: "Client & Membership added successfully. WhatsApp messages sent."
       });
     }
 
-    // 🔹 Fire WhatsApp message in background (non-blocking)
-    (async () => {
-      try {
-        await clientTwilio.messages.create({
-          from: "whatsapp:+14155238886",
-          to: `whatsapp:+91${phone}`,
-          body: `🎉 Welcome to our Gym, ${name}!\n\nWe’re excited to have you onboard. 💪\n\nYour selected package: ${packageExists.packageType}\nTrainer: ${trainerExists.name}\nBranch: ${branchExists.name}\n\nLet's achieve your fitness goals together! 🏋️‍♂️🔥`
-        });
-
-        if (paymentMethod.toLowerCase() === "cash" && isConfirmed) {
-          await clientTwilio.messages.create({
-            from: "whatsapp:+14155238886",
-            to: `whatsapp:+91${phone}`,
-            body: `✅ Payment Successful!\n\nHi ${name}, we’ve received your CASH payment for the package: ${packageExists.packageType}.\n\n📅 Start Date: ${paidDate.toDateString()}\n📅 Expiry Date: ${expiredDate.toDateString()}\n\nStay consistent and crush your fitness journey! 🔥`
-          });
-        }
-      } catch (err) {
-        console.error("⚠️ WhatsApp sending failed:", err.message);
-      }
-    })();
-
-    // 🔹 Always send Welcome WhatsApp message
-    // await clientTwilio.messages.create({
-    //   from: "whatsapp:+14155238886",
-    //   to: `whatsapp:+91${phone}`,
-    //   body: `🎉 Welcome to our Gym, ${name}!\n\nWe’re excited to have you onboard. 💪\n\nYour selected package: ${packageExists.packageType}\nTrainer: ${trainerExists.name}\nBranch: ${branchExists.name}\n\nLet's achieve your fitness goals together! 🏋️‍♂️🔥`
-    // });
-
-    // If UPI → go to payment route
+    // For online payment
     if (paymentMethod.toLowerCase() === "online") {
-      return res.redirect(
-        `/payment/create-order?clientId=${newUser._id}&packageId=${packageExists._id}`
+      // Send welcome message asynchronously
+      sendWhatsAppMessage(phone,
+        `🎉 Welcome to our Gym, ${name}!\n\nWe’re excited to have you onboard. 💪\nYour selected package: ${packageExists.packageType}\nTrainer: ${trainerExists.name}\nBranch: ${branchExists.name}\nLet's achieve your fitness goals together! 🏋️‍♂️🔥`
       );
+
+      return res.redirect(`/payment/create-order?clientId=${newUser._id}&packageId=${packageExists._id}`);
     }
 
-    // 🔹 If Cash and Confirmed → send WhatsApp payment confirmation
-    // if (paymentMethod.toLowerCase() === "cash" && isConfirmed) {
-    //   console.log('msg');
-      
-    //   await clientTwilio.messages.create({
-    //     from: "whatsapp:+14155238886",
-    //     to: `whatsapp:+91${phone}`,
-    //     body: `✅ Payment Successful!\n\nHi ${name}, we’ve received your CASH payment for the package: ${packageExists.packageType}.\n\n📅 Start Date: ${paidDate.toDateString()}\n📅 Expiry Date: ${expiredDate.toDateString()}\n\nStay consistent and crush your fitness journey! 🔥`
+    // 🔹 Send WhatsApp message in background
+    // (async () => {
+    //   try {
+    //     await clientTwilio.messages.create({
+    //       from: "whatsapp:+14155238886",
+    //       to: `whatsapp:+91${phone}`,
+    //       body: `🎉 Welcome to our Gym, ${name}!\n\nWe’re excited to have you onboard. 💪\n\nYour selected package: ${packageExists.packageType}\nTrainer: ${trainerExists.name}\nBranch: ${branchExists.name}\n\nLet's achieve your fitness goals together! 🏋️‍♂️🔥`
+    //     });
+
+    //     if (paymentMethod.toLowerCase() === "cash" && isConfirmed) {
+    //       await clientTwilio.messages.create({
+    //         from: "whatsapp:+14155238886",
+    //         to: `whatsapp:+91${phone}`,
+    //         body: `✅ Payment Successful!\n\nHi ${name}, we’ve received your CASH payment for the package: ${packageExists.packageType}.\n\n📅 Start Date: ${paidDate.toDateString()}\n📅 Expiry Date: ${expiredDate.toDateString()}\n\nStay consistent and crush your fitness journey! 🔥`
+    //       });
+    //     }
+    //   } catch (err) {
+    //     console.error("⚠️ WhatsApp sending failed:", err.message);
+    //   }
+    // })();
+
+    // if (paymentMethod.toLowerCase() === "online") {
+    //   return res.redirect(
+    //     `/payment/create-order?clientId=${newUser._id}&packageId=${packageExists._id}`
+    //   );
+    // } else {
+    //   return res.status(200).json({
+    //     success: true,
+    //     message: "Client & Membership added successfully."
     //   });
     // }
 
@@ -2176,6 +2178,8 @@ exports.updateMembership = async (req, res) => {
       // Create NEW Payment
       const payment = await Payment.create({
         clientId,
+        name: membership.clientId.name,
+        phone: membership.clientId.phone,
         amount: packageExists.price,
         currency: "INR",
         paymentMethod: "Cash",
@@ -2214,6 +2218,8 @@ exports.updateMembership = async (req, res) => {
       // Create NEW Payment
       const payment = await Payment.create({
         clientId,
+        name: membership.clientId.name,
+        phone: membership.clientId.phone,
         amount: packageExists.price,
         currency: "INR",
         paymentMethod: "Online",
@@ -2734,4 +2740,19 @@ exports.getPaymentList = async (req, res) => {
   //     message: "Server error while fetching payment details"
   //   });
   // }
+}
+
+
+
+// Helper function to send WhatsApp message
+async function sendWhatsAppMessage(phone, message) {
+  try {
+    await clientTwilio.messages.create({
+      from: "whatsapp:+14155238886",
+      to: `whatsapp:+91${phone}`,
+      body: message
+    });
+  } catch (err) {
+    console.error("⚠️ WhatsApp sending failed:", err.message);
+  }
 }

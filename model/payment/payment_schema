@@ -8,6 +8,12 @@ const schema = new mongoose.Schema(
       ref: "Client", // reference to Client schema
       required: true,
     },
+    name:{
+      type: String,
+    },
+    phone:{
+      type: String,
+    },
     razorpayOrderId: {
       type: String,
     },
