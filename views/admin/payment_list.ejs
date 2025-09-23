@@ -29,6 +29,7 @@
                                             <th>Phone</th>
                                             <th>Amound</th>
                                             <th>Method</th>
+                                            <th>Date</th>
                                             <th>Status</th>
                                             <th>Payment Id</th>
                                         </tr>
@@ -109,6 +110,7 @@
                                                 <td>${payment.phone || "N/A"}</td>
                                                 <td>₹${payment.amount}</td>
                                                 <td>${payment.method}</td>
+                                                <td>${payment.paymentDate}</td>
                                                 <td>
                                                     <span class="badge ${
                                                     payment.status === "Completed"

@@ -2672,7 +2672,7 @@ exports.getClientDetails = async (req, res) => {
 
 exports.getPaymentList = async (req, res) => {
   try {
-    let { page = 1, limit = 2, search = "" } = req.query;
+    let { page = 1, limit = 5, search = "" } = req.query;
     page = parseInt(page);
     limit = parseInt(limit);
 
@@ -2706,6 +2706,7 @@ exports.getPaymentList = async (req, res) => {
       paymentId: p.razorpayPaymentId 
         ? p.razorpayPaymentId 
         : (p.paymentMethod === "Cash" ? "Cash Payment" : "-"),
+      paymentDate: p.paymentDate,
       createdAt: p.createdAt
     }));
 
