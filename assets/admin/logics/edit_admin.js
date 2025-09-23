@@ -55,27 +55,73 @@ document.addEventListener("DOMContentLoaded", function () {
       const result = await res.json();
 
       if (result.success) {
-        window.location.href = "/superadmin-admin-list";
+        Swal.fire({
+          title: "Success!",
+          text: result.message || "Admin updated successfully!",
+          icon: "success",
+          timer: 1200,
+          showConfirmButton: false,
+          background: "#1e1e2f",
+          color: "#ffffff",
+          iconColor: "#00d97e"
+        }).then(() => {
+          window.location.href = "/superadmin-admin-list";
+        });
       } else if (result.errors) {
         // ✅ Clear previous validation
         form.querySelectorAll("input").forEach(input => {
           input.classList.remove("is-invalid");
         });
 
-        // ✅ Show server-side errors (email, phone uniqueness, etc.)
+        // ✅ Show server-side errors
         Object.keys(result.errors).forEach(field => {
           const input = document.getElementById(field);
           if (input) {
-            const feedback = input.parentNode.querySelector(".invalid-feedback");
-            if (feedback) {
-              feedback.innerText = result.errors[field];
-              input.classList.add("is-invalid");
+            let feedback = input.parentNode.querySelector(".invalid-feedback");
+            if (!feedback) {
+              feedback = document.createElement("div");
+              feedback.className = "invalid-feedback";
+              input.parentNode.appendChild(feedback);
             }
+            feedback.innerText = result.errors[field];
+            input.classList.add("is-invalid");
           }
+        });
+
+        Swal.fire({
+          title: "Error!",
+          text: "Please fix the highlighted errors.",
+          icon: "error",
+          timer: 1500,
+          showConfirmButton: false,
+          background: "#1e1e2f",
+          color: "#ffffff",
+          iconColor: "#ff6b6b"
+        });
+      } else {
+        Swal.fire({
+          title: "Error!",
+          text: result.error || "Failed to update admin",
+          icon: "error",
+          timer: 1500,
+          showConfirmButton: false,
+          background: "#1e1e2f",
+          color: "#ffffff",
+          iconColor: "#ff6b6b"
         });
       }
     } catch (err) {
       console.error("❌ Error updating admin:", err);
+      Swal.fire({
+        title: "Error!",
+        text: "Server error. Please try again later.",
+        icon: "error",
+        timer: 1500,
+        showConfirmButton: false,
+        background: "#1e1e2f",
+        color: "#ffffff",
+        iconColor: "#ff6b6b"
+      });
     }
   });
 });

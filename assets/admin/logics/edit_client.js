@@ -173,14 +173,46 @@ $(document).ready(function () {
             data: JSON.stringify(data),
             success: function (res) {
                 if (res.success) {
-                    if (res.redirect) {
-                        window.location.href = res.redirect; // redirect if backend provides URL
-                    } else {
-                        window.location.href = "/admin-clients-list";
-                    }
+                    Swal.fire({
+                        title: "Success!",
+                        text: res.message || "Membership updated successfully!",
+                        icon: "success",
+                        timer: 1200,
+                        showConfirmButton: false,
+                        background: "#1e1e2f",
+                        color: "#ffffff",
+                        iconColor: "#00d97e"
+                    }).then(() => {
+                        window.location.href = res.redirect || "/admin-clients-list";
+                    });
                 } else {
-                    window.location.href = "/admin-clients-list";
+                    Swal.fire({
+                        title: "Error!",
+                        text: res.message || "Something went wrong while updating membership.",
+                        icon: "error",
+                        timer: 1500,
+                        showConfirmButton: false,
+                        background: "#1e1e2f",
+                        color: "#ffffff",
+                        iconColor: "#ff6b6b"
+                    }).then(() => {
+                        window.location.href = "/admin-clients-list";
+                    });
                 }
+            },
+            error: function (err) {
+                Swal.fire({
+                    title: "Server Error!",
+                    text: "Unable to update membership. Please try again.",
+                    icon: "error",
+                    timer: 1500,
+                    showConfirmButton: false,
+                    background: "#1e1e2f",
+                    color: "#ffffff",
+                    iconColor: "#ff6b6b"
+                }).then(() => {
+                    window.location.href = "/admin-clients-list";
+                });
             }
         });
 
@@ -283,7 +315,7 @@ $(document).ready(function () {
 
     if (!isValid) return;
 
-    // --- AJAX POST to server ---
+    // --- AJAX PATCH to server ---
     $.ajax({
         url: `/admin/update-client-details/${clientId}`,
         type: "PATCH",
@@ -291,9 +323,29 @@ $(document).ready(function () {
         data: JSON.stringify(data),
         success: function (res) {
             if (res.success) {
-                window.location.href = "/admin-clients-list";
+                Swal.fire({
+                    title: "Success!",
+                    text: res.message || "Client details updated successfully!",
+                    icon: "success",
+                    timer: 1200,
+                    showConfirmButton: false,
+                    background: "#1e1e2f",
+                    color: "#ffffff",
+                    iconColor: "#00d97e"
+                }).then(() => {
+                    window.location.href = "/admin-clients-list";
+                });
             } else {
-                alert(res.message || "Failed");
+                Swal.fire({
+                    title: "Error!",
+                    text: res.message || "Failed to update client details.",
+                    icon: "error",
+                    timer: 1500,
+                    showConfirmButton: false,
+                    background: "#1e1e2f",
+                    color: "#ffffff",
+                    iconColor: "#ff6b6b"
+                });
             }
         },
         error: function (xhr) {
@@ -307,7 +359,16 @@ $(document).ready(function () {
                     }
                 });
             } else {
-                alert("Server error");
+                Swal.fire({
+                    title: "Server Error!",
+                    text: "Unable to update client details. Please try again.",
+                    icon: "error",
+                    timer: 1500,
+                    showConfirmButton: false,
+                    background: "#1e1e2f",
+                    color: "#ffffff",
+                    iconColor: "#ff6b6b"
+                });
             }
         }
     });

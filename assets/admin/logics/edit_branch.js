@@ -84,9 +84,20 @@ document.addEventListener("DOMContentLoaded", function () {
       const result = await res.json();
 
       if (result.success) {
-        window.location.href = "/admin-branches-list";
+        Swal.fire({
+          title: "Success!",
+          text: result.message || "Branch updated successfully!",
+          icon: "success",
+          timer: 1200,
+          showConfirmButton: false,
+          background: "#1e1e2f",
+          color: "#ffffff",
+          iconColor: "#00d97e"
+        }).then(() => {
+          window.location.href = "/admin-branches-list";
+        });
       } else if (result.errors) {
-        // ✅ Handle server errors
+        // ✅ Handle server validation errors
         Object.keys(result.errors).forEach(field => {
           const input = document.getElementById(field);
           if (input) {
@@ -100,11 +111,41 @@ document.addEventListener("DOMContentLoaded", function () {
             input.classList.add("is-invalid");
           }
         });
+
+        Swal.fire({
+          title: "Error!",
+          text: "Please fix the highlighted errors.",
+          icon: "error",
+          timer: 1500,
+          showConfirmButton: false,
+          background: "#1e1e2f",
+          color: "#ffffff",
+          iconColor: "#ff6b6b"
+        });
       } else {
-        alert(result.error || "Failed to update branch");
+        Swal.fire({
+          title: "Error!",
+          text: result.error || "Failed to update branch",
+          icon: "error",
+          timer: 1500,
+          showConfirmButton: false,
+          background: "#1e1e2f",
+          color: "#ffffff",
+          iconColor: "#ff6b6b"
+        });
       }
     } catch (err) {
       console.error("❌ Error updating branch:", err);
+      Swal.fire({
+        title: "Error!",
+        text: "Server error. Please try again later.",
+        icon: "error",
+        timer: 1500,
+        showConfirmButton: false,
+        background: "#1e1e2f",
+        color: "#ffffff",
+        iconColor: "#ff6b6b"
+      });
     }
   });
 });

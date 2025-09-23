@@ -106,7 +106,29 @@ $(document).ready(function () {
             data: JSON.stringify(updatedTrainer),
             success: function (result) {
                 if (result.success) {
-                    window.location.href = "/admin-trainers-list";
+                    Swal.fire({
+                        title: "Success!",
+                        text: result.message || "Trainer updated successfully!",
+                        icon: "success",
+                        timer: 1200,
+                        showConfirmButton: false,
+                        background: "#1e1e2f",
+                        color: "#ffffff",
+                        iconColor: "#00d97e"
+                    }).then(() => {
+                        window.location.href = "/admin-trainers-list";
+                    });
+                } else {
+                    Swal.fire({
+                        title: "Error!",
+                        text: result.message || "Failed to update trainer.",
+                        icon: "error",
+                        timer: 1500,
+                        showConfirmButton: false,
+                        background: "#1e1e2f",
+                        color: "#ffffff",
+                        iconColor: "#ff6b6b"
+                    });
                 }
             },
             error: function (xhr) {
@@ -119,9 +141,21 @@ $(document).ready(function () {
                             input.siblings(".invalid-feedback").text(response.errors[field]);
                         }
                     });
+                } else {
+                    Swal.fire({
+                        title: "Server Error!",
+                        text: "Unable to update trainer. Please try again.",
+                        icon: "error",
+                        timer: 1500,
+                        showConfirmButton: false,
+                        background: "#1e1e2f",
+                        color: "#ffffff",
+                        iconColor: "#ff6b6b"
+                    });
                 }
             }
         });
+
     });
 
 
