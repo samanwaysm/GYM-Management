@@ -44,32 +44,100 @@ $(document).ready(function () {
     };
 
     // ✅ Send AJAX request to add trainer
+    // fetch('/admin/add-trainers', {
+    //   method: 'POST',
+    //   headers: { 'Content-Type': 'application/json' },
+    //   body: JSON.stringify(formData)
+    // })
+    // .then(res => res.json())
+    // .then(data => {
+    //   if (data.success) {
+    //     Swal.fire({
+    //       title: "Success!",
+    //       text: data.message,
+    //       icon: "success",
+    //       timer: 1000,
+    //       showConfirmButton: false,
+    //       background: "#1e1e2f",     // dark background
+    //       color: "#ffffff",          // white text
+    //       iconColor: "#00d97e"       // success green for dark theme
+    //     }).then(() => {
+    //       window.location.href = "/admin-trainers-list";
+    //     });
+    //     // ✅ Redirect after success
+    //     // window.location.href = "/admin-trainers-list";
+    //   } else if (data.errors) {
+    //     // Show backend validation errors under each field
+    //     Object.keys(data.errors).forEach(field => {
+    //       const input = document.getElementById(field);
+    //       const errorDiv = document.getElementById(field + "Error");
+    //       if (input && errorDiv) {
+    //         errorDiv.textContent = data.errors[field];
+    //         input.classList.add("is-invalid");
+    //       }
+    //     });
+    //   }
+    // })
+    // .catch(err => {
+    //   console.error("AJAX Error:", err);
+    //   alert("Server error while adding trainer.");
+    // });
+
     fetch('/admin/add-trainers', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(formData)
-    })
-    .then(res => res.json())
-    .then(data => {
-      if (data.success) {
-        // ✅ Redirect after success
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify(formData)
+})
+  .then(res => res.json())
+  .then(data => {
+    if (data.success) {
+      // ✅ Success
+      Swal.fire({
+        title: "Success!",
+        text: data.message,
+        icon: "success",
+        timer: 1000,
+        showConfirmButton: false,
+        background: "#1e1e2f", // dark background
+        color: "#ffffff",      // white text
+        iconColor: "#00d97e"   // success green for dark theme
+      }).then(() => {
         window.location.href = "/admin-trainers-list";
-      } else if (data.errors) {
-        // Show backend validation errors under each field
-        Object.keys(data.errors).forEach(field => {
-          const input = document.getElementById(field);
-          const errorDiv = document.getElementById(field + "Error");
-          if (input && errorDiv) {
-            errorDiv.textContent = data.errors[field];
-            input.classList.add("is-invalid");
-          }
-        });
-      }
-    })
-    .catch(err => {
-      console.error("AJAX Error:", err);
-      alert("Server error while adding trainer.");
+      });
+    } else if (data.errors) {
+      // ❌ Validation errors → show under each field
+      Object.keys(data.errors).forEach(field => {
+        const input = document.getElementById(field);
+        const errorDiv = document.getElementById(field + "Error");
+        if (input && errorDiv) {
+          errorDiv.textContent = data.errors[field];
+          input.classList.add("is-invalid");
+        }
+      });
+    } else if (data.message) {
+      // ❌ Server error or duplicate check message
+      Swal.fire({
+        title: "Error!",
+        text: data.message,
+        icon: "error",
+        background: "#1e1e2f",
+        color: "#ffffff",
+        iconColor: "#ff4d4f" // red for errors
+      });
+    }
+  })
+  .catch(err => {
+    console.error("AJAX Error:", err);
+    Swal.fire({
+      title: "Server Error",
+      text: "Something went wrong while adding trainer.",
+      icon: "error",
+      background: "#1e1e2f",
+      color: "#ffffff",
+      iconColor: "#ff4d4f"
     });
+  });
+
   });
 });
 

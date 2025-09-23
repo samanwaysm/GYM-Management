@@ -725,7 +725,18 @@ $(document).ready(function () {
       contentType: false,
       success: function (res) {
         if (res.success) {
+          Swal.fire({
+          title: "Success!",
+          text: res.message,
+          icon: "success",
+          timer: 1200,
+          showConfirmButton: false,
+          background: "#1e1e2f",
+          color: "#ffffff",
+          iconColor: "#00d97e"
+        }).then(() => {
           window.location.href = "/admin-clients-list";
+        });
         } else if (res.errors) {
           // Backend error → mark invalid
           Object.keys(res.errors).forEach(f => {

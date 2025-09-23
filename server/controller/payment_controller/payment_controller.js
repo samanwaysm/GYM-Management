@@ -49,9 +49,18 @@ exports.createOrder = async (req, res) => {
       { new: true }
     );    
 
+    console.log(paymentLink.short_url);
+    
     // ✅ Send response FIRST
-    req.session.success = "Payment link created & sent to client.";
-    res.redirect("/admin-clients-list");
+    // req.session.success = "Payment link created & sent to client.";
+    // res.redirect("/admin-clients-list");
+
+    // ✅ Send response to frontend with redirect URL
+    res.status(200).json({
+      success: true,
+      message: "Payment link created & sent to client.",
+      redirectUrl: "/admin-clients-list"
+    });
 
     // 🔹 WhatsApp message in BACKGROUND
     (async () => {

@@ -160,10 +160,18 @@
       const data = await res.json();
 
       if (data.success) {
-        alert("✅ Branch added successfully!");
-        form.reset();
-        form.classList.remove("was-validated");
-        clearError();
+        Swal.fire({
+          title: "Success!",
+          text: data.message,
+          icon: "success",
+          timer: 1000,
+          showConfirmButton: false,
+          background: "#1e1e2f",     // dark background
+          color: "#ffffff",          // white text
+          iconColor: "#00d97e"       // success green for dark theme
+        }).then(() => {
+          window.location.href = "/admin-branches-list";
+        });
       } else {
         if (data.errors?.name) {
           showError(data.errors.name);

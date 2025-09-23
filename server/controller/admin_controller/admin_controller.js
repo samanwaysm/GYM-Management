@@ -788,7 +788,7 @@ exports.addBranch = async (req, res) => {
 
     await newBranch.save();
 
-    return res.json({ success: true });
+    return res.status(200).json({ success: true, message: "Branch added successfully." });
   } catch (error) {
     console.error("Error creating branch:", error);
     return res.status(500).json({ success: false, errors: { server: "Server error" } });
@@ -1152,7 +1152,7 @@ exports.addTrainers = async (req, res) => {
       branch
     }).save();
 
-    return res.json({ success: true });
+    return res.status(200).json({ success: true, message: "Trainer added successfully." });
 
   } catch (error) {
     console.error("Error creating trainer:", error);
@@ -1780,7 +1780,10 @@ exports.addClients = async (req, res) => {
         `/payment/create-order?clientId=${newUser._id}&packageId=${packageExists._id}`
       );
     } else {
-      res.json({ success: true });
+      return res.status(200).json({
+        success: true,
+        message: "Client & Membership added successfully."
+      });
     }
 
     // 🔹 Fire WhatsApp message in background (non-blocking)
