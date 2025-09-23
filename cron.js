@@ -16,9 +16,21 @@ const clientTwilio = new twilio(process.env.TWILIO_SID, process.env.TWILIO_AUTH_
 // cron.schedule("*/1 * * * *", async () => {
 //   console.log("⏰ Cron job running every 1 minutes!");
 
-cron.schedule("0 9 * * *", async () => {
-  console.log("⏰ Cron job running at 9:00 AM every day!");
+// Helper to send WhatsApp messages
+async function sendWhatsAppMessage(phone, message) {
+  try {
+    await clientTwilio.messages.create({
+      from: "whatsapp:+14155238886",
+      to: `whatsapp:+91${phone}`,
+      body: message
+    });
+  } catch (err) {
+    console.error(`❌ WhatsApp sending failed to ${phone}:`, err.message);
+  }
+}
 
+// cron.schedule("0 9 * * *", async () => {
+cron.schedule("*/1 * * * *", async () => {
   try {
     // --------------------- Expired Membership Check ---------------------
     const expiredMemberships = await Membership.aggregate([
@@ -33,15 +45,11 @@ cron.schedule("0 9 * * *", async () => {
           from: "users",
           localField: "clientId",
           foreignField: "_id",
-          as: "clientData"
+          as: "client"
         }
       },
-      { $unwind: "$clientData" },
-      {
-        $match: {
-          "clientData.userType": "client"
-        }
-      },
+      { $unwind: "$client" },
+      { $match: { "client.userType": "client" } },
       {
         $project: {
           _id: 1,
@@ -49,30 +57,26 @@ cron.schedule("0 9 * * *", async () => {
           paymentStatus: 1,
           confirmedPayment: 1,
           expiredDate: 1,
-          "clientData._id": 1,
-          "clientData.name": 1,
-          "clientData.email": 1,
-          "clientData.phone": 1
+          "client._id": 1,
+          "client.name": 1,
+          "client.email": 1,
+          "client.phone": 1
         }
       }
     ]);
 
     await Promise.all(
-      expiredMemberships.map(async (membership) => {
-        const client = membership.clientData;
+      expiredMemberships.map(async ({ _id, client }) => {
 
-        console.log(`📌 Expired: ${client.name} (${client.email})`);
-
-        // ✅ Send WhatsApp message
-        await clientTwilio.messages.create({
-          from: "whatsapp:+14155238886",
-          to: `whatsapp:+91${client.phone}`,
-          body: `Hi ${client.name}, your gym membership has expired. Please renew your membership by logging in here: ${process.env.APP_URL}/login`
-        });
+        // ✅ Send WhatsApp notification
+        await sendWhatsAppMessage(
+          client.phone,
+          `Hi ${client.name}, your gym membership has expired. Please renew your membership here: ${process.env.APP_URL}/login`
+        );
 
         // ✅ Update membership status
         await Membership.updateOne(
-          { _id: membership._id },
+          { _id },
           {
             $set: {
               paymentMethod: null,
@@ -85,12 +89,10 @@ cron.schedule("0 9 * * *", async () => {
       })
     );
 
-    console.log("✅ All expired memberships processed successfully!");
-
 
     // --------------------- Birthday Wishes Check ---------------------
     const today = new Date();
-    const todayMonth = today.getMonth() + 1; // months are 0-based
+    const todayMonth = today.getMonth() + 1;
     const todayDate = today.getDate();
 
     const birthdayClients = await ClientDetails.aggregate([
@@ -112,42 +114,30 @@ cron.schedule("0 9 * * *", async () => {
           from: "users",
           localField: "clientId",
           foreignField: "_id",
-          as: "clientData"
+          as: "client"
         }
       },
-      { $unwind: "$clientData" },
-      {
-        $match: {
-          "clientData.userType": "client"
-        }
-      },
+      { $unwind: "$client" },
+      { $match: { "client.userType": "client" } },
       {
         $project: {
-          "clientData._id": 1,
-          "clientData.name": 1,
-          "clientData.email": 1,
-          "clientData.phone": 1
+          "client._id": 1,
+          "client.name": 1,
+          "client.email": 1,
+          "client.phone": 1
         }
       }
     ]);
 
     await Promise.all(
-      birthdayClients.map(async (clientDetail) => {
-        const client = clientDetail.clientData;
+      birthdayClients.map(async ({ client }) => {
 
-        console.log(`🎉 Birthday: ${client.name} (${client.email})`);
-
-        // ✅ Send WhatsApp Birthday WishF
-        await clientTwilio.messages.create({
-          from: "whatsapp:+14155238886",
-          to: `whatsapp:+91${client.phone}`,
-          body: `🎂 Happy Birthday ${client.name}! 🎉  
-Wishing you a fantastic year ahead from all of us at ${process.env.APP_NAME}! 🏋️‍♂️`
-        });
+        await sendWhatsAppMessage(
+          client.phone,
+          `🎂 Happy Birthday ${client.name}! 🎉\nWishing you a fantastic year ahead from all of us at ${process.env.APP_NAME}! 🏋️‍♂️`
+        );
       })
     );
-
-    console.log("✅ Birthday wishes sent successfully!");
 
   } catch (err) {
     console.error("❌ Cron job failed:", err.message);
