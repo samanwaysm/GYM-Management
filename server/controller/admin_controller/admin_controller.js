@@ -2694,7 +2694,7 @@ exports.getPaymentList = async (req, res) => {
       .sort({ createdAt: -1 })
       .skip((page - 1) * limit)
       .limit(limit)
-      .select("name phone amount paymentMethod status razorpayPaymentId createdAt");
+      .select("name phone amount paymentMethod status razorpayPaymentId paymentDate createdAt");
 
     // Map the response to your frontend format
     const formattedPayments = payments.map(p => ({
