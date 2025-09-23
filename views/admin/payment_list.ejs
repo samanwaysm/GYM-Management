@@ -29,7 +29,7 @@
                                             <th>Phone</th>
                                             <th>Amound</th>
                                             <th>Method</th>
-                                            <th>Date</th>
+                                            <th>Date & Time</th>
                                             <th>Status</th>
                                             <th>Payment Id</th>
                                         </tr>
@@ -110,7 +110,18 @@
                                                 <td>${payment.phone || "N/A"}</td>
                                                 <td>₹${payment.amount}</td>
                                                 <td>${payment.method}</td>
-                                                <td>${payment.paymentDate}</td>
+                                                <td>
+                                                    <%= payment.paymentDate 
+                                                            ? new Date(payment.paymentDate).toLocaleString("en-IN", { 
+                                                                day: "2-digit", 
+                                                                month: "short", 
+                                                                year: "numeric", 
+                                                                hour: "2-digit", 
+                                                                minute: "2-digit", 
+                                                                hour12: true 
+                                                            }) 
+                                                            : "-" %>
+                                                </td>
                                                 <td>
                                                     <span class="badge ${
                                                     payment.status === "Completed"
