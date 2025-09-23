@@ -149,36 +149,16 @@ $(document).ready(function () {
     }
 
     // --- Membership form submit ---
-    $("#membershipForm").on("submit", function (e) {
-        e.preventDefault();
+$("#membershipForm").on("submit", function (e) {
+    e.preventDefault();
 
-        const data = {
-            packageId: $("#package").val(),
-            paymentMethod: $("#paymentMethod").val(),
-            confirmedPayment: false // default
-        };
+    const data = {
+        packageId: $("#package").val(),
+        paymentMethod: $("#paymentMethod").val(),
+        confirmedPayment: false // default
+    };
 
-        // Handle confirmation based on payment method
-        if (data.paymentMethod === "Cash") {
-            Swal.fire({
-                title: "Confirm Cash Payment?",
-                text: "Are you sure you want to confirm this Cash Payment?",
-                icon: "warning",
-                showCancelButton: true,
-                confirmButtonText: "Yes, confirm it!",
-                cancelButtonText: "Cancel",
-                background: "#1e1e2f",
-                color: "#ffffff",
-                iconColor: "#00d97e"
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    data.confirmedPayment = true;
-                }
-            });
-        } else if (data.paymentMethod === "Online") {
-            data.confirmedPayment = false; // backend will handle Online flow
-        }
-
+    const submitAjax = () => {
         $.ajax({
             url: `/admin/update-membership/${clientId}`,
             type: "PATCH",
@@ -228,8 +208,113 @@ $(document).ready(function () {
                 });
             }
         });
+    };
 
-    });
+    if (data.paymentMethod === "Cash") {
+        Swal.fire({
+            title: "Confirm Cash Payment?",
+            text: "Are you sure you want to confirm this Cash Payment?",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonText: "Yes, confirm it!",
+            cancelButtonText: "Cancel",
+            background: "#1e1e2f",
+            color: "#ffffff",
+            iconColor: "#00d97e"
+        }).then((result) => {
+            if (result.isConfirmed) {
+                data.confirmedPayment = true;
+                submitAjax(); // call AJAX **after confirmation**
+            }
+        });
+    } else {
+        // Online or other payments → submit directly
+        submitAjax();
+    }
+});
+
+    // --- Membership form submit ---
+    // $("#membershipForm").on("submit", function (e) {
+    //     e.preventDefault();
+
+    //     const data = {
+    //         packageId: $("#package").val(),
+    //         paymentMethod: $("#paymentMethod").val(),
+    //         confirmedPayment: false // default
+    //     };
+
+    //     // Handle confirmation based on payment method
+    //     if (data.paymentMethod === "Cash") {
+    //         Swal.fire({
+    //             title: "Confirm Cash Payment?",
+    //             text: "Are you sure you want to confirm this Cash Payment?",
+    //             icon: "warning",
+    //             showCancelButton: true,
+    //             confirmButtonText: "Yes, confirm it!",
+    //             cancelButtonText: "Cancel",
+    //             background: "#1e1e2f",
+    //             color: "#ffffff",
+    //             iconColor: "#00d97e"
+    //         }).then((result) => {
+    //             if (result.isConfirmed) {
+    //                 data.confirmedPayment = true;
+    //             }
+    //         });
+    //     } else if (data.paymentMethod === "Online") {
+    //         data.confirmedPayment = false; // backend will handle Online flow
+    //     }
+
+    //     $.ajax({
+    //         url: `/admin/update-membership/${clientId}`,
+    //         type: "PATCH",
+    //         contentType: "application/json",
+    //         data: JSON.stringify(data),
+    //         success: function (res) {
+    //             if (res.success) {
+    //                 Swal.fire({
+    //                     title: "Success!",
+    //                     text: res.message || "Membership updated successfully!",
+    //                     icon: "success",
+    //                     timer: 1200,
+    //                     showConfirmButton: false,
+    //                     background: "#1e1e2f",
+    //                     color: "#ffffff",
+    //                     iconColor: "#00d97e"
+    //                 }).then(() => {
+    //                     window.location.href = res.redirect || "/admin-clients-list";
+    //                 });
+    //             } else {
+    //                 Swal.fire({
+    //                     title: "Error!",
+    //                     text: res.message || "Something went wrong while updating membership.",
+    //                     icon: "error",
+    //                     timer: 1500,
+    //                     showConfirmButton: false,
+    //                     background: "#1e1e2f",
+    //                     color: "#ffffff",
+    //                     iconColor: "#ff6b6b"
+    //                 }).then(() => {
+    //                     window.location.href = "/admin-clients-list";
+    //                 });
+    //             }
+    //         },
+    //         error: function (err) {
+    //             Swal.fire({
+    //                 title: "Server Error!",
+    //                 text: "Unable to update membership. Please try again.",
+    //                 icon: "error",
+    //                 timer: 1500,
+    //                 showConfirmButton: false,
+    //                 background: "#1e1e2f",
+    //                 color: "#ffffff",
+    //                 iconColor: "#ff6b6b"
+    //             }).then(() => {
+    //                 window.location.href = "/admin-clients-list";
+    //             });
+    //         }
+    //     });
+
+    // });
 
     // --- Details form submit ---
     // $("#detailsForm").on("submit", function (e) {
