@@ -1762,10 +1762,11 @@ exports.addClients = async (req, res) => {
       status: membershipStatus
     });
 
-    await Payment.create({
+    // Create Payment
+    const payment = await Payment.create({
       clientId: newUser._id,
-      name: newUser.name,       // add client name
-      phone: newUser.phone,     // add client phone
+      name: newUser.name,
+      phone: newUser.phone,
       amount: packageExists.price,
       currency: "INR",
       paymentMethod,
@@ -1799,7 +1800,7 @@ exports.addClients = async (req, res) => {
         `🎉 Welcome to our Gym, ${name}!\n\nWe’re excited to have you onboard. 💪\nYour selected package: ${packageExists.packageType}\nTrainer: ${trainerExists.name}\nBranch: ${branchExists.name}\nLet's achieve your fitness goals together! 🏋️‍♂️🔥`
       );
 
-      return res.redirect(`/payment/create-order?clientId=${newUser._id}&packageId=${packageExists._id}&paymentId=${Payment._id}`);
+      return res.redirect(`/payment/create-order?clientId=${newUser._id}&packageId=${packageExists._id}&paymentId=${payment._id}`);
     }
 
     // 🔹 Send WhatsApp message in background
