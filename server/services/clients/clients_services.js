@@ -1,10 +1,10 @@
 const session = require('express-session');
 
 exports.home = (req, res) => {
-    const { errors,userId} = req.session
+    const { errors,userId,userType} = req.session
     
     delete req.session.errors
-    res.render("clients/home",{errors,userId},(err, html) => {
+    res.render("clients/home",{errors,userId,userType},(err, html) => {
         if (err) {
             console.log(err);
         }

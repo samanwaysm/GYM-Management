@@ -23,7 +23,7 @@
     <link rel="stylesheet" href="/client/css/slicknav.min.css" type="text/css">
     <link rel="stylesheet" href="/client/css/style.css" type="text/css">
     <link rel="shortcut icon" href="/client/img/fevicon/fevicon.png" />
-    <style>
+    <!-- <style>
         body {
             background-color: #121212;
             /* dark theme background */
@@ -146,8 +146,51 @@
                 display: block !important;
             }
         }
-    </style>
+    </style> -->
 
+    <style>
+        body {
+  background-color: #121212;
+  color: #f5f5f5;
+  font-family: 'Nunito Sans', sans-serif;
+}
+
+.profile-card,
+.renew-card {
+  background: #1e1e1e;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+}
+
+.profile-img {
+  width: 130px;
+  height: 130px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid rgb(228, 56, 28);
+}
+
+.expired {
+  color: rgb(228, 56, 28);
+  font-weight: 600;
+}
+
+.btn-danger {
+  background-color: rgb(228, 56, 28) !important;
+  border: none;
+  font-weight: 600;
+  border-radius: 8px;
+  padding: 10px 20px;
+}
+
+.form-select {
+  background-color: #121212;
+  color: #f5f5f5;
+  border: 1px solid #444;
+}
+
+    </style>
 </head>
 
 <body>
@@ -172,18 +215,9 @@
                             <li class="active"><a href="/home">Home</a></li>
                             <li><a href="/user-profile">Profile</a></li>
 
-                            <!-- Mobile-only Login (shows in hamburger menu) -->
-                            <li class="login-mobile">
-                                <a href="/login" class="btn-login">Login</a>
-                            </li>
                         </ul>
                     </nav>
                 </div>
-            </div>
-
-            <!-- Desktop-only Login (right side) -->
-            <div class="login-desktop">
-                <a href="/login" class="btn-login">Login</a>
             </div>
 
             <div id="mobile-menu-wrap"></div>
@@ -225,10 +259,96 @@
 
     </div> -->
 
-    <div class="membership-wrapper container py-5 mt-5">
+    <div class="container py-5 mt-5">
+        <div class="row justify-content-center mt-5">
+            <div class="col-lg-12 col-md-12">
 
-        <!-- Profile Card -->
-        <div id="profile-card" class="membership-card profile-card d-flex align-items-center mt-5" style="display:none;">
+            <!-- <div id="profile-card" class="profile-card mb-4">
+                <div class="row align-items-center">
+                    <div class="col-md-6 text-center">
+                    <img id="user-photo" src="/client/img/noProfile/profile.png"
+                        alt="User Photo" class="profile-img img-fluid rounded">
+                    </div>
+
+                    <div class="col-md-6">
+                    <div class="ms-3">
+                        <h4 class="mb-2" id="user-name">John Doe</h4>
+                        <p class="mb-1"><i class="fa fa-envelope me-2"></i><span id="user-email">john@example.com</span></p>
+                        <p class="mb-1"><i class="fa fa-phone me-2"></i><span id="user-phone">+91 9876543210</span></p>
+                        <p class="mb-1"><i class="fa fa-map-marker me-2"></i> Branch: <span id="user-branch">Bangalore</span></p>
+                        <p class="mb-1"><i class="fa fa-user me-2"></i> Trainer: <span id="user-trainer">Suresh</span></p>
+                        <p class="mb-0"><i class="fa fa-calendar me-2"></i> Renewal Date:
+                        <span id="renewal-date">2025-10-15</span>
+                        </p>
+                    </div>
+                    </div>
+                </div>
+            </div> -->
+
+            <div id="profile-card" class="profile-card mb-4">
+                <div class="row align-items-center">
+                    <!-- Left Side (Photo) -->
+                    <div class="col-md-6 text-center">
+                    <img id="user-photo" src="/client/img/noProfile/profile.png"
+                        alt="User Photo" class="profile-img img-fluid rounded">
+                    </div>
+
+                    <!-- Right Side (Details) -->
+                    <div class="col-md-6">
+                    <div class="ms-3">
+                        <h4 class="mb-2" id="user-name"></h4>
+                        <p class="mb-1"><i class="fa fa-envelope me-2"></i><span id="user-email"></span></p>
+                        <p class="mb-1"><i class="fa fa-phone me-2"></i><span id="user-phone"></span></p>
+                        <p class="mb-1"><i class="fa fa-map-marker me-2"></i> Branch: <span id="user-branch"></span></p>
+                        <p class="mb-1"><i class="fa fa-user me-2"></i> Trainer: <span id="user-trainer"></span></p>
+                        <p class="mb-0"><i class="fa fa-calendar me-2"></i> Renewal Date:
+                        <span id="renewal-date"></span>
+                        </p>
+                    </div>
+                    </div>
+                </div>
+                </div>
+
+
+            <!-- <div id="profile-card" class="profile-card mb-4">
+                <div class="col-lg-12 col-md-12">
+                <img id="user-photo" src="/client/img/noProfile/profile.png"
+                    alt="User Photo" class="profile-img">
+                <div class="ms-4">
+                    <h4 class="mb-1" id="user-name"></h4>
+                    <p class="mb-1"><i class="fa fa-envelope me-2"></i><span id="user-email"></span></p>
+                    <p class="mb-1"><i class="fa fa-phone me-2"></i><span id="user-phone"></span></p>
+                    <p class="mb-1"><i class="fa fa-map-marker me-2"></i> Branch: <span id="user-branch"></span></p>
+                    <p class="mb-1"><i class="fa fa-user me-2"></i> Trainer: <span id="user-trainer"></span></p>
+                    <p class="mb-0"><i class="fa fa-calendar me-2"></i> Renewal Date:
+                    <span id="renewal-date">/span>
+                    </p>
+                </div>
+                </div>
+            </div> -->
+
+            <!-- Membership Renewal -->
+            <div id="renew-card" class="renew-card d-none">
+                <h5 class="mb-3">Your membership has expired. Please renew:</h5>
+                <div class="row g-3">
+                <div class="col-md-8">
+                    <select id="packageSelect" class="form-select">
+                    <option selected>Select Membership Plan</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <button id="payOnlineBtn" class="btn btn-danger w-100">Pay Online</button>
+                </div>
+                </div>
+            </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- <div class="membership-wrapper container py-5 mt-5">
+
+        <div id="profile-card" class="membership-card profile-card mt-5">
             <div>
                 <img id="user-photo" src="/client/img/noProfile/profile.png"
                     alt="User Photo" class="profile-img">
@@ -245,7 +365,6 @@
             </div>
         </div>
 
-        <!-- Membership Renewal -->
         <div id="renew-card" class="membership-card renew-card d-none">
             <h5 class="mb-3">Your membership has expired. Please renew:</h5>
             <div class="row g-3">
@@ -260,7 +379,7 @@
             </div>
         </div>
 
-    </div>
+    </div> -->
 
     <footer class="footer-section">
         <div class="container">

@@ -200,7 +200,7 @@
                             <li><a href="/user-profile">Profile</a></li>
 
                             <!-- Mobile-only Login (shows in hamburger menu) -->
-                            <% if(!userId){ %>
+                            <% if (userType !== 'client') { %>
                                 <li class="login-mobile">
                                     <a href="/login" class="btn-login">Login</a>
                                 </li>
@@ -212,7 +212,7 @@
 
 
             <!-- Desktop-only Login (right side) -->
-            <% if(!userId){ %>
+            <% if (userType !== 'client') { %>
                 <div class="login-desktop">
                     <a href="/login" class="btn-login">Login</a>
                 </div>
