@@ -2782,41 +2782,83 @@ exports.paymentStats = async (req, res) => {
 
 exports.downloadPayments = async (req, res) => {
   try {
-    const payments = await Payment.find().populate("clientId");
+    const { method } = req.query;
+    const match = {};
 
+    // filter by method if provided
+    if (method && (method === "Cash" || method === "Online")) {
+      match.paymentMethod = method;
+    }
+
+    // Aggregation pipeline instead of populate()
+    const payments = await Payment.aggregate([
+      { $match: match },
+      {
+        $lookup: {
+          from: "users", // 🔥 the collection name of your User model (check your DB)
+          localField: "clientId",
+          foreignField: "_id",
+          as: "clientInfo"
+        }
+      },
+      { $unwind: { path: "$clientInfo", preserveNullAndEmptyArrays: true } },
+      { $sort: { paymentDate: -1, createdAt: -1 } }
+    ]);
+
+    if (!payments.length) {
+      return res.status(404).send("No payment data found");
+    }
+
+    // Create Excel workbook
     const workbook = new ExcelJS.Workbook();
     const sheet = workbook.addWorksheet("Payments");
 
+    // Define columns
     sheet.columns = [
-      { header: "Client Name", key: "name", width: 25 },
-      { header: "Phone", key: "phone", width: 15 },
-      { header: "Payment Method", key: "method", width: 15 },
-      { header: "Amount", key: "amount", width: 10 },
+      { header: "Client ID", key: "clientId", width: 24 },
+      { header: "Client Name", key: "name", width: 28 },
+      { header: "Phone", key: "phone", width: 16 },
+      { header: "Payment Method", key: "method", width: 12 },
+      { header: "Amount", key: "amount", width: 12 },
+      { header: "Currency", key: "currency", width: 8 },
       { header: "Status", key: "status", width: 12 },
-      { header: "Date", key: "date", width: 20 },
+      { header: "Payment Date", key: "date", width: 20 },
+      { header: "Created At", key: "createdAt", width: 20 }
     ];
 
-    payments.forEach((p) => {
+    // Add rows
+    payments.forEach(p => {
       sheet.addRow({
-        name: p.name || (p.clientId && p.clientId.name),
-        phone: p.phone || (p.clientId && p.clientId.phone),
-        method: p.paymentMethod,
-        amount: p.amount,
-        status: p.status,
-        date: p.paymentDate ? p.paymentDate.toLocaleDateString() : "-",
+        clientId: p.clientId ? String(p.clientId) : "",
+        name: p.name || (p.clientInfo && p.clientInfo.name) || "",
+        phone: p.phone || (p.clientInfo && p.clientInfo.phone) || "",
+        method: p.paymentMethod || "",
+        amount: p.amount || 0,
+        currency: p.currency || "INR",
+        status: p.status || "",
+        date: p.paymentDate
+          ? new Date(p.paymentDate).toISOString().replace("T", " ").slice(0, 19)
+          : "",
+        createdAt: p.createdAt
+          ? new Date(p.createdAt).toISOString().replace("T", " ").slice(0, 19)
+          : ""
       });
     });
 
+    // Set response headers
     res.setHeader(
       "Content-Type",
       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     );
-    res.setHeader("Content-Disposition", "attachment; filename=payments.xlsx");
 
+    const filename = `payments_${method ? method.toLowerCase() + "_" : ""}${Date.now()}.xlsx`;
+    res.setHeader("Content-Disposition", `attachment; filename=${filename}`);
+
+    // Write Excel to response
     await workbook.xlsx.write(res);
     res.end();
-  } catch (error) {
-    console.error(error);
+  } catch (err) {
+    console.error("download-payments error:", err);
     res.status(500).send("Error generating Excel file");
   }
-}
+};

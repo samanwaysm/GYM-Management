@@ -1,38 +1,4 @@
 <%-include("../admin/includes/header")-%>
-<style>
-  .futuristic-card {
-    background: linear-gradient(135deg, #0d1117, #161b22);
-    border: 1px solid #21262d;
-    border-radius: 20px;
-    box-shadow: 0 0 20px rgba(0,255,255,0.1);
-    color: #e6edf3;
-    padding: 25px;
-  }
-  .futuristic-title {
-    font-weight: 600;
-    color: #00ffff;
-    letter-spacing: 1px;
-  }
-  .futuristic-select, .futuristic-btn {
-    background-color: #1f2937;
-    border: 1px solid #00ffff;
-    color: #e6edf3;
-    border-radius: 10px;
-    transition: all 0.3s ease;
-  }
-  .futuristic-btn:hover {
-    background-color: #00ffff;
-    color: #0d1117;
-    box-shadow: 0 0 10px #00ffff;
-  }
-  .chart-container {
-    position: relative;
-    background: radial-gradient(circle at top, #0d1117, #000);
-    border-radius: 20px;
-    padding: 20px;
-  }
-</style>
-
         <!-- partial -->
         <div class="main-panel">
           <div class="content-wrapper">
@@ -99,46 +65,46 @@
             </div>
 
             <div class="row mt-5">
-              <div class="col-lg-12 grid-margin stretch-card">
-                <div class="card futuristic-card">
-                  <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center mb-4">
-                      <h3 class="card-title futuristic-title">💳 Payment Analytics</h3>
-                      <button class="btn btn-success futuristic-btn" id="downloadExcel">
-                        <i class="mdi mdi-file-excel"></i> Download Excel
+            <div class="col-lg-12 grid-margin stretch-card">
+              <div class="card futuristic-card">
+                <div class="card-body">
+                  <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h3 class="card-title futuristic-title">💳 Payment Analytics</h3>
+                    <button class="btn btn-success futuristic-btn" id="downloadExcel">
+                      <i class="mdi mdi-file-excel"></i> Download Excel
+                    </button>
+                  </div>
+
+                  <!-- Filters -->
+                  <div class="row mb-4">
+                    <div class="col-md-4">
+                      <select id="paymentMethodFilter" class="form-control futuristic-select">
+                        <option value="">All Methods</option>
+                        <option value="Cash">Cash</option>
+                        <option value="Online">Online</option>
+                      </select>
+                    </div>
+                    <div class="col-md-4">
+                      <select id="periodFilter" class="form-control futuristic-select">
+                        <option value="monthly">Monthly</option>
+                        <option value="yearly">Yearly</option>
+                      </select>
+                    </div>
+                    <div class="col-md-4 text-right">
+                      <button class="btn btn-primary futuristic-btn" id="applyFilter">
+                        <i class="mdi mdi-filter"></i> Apply Filter
                       </button>
                     </div>
+                  </div>
 
-                    <!-- Filters -->
-                    <div class="row mb-4">
-                      <div class="col-md-4">
-                        <select id="paymentMethodFilter" class="form-control futuristic-select">
-                          <option value="">All Methods</option>
-                          <option value="Cash">Cash</option>
-                          <option value="Online">Online</option>
-                        </select>
-                      </div>
-                      <div class="col-md-4">
-                        <select id="periodFilter" class="form-control futuristic-select">
-                          <option value="monthly">Monthly</option>
-                          <option value="yearly">Yearly</option>
-                        </select>
-                      </div>
-                      <div class="col-md-4 text-right">
-                        <button class="btn btn-primary futuristic-btn" id="applyFilter">
-                          <i class="mdi mdi-filter"></i> Apply Filter
-                        </button>
-                      </div>
-                    </div>
-
-                    <!-- Chart Container -->
-                    <div class="chart-container">
-                      <canvas id="paymentChart" height="120"></canvas>
-                    </div>
+                  <!-- Chart Container -->
+                  <div class="chart-container">
+                    <canvas id="paymentChart" height="120"></canvas>
                   </div>
                 </div>
               </div>
             </div>
+          </div>
 
             <!-- <div class="row mt-4">
               <div class="col-lg-12 grid-margin">
@@ -196,198 +162,64 @@
           })
           .catch(err => console.error("Error fetching counts:", err));
 
-          // let paymentChart;
-
-          // function fetchPaymentStats() {
-          //   const method = document.getElementById("paymentMethodFilter").value;
-          //   const period = document.getElementById("periodFilter").value;
-
-          //   fetch(`/admin/payment-stats?method=${method}&period=${period}`)
-          //     .then(res => res.json())
-          //     .then(data => {
-          //       if (data.success) {
-          //         const stats = data.data;
-
-          //         let labels, values;
-          //         if (period === "yearly") {
-          //           labels = stats.map(s => s._id.year);
-          //         } else {
-          //           labels = stats.map(s => `${s._id.month}/${s._id.year}`);
-          //         }
-          //         values = stats.map(s => s.totalAmount);
-
-          //         const ctx = document.getElementById("paymentChart").getContext("2d");
-          //         if (paymentChart) paymentChart.destroy();
-
-          //         paymentChart = new Chart(ctx, {
-          //           type: "bar",
-          //           data: {
-          //             labels,
-          //             datasets: [{
-          //               label: "Total Payment Amount (INR)",
-          //               data: values,
-          //               backgroundColor: "#4e73df"
-          //             }]
-          //           },
-          //           options: {
-          //             responsive: true,
-          //             plugins: {
-          //               legend: { display: true, position: "bottom" },
-          //               tooltip: { enabled: true }
-          //             },
-          //             scales: {
-          //               y: { beginAtZero: true }
-          //             }
-          //           }
-          //         });
-          //       }
-          //     })
-          //     .catch(err => console.error("Error fetching stats:", err));
-          // }
-
-          // // Apply Filter button
-          // document.getElementById("applyFilter").addEventListener("click", fetchPaymentStats);
-
-          // // Download Excel
-          // document.getElementById("downloadExcel").addEventListener("click", () => {
-          //   window.location.href = "/admin/download-payments";
-          // });
-
-          // // Load initially
-          // fetchPaymentStats();
           let paymentChart;
 
-  async function fetchPaymentStats() {
-    const method = document.getElementById("paymentMethodFilter").value;
-    const period = document.getElementById("periodFilter").value;
+          function fetchPaymentStats() {
+            const method = document.getElementById("paymentMethodFilter").value;
+            const period = document.getElementById("periodFilter").value;
 
-    const res = await fetch(`/admin/payment-stats?period=${period}`);
-    const data = await res.json();
+            fetch(`/admin/payment-stats?method=${method}&period=${period}`)
+              .then(res => res.json())
+              .then(data => {
+                if (data.success) {
+                  const stats = data.data;
 
-    if (!data.success) return console.error("Error fetching data");
+                  let labels, values;
+                  if (period === "yearly") {
+                    labels = stats.map(s => s._id.year);
+                  } else {
+                    labels = stats.map(s => `${s._id.month}/${s._id.year}`);
+                  }
+                  values = stats.map(s => s.totalAmount);
 
-    const stats = data.data;
+                  const ctx = document.getElementById("paymentChart").getContext("2d");
+                  if (paymentChart) paymentChart.destroy();
 
-    // Separate data by method
-    const allPayments = await fetchAllMethods(period);
+                  paymentChart = new Chart(ctx, {
+                    type: "bar",
+                    data: {
+                      labels,
+                      datasets: [{
+                        label: "Total Payment Amount (INR)",
+                        data: values,
+                        backgroundColor: "#4e73df"
+                      }]
+                    },
+                    options: {
+                      responsive: true,
+                      plugins: {
+                        legend: { display: true, position: "bottom" },
+                        tooltip: { enabled: true }
+                      },
+                      scales: {
+                        y: { beginAtZero: true }
+                      }
+                    }
+                  });
+                }
+              })
+              .catch(err => console.error("Error fetching stats:", err));
+          }
 
-    // Labels and data
-    const labels = allPayments.labels;
-    const cashValues = allPayments.cash;
-    const onlineValues = allPayments.online;
+          // Apply Filter button
+          document.getElementById("applyFilter").addEventListener("click", fetchPaymentStats);
 
-    const ctx = document.getElementById("paymentChart").getContext("2d");
+          document.getElementById("downloadExcel").addEventListener("click", () => {
+            window.location.href = "/admin/download-payments";
+          });
 
-    // Create gradient fill
-    const gradientBar = ctx.createLinearGradient(0, 0, 0, 400);
-    gradientBar.addColorStop(0, "rgba(0, 255, 255, 0.8)");
-    gradientBar.addColorStop(1, "rgba(0, 255, 255, 0.1)");
-
-    const gradientLine = ctx.createLinearGradient(0, 0, 0, 400);
-    gradientLine.addColorStop(0, "rgba(255, 99, 132, 0.8)");
-    gradientLine.addColorStop(1, "rgba(255, 99, 132, 0.1)");
-
-    if (paymentChart) paymentChart.destroy();
-
-    paymentChart = new Chart(ctx, {
-      type: "bar",
-      data: {
-        labels,
-        datasets: [
-          {
-            label: "Cash Payments",
-            data: cashValues,
-            backgroundColor: gradientBar,
-            borderColor: "#00ffff",
-            borderWidth: 1.5,
-            borderRadius: 10,
-          },
-          {
-            label: "Online Payments",
-            data: onlineValues,
-            type: "line",
-            borderColor: "#ff6384",
-            borderWidth: 3,
-            fill: true,
-            tension: 0.4,
-            pointBackgroundColor: "#ff6384",
-            pointRadius: 5,
-            pointHoverRadius: 7,
-          },
-        ],
-      },
-      options: {
-        responsive: true,
-        animation: {
-          duration: 1200,
-          easing: "easeInOutQuart",
-        },
-        plugins: {
-          legend: {
-            labels: { color: "#00ffff" },
-          },
-          tooltip: {
-            backgroundColor: "#111",
-            borderColor: "#00ffff",
-            borderWidth: 1,
-            titleColor: "#00ffff",
-            bodyColor: "#fff",
-          },
-        },
-        scales: {
-          x: {
-            ticks: { color: "#00ffff" },
-            grid: { color: "rgba(0,255,255,0.1)" },
-          },
-          y: {
-            ticks: { color: "#00ffff" },
-            grid: { color: "rgba(0,255,255,0.1)" },
-          },
-        },
-      },
-    });
-  }
-
-  async function fetchAllMethods(period) {
-    const cashRes = await fetch(`/admin/payment-stats?method=Cash&period=${period}`);
-    const onlineRes = await fetch(`/admin/payment-stats?method=Online&period=${period}`);
-    const cashData = (await cashRes.json()).data;
-    const onlineData = (await onlineRes.json()).data;
-
-    // Extract unique labels
-    const allLabels = new Set();
-    cashData.forEach(d => {
-      allLabels.add(period === "yearly" ? d._id.year : `${d._id.month}/${d._id.year}`);
-    });
-    onlineData.forEach(d => {
-      allLabels.add(period === "yearly" ? d._id.year : `${d._id.month}/${d._id.year}`);
-    });
-    const labels = Array.from(allLabels).sort();
-
-    // Map data
-    const cashMap = Object.fromEntries(cashData.map(d => [
-      period === "yearly" ? d._id.year : `${d._id.month}/${d._id.year}`,
-      d.totalAmount
-    ]));
-    const onlineMap = Object.fromEntries(onlineData.map(d => [
-      period === "yearly" ? d._id.year : `${d._id.month}/${d._id.year}`,
-      d.totalAmount
-    ]));
-
-    const cash = labels.map(l => cashMap[l] || 0);
-    const online = labels.map(l => onlineMap[l] || 0);
-
-    return { labels, cash, online };
-  }
-
-  // Filters
-  document.getElementById("applyFilter").addEventListener("click", fetchPaymentStats);
-  document.getElementById("downloadExcel").addEventListener("click", () => {
-    window.location.href = "/admin/download-payments";
-  });
-
-  // Initial load
-  fetchPaymentStats();
+          // Load initially
+          fetchPaymentStats();
      </script>
     <!-- plugins:js -->
     <script src="/admin/vendors/js/vendor.bundle.base.js"></script>
