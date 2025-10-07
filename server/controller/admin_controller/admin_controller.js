@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 const nodemailer = require('nodemailer');
 const Mailgen = require('mailgen');
 const twilio = require("twilio");
+const ExcelJS = require("exceljs");
 
 const User = require("../../../model/user/user_schema"); // import your new user schema
 const OtpDb = require("../../../model/admin/otp_schema")
@@ -2739,5 +2740,83 @@ async function sendWhatsAppMessage(phone, message) {
     });
   } catch (err) {
     console.error("⚠️ WhatsApp sending failed:", err.message);
+  }
+}
+
+exports.paymentStats = async (req, res) => {
+  try {
+    const { method, period } = req.query; // method=Cash|Online , period=monthly|yearly
+
+    const match = {};
+    if (method) match.paymentMethod = method;
+
+    // group by month or year
+    let groupStage;
+    if (period === "yearly") {
+      groupStage = {
+        _id: { year: { $year: "$paymentDate" } },
+        totalAmount: { $sum: "$amount" },
+      };
+    } else {
+      groupStage = {
+        _id: {
+          year: { $year: "$paymentDate" },
+          month: { $month: "$paymentDate" },
+        },
+        totalAmount: { $sum: "$amount" },
+      };
+    }
+
+    const stats = await Payment.aggregate([
+      { $match: match },
+      { $group: groupStage },
+      { $sort: { "_id.year": 1, "_id.month": 1 } },
+    ]);
+
+    res.json({ success: true, data: stats });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+}
+
+exports.downloadPayments = async (req, res) => {
+  try {
+    const payments = await Payment.find().populate("clientId");
+
+    const workbook = new ExcelJS.Workbook();
+    const sheet = workbook.addWorksheet("Payments");
+
+    sheet.columns = [
+      { header: "Client Name", key: "name", width: 25 },
+      { header: "Phone", key: "phone", width: 15 },
+      { header: "Payment Method", key: "method", width: 15 },
+      { header: "Amount", key: "amount", width: 10 },
+      { header: "Status", key: "status", width: 12 },
+      { header: "Date", key: "date", width: 20 },
+    ];
+
+    payments.forEach((p) => {
+      sheet.addRow({
+        name: p.name || (p.clientId && p.clientId.name),
+        phone: p.phone || (p.clientId && p.clientId.phone),
+        method: p.paymentMethod,
+        amount: p.amount,
+        status: p.status,
+        date: p.paymentDate ? p.paymentDate.toLocaleDateString() : "-",
+      });
+    });
+
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    );
+    res.setHeader("Content-Disposition", "attachment; filename=payments.xlsx");
+
+    await workbook.xlsx.write(res);
+    res.end();
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Error generating Excel file");
   }
 }

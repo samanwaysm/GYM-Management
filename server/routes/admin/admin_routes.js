@@ -127,4 +127,8 @@ route.get("/admin/package-list", controller.getPackageList);
 
 route.get("/admin/payments-list", controller.getPaymentList);
 
+route.get("/admin/payment-stats", controller.paymentStats);
+route.get("/admin/download-payments", controller.downloadPayments);
+
+
 module.exports = route;
