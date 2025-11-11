@@ -105,7 +105,7 @@ exports.handleWebhook = async (req, res) => {
           razorpayPaymentId: paymentData.id,
           status: "Completed",
           confirmedPayment: true,
-          paidAt: new Date()
+          paymentDate: new Date()
         });
 
         // Update Membership record
